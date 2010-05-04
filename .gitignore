@@ -1,0 +1,5 @@
+*.sw*
+*.8
+hmtool
+sample
+*.o

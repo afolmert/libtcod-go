@@ -1,0 +1,101 @@
+What is it 
+----------
+libtcod-go 1.5.0-1
+
+libtcod-go is a set of bindings for the libtcod library in Go programming language
+
+  
+
+libtcod http://doryen.eptalys.net/libtcod/
+ is an open-source, cross-platform C library for writing roguelike games 
+ 
+It provides many utilities frequently used in roguelike games, like  
+- truecolor console (SDL and OpenGL backends)
+- keyboard/mouse input
+- misc algorithms (line drawing, pathfinding, field of view, dungeon generation)
+- terrain and noise generators
+- widget toolkit 
+- config parser
+- name generator
+  etc.
+ 
+
+Go is a new programming language released in 2009 by Google 
+http://golang.org/. 
+It is a static language with dynamic feel, compiles to native code, has clean syntax (somewhat
+between C and Python) with garbage collection and language support for unicode
+and concurrency. 
+
+
+Most of libtcod API (version 1.5.0) is wrapped in Go, with some parts fully ported to enable easier
+callbacks. In addition, the demo and terrain-generation tool were also fully ported to
+serve as examples on how to use the library. 
+
+
+
+
+
+Installation
+------------
+To build the bindings, you will need the libtcod library and Go language installed. 
+
+Please refer to 
+http://golang.org/doc/install.html
+for Go installation
+and to
+http://doryen.eptalys.net/libtcod/download/
+for litcod installation 
+
+
+To build litcod-go bindings, type 
+make
+in the main directory.
+This should automatically build and install the bindings and build demos.
+
+To run the samples program type 
+cd cmd/sample; ./sample
+in the main directory.
+
+To run the hmtool program type 
+cd cmd/hmtool; ./hmtool
+in the main directory.
+
+
+Note that the bindings has been tested only on 32bit Linux with latest Go release
+(using 8g compiler) so far, so there may be some problems on other
+platforms. 
+Please report any problems with building and using the library on other platforms.
+
+
+Documentation
+--------------
+Although there is no documentation for the bindings themselves, the bindings API
+does not differ much from the original library, so the original documentation should
+be very helpful (http://doryen.eptalys.net/data/libtcod/doc/1.5.0/index.html).
+
+The samples and hmtool program also use many parts of the API so they also could be
+helpful to get started.
+
+
+
+
+Bugs
+-----
+Original API parts missing from Go bindings:
+- custom containers (TCOD_list_t) - alternatives exist in Go
+- thread/mutexes functions - alternatives exist in Go 
+- SDL callback renderer - callbacks from C are currently cumbersome in Go
+   
+
+
+Please report any other bugs to afolmert (at) gmail (dot) com
+
+
+
+Credits
+--------
+Thanks to:
+Go Authors for Go language 
+Jice, Mingos and others for libtcod library 
+Chris Hamons for some API design ideas in libtcod-net bindings
+
