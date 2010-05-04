@@ -2104,7 +2104,7 @@ func changeColorMapCbk(w tcod.IWidget, data interface{}) {
 		idxSlider.SetCallback(changeColorMapIdxCbk, i)
 		vbox.AddWidget(idxSlider)
 		keyImages[i] = gui.NewImageWidget(0, 0, 0, 2)
-		keyImages[i].SetBackgroundColor(keyColor[i], tcod.COLOR_BLACK)
+		keyImages[i].SetBackgroundColor(keyColor[i], keyColor[i])
 		vbox.AddWidget(keyImages[i])
 		hbox.AddWidget(vbox)
 

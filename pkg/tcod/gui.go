@@ -711,7 +711,9 @@ func (self *ImageWidget) initializeImageWidget(x, y, w, h int, tip string) {
 
 func (self *ImageWidget) Render(iself IWidget) {
 	con := self.gui.con
-	con.SetBackgroundColor(self.back)
+	fore, back := self.GetCurrentColors()
+	con.SetForegroundColor(fore)
+	con.SetBackgroundColor(back)
 	con.Rect(self.x, self.y, self.w, self.h, true, BKGND_SET)
 
 }
