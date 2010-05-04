@@ -178,7 +178,6 @@ type AsciiArtDemo struct {
 
 
 func NewAsciiArtDemo() *AsciiArtDemo {
-	aas.goLoadAsciiArts()
 	return &AsciiArtDemo{}
 }
 
@@ -187,13 +186,16 @@ func (self *AsciiArtDemo) Delete() {
 
 
 func (self *AsciiArtDemo) Render(first bool, key *Key) {
+	if aas == nil {
+		aas = NewAsciiArtStatic()
+	}
 
 	if self.asciiArt == nil || SysElapsedSeconds()-self.lastSlideTime > ASCII_ART_SLIDE_DELAY {
 		self.asciiArt = aas.randomAsciiArt()
 		first = true
 		if self.asciiArt == nil {
 			demoConsole.SetBackgroundColor(COLOR_BLACK)
-			demoConsole.SetForegroundColor(COLOR_LIGHT_GREEN)
+			demoConsole.SetForegroundColor(COLOR_GREY)
 			demoConsole.Clear()
 			demoConsole.PrintLeftRect(0, 0, demoConsole.GetWidth(), demoConsole.GetHeight(), BKGND_SET, "Loading images, please wait...")
 		} else {
@@ -1621,6 +1623,9 @@ func (self *MouseDemo) Delete() {
 
 func (self *MouseDemo) Render(first bool, key *Key) {
 	var mouse Mouse
+	if aas == nil {
+		aas = NewAsciiArtStatic()
+	}
 
 	if first {
 		demoConsole.SetBackgroundColor(COLOR_BLACK)

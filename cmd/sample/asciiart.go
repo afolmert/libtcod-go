@@ -61,12 +61,13 @@ type AsciiArt struct {
 
 var asciiArts []IAsciiArt
 
-var aas *AsciiArtStatic = NewAsciiArtStatic()
+var aas *AsciiArtStatic
 
 func NewAsciiArtStatic() *AsciiArtStatic {
 	result := &AsciiArtStatic{}
 	result.loadedArts = false
 	result.loadedArtsChan = make(chan bool)
+	result.goLoadAsciiArts()
 	return result
 }
 
