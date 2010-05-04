@@ -102,10 +102,10 @@ var HEADER1 []string = []string{
 var HEADER2 []string = []string{
 	// C header 2
 	"// function building the heightmap\n" +
-		"func buildMap(tcod.TCOD_heightmap_t *hm) {\n",
+		"void buildMap(TCOD_heightmap_t *hm) {\n",
 	// CPP header 2
 	"// function building the heightmap\n" +
-		"func buildMap(TCODHeightMap *hm) {\n",
+		"void buildMap(TCODHeightMap *hm) {\n",
 	// PY header 2
 	"# function building the heightmap\n" +
 		"def buildMap(hm) :\n",
@@ -118,35 +118,35 @@ var FOOTER1 []string = []string{
 	// C footer
 	"}\n" +
 		"// test code to print the heightmap\n" +
-		"// to compile self file on Linux :\n" +
+		"// to compile this file on Linux :\n" +
 		"//  gcc hm.c -o hm -I include/ -L . -ltcod\n" +
-		"// to compile self file on Windows/mingw32 :\n" +
+		"// to compile this file on Windows/mingw32 :\n" +
 		"//  gcc hm.c -o hm.exe -I include/ -L lib -ltcod-mingw\n" +
 		"int main(int argc, char *argv[]) {\n" +
-		"\tint x,y\n" +
-		"\ttcod.TCOD_heightmap_t *hm=tcod.TCOD_heightmap_new(HM_WIDTH,HM_HEIGHT)\n",
+		"\tint x,y;\n" +
+		"\tTCOD_heightmap_t *hm=TCOD_heightmap_new(HM_WIDTH,HM_HEIGHT);\n",
 	// CPP footer
 	"}\n" +
 		"// test code to print the heightmap\n" +
-		"// to compile self file on Linux :\n" +
+		"// to compile this file on Linux :\n" +
 		"//  g++ hm.cpp -o hm -I include/ -L . -ltcod -ltcod++\n" +
-		"// to compile self file on Windows/mingw32 :\n" +
+		"// to compile this file on Windows/mingw32 :\n" +
 		"//  g++ hm.cpp -o hm.exe -I include/ -L lib -ltcod-mingw\n" +
 		"int main(int argc, char *argv[]) {\n" +
-		"\tTCODHeightMap hm(HM_WIDTH,HM_HEIGHT)\n" +
-		"\tbuildMap(&hm)\n" +
-		"\tTCODConsole::initRoot(HM_WIDTH,HM_HEIGHT,\"height map test\",false)\n" +
+		"\tTCODHeightMap hm(HM_WIDTH,HM_HEIGHT);\n" +
+		"\tbuildMap(&hm);\n" +
+		"\tTCODConsole::initRoot(HM_WIDTH,HM_HEIGHT,\"height map test\",false);\n" +
 		"\tfor (int x=0; x < HM_WIDTH; x ++ ) {\n" +
-		"\t\tfor (int y=0; y < HM_HEIGHT; y++ ) {\n" +
-		"\t\t\tfloat z = hm.getValue(x,y)\n" +
-		"\t\t\tuint8 val=(uint8)(z*255)\n" +
-		"\t\t\tTCODColor c(val,val,val)\n" +
-		"\t\t\tTCODConsole::root.setBack(x,y,c)\n" +
+		"\t\tfor (int y=0;y < HM_HEIGHT; y++ ) {\n" +
+		"\t\t\tfloat z = hm.getValue(x,y);\n" +
+		"\t\t\tuint8 val=(uint8)(z*255);\n" +
+		"\t\t\tTCODColor c(val,val,val);\n" +
+		"\t\t\tTCODConsole::root->setBack(x,y,c);\n" +
 		"\t\t}\n" +
 		"\t}\n" +
-		"\tTCODConsole::root.flush()\n" +
-		"\tTCODConsole::waitForKeypress(true)\n" +
-		"\treturn 0\n" +
+		"\tTCODConsole::root->flush();\n" +
+		"\tTCODConsole::waitForKeypress(true);\n" +
+		"\treturn 0;\n" +
 		"}\n",
 	// PY footer
 	"# test code to print the heightmap\n" +
@@ -185,19 +185,19 @@ var FOOTER1 []string = []string{
 
 var FOOTER2 []string = []string{
 	// C footer
-	"\tbuildMap(hm)\n" +
-		"\ttcod.TCOD_console_init_root(HM_WIDTH,HM_HEIGHT,\"height map test\",false)\n" +
+	"\tbuildMap(hm);\n" +
+		"\tTCOD_console_init_root(HM_WIDTH,HM_HEIGHT,\"height map test\",false);\n" +
 		"\tfor (x=0; x < HM_WIDTH; x ++ ) {\n" +
-		"\t\tfor (y=0; y < HM_HEIGHT; y++ ) {\n" +
-		"\t\t\tfloat z = tcod.TCOD_heightmap_get_value(hm,x,y)\n" +
-		"\t\t\tuint8 val=(uint8)(z*255)\n" +
-		"\t\t\ttcod.TCOD_color_t c={val,val,val}\n" +
-		"\t\t\ttcod.TCOD_console_set_back(nil,x,y,c,tcod.TCOD_BKGND_SET)\n" +
+		"\t\tfor (y=0;y < HM_HEIGHT; y++ ) {\n" +
+		"\t\t\tfloat z = TCOD_heightmap_get_value(hm,x,y);\n" +
+		"\t\t\tuint8 val=(uint8)(z*255);\n" +
+		"\t\t\tTCOD_color_t c={val,val,val};\n" +
+		"\t\t\tTCOD_console_set_back(NULL,x,y,c,TCOD_BKGND_SET);\n" +
 		"\t\t}\n" +
 		"\t}\n" +
-		"\ttcod.TCOD_console_flush()\n" +
-		"\ttcod.TCOD_console_wait_for_keypress(true)\n" +
-		"\treturn 0\n" +
+		"\tTCOD_console_flush();\n" +
+		"\tTCOD_console_wait_for_keypress(true);\n" +
+		"\treturn 0;\n" +
 		"}\n",
 	// CPP footer
 	"",
@@ -433,9 +433,9 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 	if self.needsRandom || self.needsNoise {
 		switch codeType {
 		case C:
-			self.addCode(fmt.Sprintf("tcod.TCOD_random_t rnd=nil\n", seed))
+			self.addCode(fmt.Sprintf("tcod.TCOD_random_t rnd=nil;\n", seed))
 		case CPP:
-			self.addCode(fmt.Sprintf("TCODRandom *rnd=new TCODRandom(%uU)\n", seed))
+			self.addCode(fmt.Sprintf("TCODRandom *rnd=new TCODRandom(%uU);\n", seed))
 		case PY:
 			self.addCode(fmt.Sprintf("rnd=libtcod.random_new_from_seed(%u)\n", seed))
 		case GO:
@@ -446,9 +446,9 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 	if self.needsNoise {
 		switch codeType {
 		case C:
-			self.addCode("tcod.TCOD_noise_t noise=nil\n")
+			self.addCode("tcod.TCOD_noise_t noise=nil;\n")
 		case CPP:
-			self.addCode("TCODNoise *noise=new TCODNoise(2,rnd)\n")
+			self.addCode("TCODNoise *noise=new TCODNoise(2,rnd);\n")
 		case PY:
 			self.addCode("noise=libtcod.noise_new(2,libtcod.NOISE_DEFAULT_HURST,libtcod.NOISE_DEFAULT_LACUNARITY,rnd)\n")
 		case GO:
@@ -467,9 +467,9 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 	}
 	self.addCode(FOOTER1[codeType])
 	if (self.needsRandom || self.needsNoise) && codeType == C {
-		self.addCode(fmt.Sprintf("\trnd=tcod.TCOD_random_new_from_seed(%uU)\n", seed))
+		self.addCode(fmt.Sprintf("\trnd=tcod.TCOD_random_new_from_seed(%uU);\n", seed))
 		if self.needsNoise {
-			self.addCode("\tnoise=tcod.TCOD_noise_new(2,tcod.TCOD_NOISE_DEFAULT_HURST,tcod.TCOD_NOISE_DEFAULT_LACUNARITY,rnd)\n")
+			self.addCode("\tnoise=tcod.TCOD_noise_new(2,tcod.TCOD_NOISE_DEFAULT_HURST,tcod.TCOD_NOISE_DEFAULT_LACUNARITY,rnd);\n")
 		}
 	}
 	self.addCode(FOOTER2[codeType])
@@ -653,9 +653,9 @@ func (self *NormalizeOperation) initializeNormalizeOperation(opType OpType, min,
 func (self *NormalizeOperation) getCode(codeType CodeType) string {
 	switch codeType {
 	case C:
-		return fmt.Sprintf("\ttcod.TCOD_heightmap_normalize(hm,%g,%g)\n", self.min, self.max)
+		return fmt.Sprintf("\ttcod.TCOD_heightmap_normalize(hm,%g,%g);\n", self.min, self.max)
 	case CPP:
-		return fmt.Sprintf("\thm.normalize(%g,%g)\n", min, max)
+		return fmt.Sprintf("\thm.normalize(%g,%g);\n", min, max)
 	case PY:
 		return fmt.Sprintf("    libtcod.heightmap_normalize(hm,%g,%g)\n", self.min, self.max)
 	case GO:
@@ -756,11 +756,11 @@ func (self *AddFbmOperation) getCode(codeType CodeType) string {
 	switch codeType {
 	case C:
 		return fmt.Sprintf(
-			"\ttcod.TCOD_heightmap_add_fbm(hm,noise,%g,%g,%g,%g,%g,%g,%g)\n",
+			"\ttcod.TCOD_heightmap_add_fbm(hm,noise,%g,%g,%g,%g,%g,%g,%g);\n",
 			self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale)
 	case CPP:
 		return fmt.Sprintf(
-			"\thm.addFbm(noise,%g,%g,%g,%g,%g,%g,%g)\n",
+			"\thm.addFbm(noise,%g,%g,%g,%g,%g,%g,%g);\n",
 			self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale)
 	case PY:
 		return fmt.Sprintf(
@@ -914,13 +914,13 @@ func (self *ScaleFbmOperation) getCode(codeType CodeType) string {
 	switch codeType {
 	case C:
 		return fmt.Sprintf(
-			"\ttcod.TCOD_heightmap_scale_fbm(hm,noise,%g,%g,%g,%g,%g,%g,%g)\n"+
-				"\tscaleFbmDelta += HM_WIDTH\n",
+			"\ttcod.TCOD_heightmap_scale_fbm(hm,noise,%g,%g,%g,%g,%g,%g,%g);\n"+
+				"\tscaleFbmDelta += HM_WIDTH;\n",
 			self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale)
 	case CPP:
 		return fmt.Sprintf(
-			"\thm.scaleFbm(noise,%g,%g,%g,%g,%g,%g,%g)\n"+
-				"\tscaleFbmDelta += HM_WIDTH\n",
+			"\thm.scaleFbm(noise,%g,%g,%g,%g,%g,%g,%g);\n"+
+				"\tscaleFbmDelta += HM_WIDTH;\n",
 			self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale)
 	case PY:
 		return fmt.Sprintf(
@@ -979,9 +979,9 @@ func (self *AddHillOperation) initializeAddHillOperation(opType OpType, nbHill i
 func (self *AddHillOperation) getCode(codeType CodeType) string {
 	switch codeType {
 	case C:
-		return fmt.Sprintf("\taddHill(hm,%d,%g,%g,%g)\n", self.nbHill, self.radius, self.radiusVar, self.height)
+		return fmt.Sprintf("\taddHill(hm,%d,%g,%g,%g);\n", self.nbHill, self.radius, self.radiusVar, self.height)
 	case CPP:
-		return fmt.Sprintf("\taddHill(hm,%d,%g,%g,%g)\n", self.nbHill, self.radius, self.radiusVar, self.height)
+		return fmt.Sprintf("\taddHill(hm,%d,%g,%g,%g);\n", self.nbHill, self.radius, self.radiusVar, self.height)
 	case PY:
 		return fmt.Sprintf("    addHill(hm,%d,%g,%g,%g)\n", self.nbHill, self.radius, self.radiusVar, self.height)
 	case GO:
@@ -998,31 +998,31 @@ func (self *AddHillOperation) runInternal() {
 func (self *AddHillOperation) addInternal() bool {
 	operations.addInitCode(C,
 		"#include <math.h>\n"+
-			"func addHill(tcod.TCOD_heightmap_t *hm,int nbHill, float baseRadius, float radiusVar, float height)  {\n"+
-			"\tint i\n"+
+			"void addHill(TCOD_heightmap_t *hm,int nbHill, float baseRadius, float radiusVar, float height)  {\n"+
+			"\tint i;\n"+
 			"\tfor (i=0; i<  nbHill; i++ ) {\n"+
-			"\t\tfloat hillMinRadius=baseRadius*(1.0f-radiusVar)\n"+
-			"\t\tfloat hillMaxRadius=baseRadius*(1.0f+radiusVar)\n"+
-			"\t\tfloat radius = tcod.TCOD_random_get_float(rnd,hillMinRadius, hillMaxRadius)\n"+
-			"\t\tfloat theta = tcod.TCOD_random_get_float(rnd,0.0f, 6.283185f) // between 0 and 2Pi\n"+
-			"\t\tfloat dist = tcod.TCOD_random_get_float(rnd,0.0f, (float)min(HM_WIDTH,HM_HEIGHT)/2 - radius)\n"+
-			"\t\tint xh = (int) (HM_WIDTH/2 + cos(theta) * dist)\n"+
-			"\t\tint yh = (int) (HM_HEIGHT/2 + sin(theta) * dist)\n"+
-			"\t\ttcod.TCOD_heightmap_add_hill(hm,(float)xh,(float)yh,radius,height)\n"+
+			"\t\tfloat hillMinRadius=baseRadius*(1.0f-radiusVar);\n"+
+			"\t\tfloat hillMaxRadius=baseRadius*(1.0f+radiusVar);\n"+
+			"\t\tfloat radius = TCOD_random_get_float(rnd,hillMinRadius, hillMaxRadius);\n"+
+			"\t\tfloat theta = TCOD_random_get_float(rnd,0.0f, 6.283185f); // between 0 and 2Pi\n"+
+			"\t\tfloat dist = TCOD_random_get_float(rnd,0.0f, (float)MIN(HM_WIDTH,HM_HEIGHT)/2 - radius);\n"+
+			"\t\tint xh = (int) (HM_WIDTH/2 + cos(theta) * dist);\n"+
+			"\t\tint yh = (int) (HM_HEIGHT/2 + sin(theta) * dist);\n"+
+			"\t\tTCOD_heightmap_add_hill(hm,(float)xh,(float)yh,radius,height);\n"+
 			"\t}\n"+
 			"}\n")
 	operations.addInitCode(CPP,
 		"#include <math.h>\n"+
-			"func addHill(TCODHeightMap *hm,int nbHill, float baseRadius, float radiusVar, float height)  {\n"+
+			"void addHill(TCODHeightMap *hm,int nbHill, float baseRadius, float radiusVar, float height)  {\n"+
 			"\tfor (int i=0; i<  nbHill; i++ ) {\n"+
-			"\t\tfloat hillMinRadius=baseRadius*(1.0f-radiusVar)\n"+
-			"\t\tfloat hillMaxRadius=baseRadius*(1.0f+radiusVar)\n"+
-			"\t\tfloat radius = rnd.getFloat(hillMinRadius, hillMaxRadius)\n"+
-			"\t\tfloat theta = rnd.getFloat(0.0f, 6.283185f) // between 0 and 2Pi\n"+
-			"\t\tfloat dist = rnd.getFloat(0.0f, (float)min(HM_WIDTH,HM_HEIGHT)/2 - radius)\n"+
-			"\t\tint xh = (int) (HM_WIDTH/2 + cos(theta) * dist)\n"+
-			"\t\tint yh = (int) (HM_HEIGHT/2 + sin(theta) * dist)\n"+
-			"\t\thm.addHill((float)xh,(float)yh,radius,height)\n"+
+			"\t\tfloat hillMinRadius=baseRadius*(1.0f-radiusVar);\n"+
+			"\t\tfloat hillMaxRadius=baseRadius*(1.0f+radiusVar);\n"+
+			"\t\tfloat radius = rnd->getFloat(hillMinRadius, hillMaxRadius);\n"+
+			"\t\tfloat theta = rnd->getFloat(0.0f, 6.283185f); // between 0 and 2Pi\n"+
+			"\t\tfloat dist = rnd->getFloat(0.0f, (float)MIN(HM_WIDTH,HM_HEIGHT)/2 - radius);\n"+
+			"\t\tint xh = (int) (HM_WIDTH/2 + cos(theta) * dist);\n"+
+			"\t\tint yh = (int) (HM_HEIGHT/2 + sin(theta) * dist);\n"+
+			"\t\thm->addHill((float)xh,(float)yh,radius,height);\n"+
 			"\t}\n"+
 			"}\n")
 	operations.addInitCode(PY,
@@ -1244,19 +1244,19 @@ func (self *SmoothOperation) getCode(codeType CodeType) string {
 	switch codeType {
 	case C:
 		return fmt.Sprintf(
-			"\tsmoothKernelWeight[4] = %g\n"+
+			"\tsmoothKernelWeight[4] = %g;\n"+
 				"\t{\n"+
-				"\t\tint i\n"+
+				"\t\tint i;\n"+
 				"\t\tfor (i=%d; i>= 0; i--) {\n"+
-				"\t\t\ttcod.TCOD_heightmap_kernel_transform(hm,smoothKernelSize,smoothKernelDx,smoothKernelDy,smoothKernelWeight,%g,%g)\n"+
+				"\t\t\ttcod.TCOD_heightmap_kernel_transform(hm,smoothKernelSize,smoothKernelDx,smoothKernelDy,smoothKernelWeight,%g,%g);\n"+
 				"\t\t}\n"+
 				"\t}\n",
 			20-self.radius*19, self.count, self.minLevel, self.maxLevel)
 	case CPP:
 		return fmt.Sprintf(
-			"\tsmoothKernelWeight[4] = %g\n"+
+			"\tsmoothKernelWeight[4] = %g;\n"+
 				"\tfor (int i=%d; i>= 0; i--) {\n"+
-				"\t\thm.kernelTransform(smoothKernelSize,smoothKernelDx,smoothKernelDy,smoothKernelWeight,%g,%g)\n"+
+				"\t\thm.kernelTransform(smoothKernelSize,smoothKernelDx,smoothKernelDy,smoothKernelWeight,%g,%g);\n"+
 				"\t}\n",
 			20-self.radius*19, self.count, self.minLevel, self.maxLevel)
 	case PY:
@@ -1269,7 +1269,7 @@ func (self *SmoothOperation) getCode(codeType CodeType) string {
 		return fmt.Sprintf(
 			"    smoothKernelWeight[4] = %g\n"+
 				"    for i := %d; i >= 0; i-- {\n"+
-				"        hm.KernelTransform(smoothKernelSize,&smoothKernelDx,&smoothKernelDy,&smoothKernelWeight,%g,%g)\n" +
+				"        hm.KernelTransform(smoothKernelSize,&smoothKernelDx,&smoothKernelDy,&smoothKernelWeight,%g,%g)\n"+
 				"    }\n ",
 			20-self.radius*19, self.count, self.minLevel, self.maxLevel)
 	default:
@@ -1288,16 +1288,16 @@ func (self *SmoothOperation) runInternal() {
 func (self *SmoothOperation) addInternal() bool {
 	operations.addInitCode(C,
 		"// 3x3 kernel for smoothing operations\n"+
-			"int smoothKernelSize=9\n"+
-			"int smoothKernelDx[9]={-1,0,1,-1,0,1,-1,0,1}\n"+
-			"int smoothKernelDy[9]={-1,-1,-1,0,0,0,1,1,1}\n"+
-			"float smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1}\n")
+			"int smoothKernelSize=9;\n"+
+			"int smoothKernelDx[9]={-1,0,1,-1,0,1,-1,0,1};\n"+
+			"int smoothKernelDy[9]={-1,-1,-1,0,0,0,1,1,1};\n"+
+			"float smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1};\n")
 	operations.addInitCode(CPP,
 		"// 3x3 kernel for smoothing operations\n"+
-			"int smoothKernelSize=9\n"+
-			"int smoothKernelDx[9]={-1,0,1,-1,0,1,-1,0,1}\n"+
-			"int smoothKernelDy[9]={-1,-1,-1,0,0,0,1,1,1}\n"+
-			"float smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1}\n")
+			"int smoothKernelSize=9;\n"+
+			"int smoothKernelDx[9]={-1,0,1,-1,0,1,-1,0,1};\n"+
+			"int smoothKernelDy[9]={-1,-1,-1,0,0,0,1,1,1};\n"+
+			"float smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1};\n")
 	operations.addInitCode(PY,
 		"# 3x3 kernel for smoothing operations\n"+
 			"smoothKernelSize=9\n"+
@@ -1417,9 +1417,9 @@ func (self *RainErosionOperation) initializeRainErosionOperation(opType OpType, 
 func (self *RainErosionOperation) getCode(codeType CodeType) string {
 	switch codeType {
 	case C:
-		return fmt.Sprintf("\ttcod.TCOD_heightmap_rain_erosion(hm,%d,%g,%g,rnd)\n", self.nbDroperations, self.erosionCoef, self.sedimentationCoef)
+		return fmt.Sprintf("\ttcod.TCOD_heightmap_rain_erosion(hm,%d,%g,%g,rnd);\n", self.nbDroperations, self.erosionCoef, self.sedimentationCoef)
 	case CPP:
-		return fmt.Sprintf("\thm.rainErosion(%d,%g,%g,rnd)\n", self.nbDroperations, self.erosionCoef, self.sedimentationCoef)
+		return fmt.Sprintf("\thm.rainErosion(%d,%g,%g,rnd);\n", self.nbDroperations, self.erosionCoef, self.sedimentationCoef)
 	case PY:
 		return fmt.Sprintf("    libtcod.heightmap_rain_erosion(hm,%d,%g,%g,rnd)\n", self.nbDroperations, self.erosionCoef, self.sedimentationCoef)
 	case GO:
@@ -1523,18 +1523,18 @@ func (self *NoiseLerpOperation) getCode(codeType CodeType) string {
 	case C:
 		return fmt.Sprintf(
 			"\t{\n"+
-				"\t\ttcod.TCOD_heightmap_t *tmp=tcod.TCOD_heightmap_new(HM_WIDTH,HM_HEIGHT)\n"+
-				"\t\ttcod.TCOD_heightmap_add_fbm(tmp,noise,%g,%g,%g,%g,%g,%g,%g)\n"+
-				"\t\ttcod.TCOD_heightmap_lerp(hm,tmp,hm,%g)\n"+
-				"\t\ttcod.TCOD_heightmap_delete(tmp)\n"+
+				"\t\ttcod.TCOD_heightmap_t *tmp=tcod.TCOD_heightmap_new(HM_WIDTH,HM_HEIGHT);\n"+
+				"\t\ttcod.TCOD_heightmap_add_fbm(tmp,noise,%g,%g,%g,%g,%g,%g,%g);\n"+
+				"\t\ttcod.TCOD_heightmap_lerp(hm,tmp,hm,%g);\n"+
+				"\t\ttcod.TCOD_heightmap_delete(tmp);\n"+
 				"\t}\n",
 			self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale, self.coef)
 	case CPP:
 		return fmt.Sprintf(
 			"\t{\n"+
-				"\t\tTCODHeightMap tmp(HM_WIDTH,HM_HEIGHT)\n"+
-				"\t\ttmp.addFbm(noise,%g,%g,%g,%g,%g,%g,%g)\n"+
-				"\t\thm.lerp(hm,&tmp,%g)\n"+
+				"\t\tTCODHeightMap tmp(HM_WIDTH,HM_HEIGHT);\n"+
+				"\t\ttmp.addFbm(noise,%g,%g,%g,%g,%g,%g,%g);\n"+
+				"\t\thm.lerp(hm,&tmp,%g);\n"+
 				"\t}\n",
 			self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale, self.coef)
 	case PY:
@@ -1636,22 +1636,22 @@ func (self *VoronoiOperation) getCode(codeType CodeType) string {
 	case C:
 		return fmt.Sprintf(
 			"\t{\n"+
-				"\t\tfloat coef[]={%s}\n"+
-				"\t\ttcod.TCOD_heightmap_t *tmp =tcod.TCOD_heightmap_new(HM_WIDTH,HM_HEIGHT)\n"+
-				"\t\ttcod.TCOD_heightmap_add_voronoi(tmp,%d,%d,coef,rnd)\n"+
-				"\t\ttcod.TCOD_heightmap_normalize(tmp,0.0f,1.0f)\n"+
-				"\t\ttcod.TCOD_heightmap_add(hm,tmp,hm)\n"+
-				"\t\ttcod.TCOD_heightmap_delete(tmp)\n"+
+				"\t\tfloat coef[]={%s};\n"+
+				"\t\ttcod.TCOD_heightmap_t *tmp =tcod.TCOD_heightmap_new(HM_WIDTH,HM_HEIGHT);\n"+
+				"\t\ttcod.TCOD_heightmap_add_voronoi(tmp,%d,%d,coef,rnd);\n"+
+				"\t\ttcod.TCOD_heightmap_normalize(tmp,0.0f,1.0f);\n"+
+				"\t\ttcod.TCOD_heightmap_add(hm,tmp,hm);\n"+
+				"\t\ttcod.TCOD_heightmap_delete(tmp);\n"+
 				"\t}\n",
 			coefstr, self.nbPoints, self.nbCoef)
 	case CPP:
 		return fmt.Sprintf(
 			"\t{\n"+
-				"\t\tfloat coef[]={%s}\n"+
-				"\t\tTCODHeightMap tmp(HM_WIDTH,HM_HEIGHT)\n"+
-				"\t\ttmp.addVoronoi(%d,%d,coef,rnd)\n"+
-				"\t\ttmp.normalize()\n"+
-				"\t\thm.add(hm,&tmp)\n"+
+				"\t\tfloat coef[]={%s};\n"+
+				"\t\tTCODHeightMap tmp(HM_WIDTH,HM_HEIGHT);\n"+
+				"\t\ttmp.addVoronoi(%d,%d,coef,rnd);\n"+
+				"\t\ttmp.normalize();\n"+
+				"\t\thm.add(hm,&tmp);\n"+
 				"\t}\n",
 			coefstr, self.nbPoints, self.nbCoef)
 	case PY:
