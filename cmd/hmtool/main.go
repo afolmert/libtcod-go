@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"container/vector"
 	"io/ioutil"
+	"path"
+	"os"
 )
 //
 //
@@ -2211,6 +2213,12 @@ func buildGui() {
 }
 
 func main() {
+	// change dir to program dir 
+	program := os.Args[0]
+	dir, _ := path.Split(program)
+	os.Chdir(dir)
+
+
 	root = tcod.NewRootConsole(HM_WIDTH, HM_HEIGHT, "height map tool", false)
 	guicon = tcod.NewConsole(HM_WIDTH, HM_HEIGHT)
 	gui = tcod.NewGui(guicon)
