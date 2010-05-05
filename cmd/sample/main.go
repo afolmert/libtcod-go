@@ -2,18 +2,17 @@ package main
 
 //
 import (
-	"fmt"
-	. "tcod"
-	//	"time"
-	"crypto/rand"
-	"strings"
-	//"unsafe"
-	"flag"
-	"strconv"
-	"os"
-	"math"
 	"container/vector"
+	"crypto/rand"
+	"flag"
+	"fmt"
 	"io/ioutil"
+	"math"
+	"os"
+	"path"
+	"strconv"
+	"strings"
+	. "tcod"
 )
 
 //
@@ -1856,6 +1855,11 @@ func (self *ParserDemo) Render(first bool, key *Key) {
 //
 
 func Initialize() {
+
+	// change dir to program dir 
+	program := os.Args[0]
+	dir, _ := path.Split(program)
+	os.Chdir(dir)
 
 	random = GetRandomInstance()
 	samples = []Sample{
