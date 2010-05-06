@@ -49,10 +49,6 @@ cd cmd/hmtool; ./hmtool
 in the main directory.
 
 
-Note that the bindings has been tested only on 32bit Linux with latest Go release
-(using 8g compiler) so far, so there may be some problems on other
-platforms. 
-Please report any problems with building and using the library on other platforms.
 
 
 Documentation
@@ -74,9 +70,10 @@ Original API parts missing from Go bindings:
 - thread/mutexes functions - alternatives exist in Go 
 - SDL callback renderer - callbacks from C are currently cumbersome in Go
    
+The bindings have been tested on 32bit and 64bit Linux with 8g and 6g compilers. 
+There may still be some issues on other platforms.
 
-
-Please report any other bugs to afolmert (at) gmail (dot) com
+Please report any problems and other bugs to afolmert (at) gmail (dot) com
 
 
 

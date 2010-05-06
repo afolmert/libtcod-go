@@ -147,10 +147,37 @@ package tcod
     return TCOD_color_multiply(*c1, *c2);
   }
 
+  TCOD_color_t _TCOD_color_multiply_scalar(TCOD_color_t *c, float value) {
+	return TCOD_color_multiply_scalar(*c, value);
+  }
+
   void _TCOD_console_set_color_control(TCOD_colctrl_t ctrl, TCOD_color_t *fore, TCOD_color_t *back) {
 	TCOD_console_set_color_control(ctrl, *fore, *back);
   }
 
+  void _TCOD_console_set_key_color(TCOD_console_t console, TCOD_color_t *color) {
+	TCOD_console_set_key_color(console, *color);
+  }
+
+  void _TCOD_console_set_background_color(TCOD_console_t console, TCOD_color_t *color) {
+	TCOD_console_set_background_color(console, *color);
+  }
+
+  void _TCOD_console_set_foreground_color(TCOD_console_t console, TCOD_color_t *color) {
+	TCOD_console_set_foreground_color(console, *color);
+  }
+
+  void _TCOD_console_set_back(TCOD_console_t console, int x, int y, TCOD_color_t *color, TCOD_bkgnd_flag_t flag) {
+	TCOD_console_set_back(console, x, y, *color, flag);
+  }
+
+  void _TCOD_console_set_fore(TCOD_console_t console, int x, int y, TCOD_color_t *color) {
+	TCOD_console_set_fore(console, x, y, *color);
+  }
+
+  void _TCOD_console_set_fade(uint8 val, TCOD_color_t *color) {
+	TCOD_console_set_fade(val, *color);
+  }
 
   void _TCOD_console_put_char_ex(TCOD_console_t console, int x, int y, int c, TCOD_color_t *fore, TCOD_color_t *back) {
 	TCOD_console_put_char_ex(console, x, y, c, *fore, *back);
@@ -170,7 +197,22 @@ package tcod
     TCOD_struct_add_structure(*s, *subs);
   }
 
+  void _TCOD_image_put_pixel(TCOD_image_t img, int x, int y, TCOD_color_t *color) {
+	 TCOD_image_put_pixel(img, x, y, *color);
 
+  }
+
+  void _TCOD_image_clear(TCOD_image_t img, TCOD_color_t *color) {
+	TCOD_image_clear(img, *color);
+  }
+
+  void _TCOD_image_set_key_color(TCOD_image_t img, TCOD_color_t *color) {
+	TCOD_image_set_key_color(img, *color);
+  }
+
+  void _TCOD_zip_put_color(TCOD_zip_t zip, TCOD_color_t *val) {
+	 TCOD_zip_put_color(zip, *val);
+  }
 
 */
 import "C"
@@ -441,7 +483,8 @@ func (self Color) Multiply(c2 Color) Color {
 }
 
 func (self Color) MultiplyScalar(value float) Color {
-	return toColor(C.TCOD_color_multiply_scalar(fromColor(self), C.float(value)))
+	c := fromColor(self)
+	return toColor(C._TCOD_color_multiply_scalar((*C.TCOD_color_t)(&c), C.float(value)))
 }
 
 func (self Color) Lerp(c2 Color, coef float) Color {
@@ -690,11 +733,13 @@ func (self *RootConsole) SetDirty(x, y, w, h int) {
 
 
 func (self *Console) SetBackgroundColor(color Color) {
-	C.TCOD_console_set_background_color(self.Data, fromColor(color))
+	ccolor := fromColor(color)
+	C._TCOD_console_set_background_color(self.Data, (*C.TCOD_color_t)(&ccolor))
 }
 
 func (self *Console) SetForegroundColor(color Color) {
-	C.TCOD_console_set_foreground_color(self.Data, fromColor(color))
+	ccolor := fromColor(color)
+	C._TCOD_console_set_foreground_color(self.Data, (*C.TCOD_color_t)(&ccolor))
 }
 
 
@@ -704,11 +749,13 @@ func (self *Console) Clear() {
 
 
 func (self *Console) SetBack(x, y int, color Color, flag BkgndFlag) {
-	C.TCOD_console_set_back(self.Data, C.int(x), C.int(y), fromColor(color), C.TCOD_bkgnd_flag_t(flag))
+	ccolor := fromColor(color)
+	C._TCOD_console_set_back(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor), C.TCOD_bkgnd_flag_t(flag))
 }
 
 func (self *Console) SetFore(x, y int, color Color) {
-	C.TCOD_console_set_fore(self.Data, C.int(x), C.int(y), fromColor(color))
+	ccolor := fromColor(color)
+	C._TCOD_console_set_fore(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
 }
 
 
@@ -850,7 +897,8 @@ func (self *Console) GetChar(x, y int) int {
 }
 
 func (self *RootConsole) SetFade(val uint8, fade Color) {
-	C.TCOD_console_set_fade(C.uint8(val), fromColor(fade))
+	ccolor := fromColor(fade)
+	C._TCOD_console_set_fade(C.uint8(val), (*C.TCOD_color_t)(&ccolor))
 }
 
 func (self *RootConsole) GetFade() uint8 {
@@ -909,7 +957,8 @@ func (self *Console) GetHeight() int {
 }
 
 func (self *Console) SetKeyColor(color Color) {
-	C.TCOD_console_set_key_color(self.Data, fromColor(color))
+	ccolor := fromColor(color)
+	C._TCOD_console_set_key_color(self.Data, (*C.TCOD_color_t)(&ccolor))
 }
 
 func (self *Console) Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float) {
@@ -1794,7 +1843,8 @@ func LoadImage(filename string) *Image {
 
 
 func (self *Image) Clear(color Color) {
-	C.TCOD_image_clear(self.Data, fromColor(color))
+	ccolor := fromColor(color)
+	C._TCOD_image_clear(self.Data, (*C.TCOD_color_t)(&ccolor))
 }
 
 func (self *Image) Invert() {
@@ -1839,7 +1889,8 @@ func (self *Image) GetMipmapPixel(x0, y0, x1, y1 float) Color {
 }
 
 func (self *Image) PutPixel(x, y int, color Color) {
-	C.TCOD_image_put_pixel(self.Data, C.int(x), C.int(y), fromColor(color))
+	ccolor := fromColor(color)
+	C._TCOD_image_put_pixel(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
 }
 
 func (self *Image) Blit(console *Console, x, y float, bkgndFlag BkgndFlag, scalex, scaley, angle float) {
@@ -1860,7 +1911,8 @@ func (self *Image) Delete() {
 }
 
 func (self *Image) SetKeyColor(keyColor Color) {
-	C.TCOD_image_set_key_color(self.Data, fromColor(keyColor))
+	ckeyColor := fromColor(keyColor)
+	C._TCOD_image_set_key_color(self.Data, (*C.TCOD_color_t)(&ckeyColor))
 }
 
 func (self *Image) IsPixelTransparent(x, y int) bool {
@@ -2383,7 +2435,8 @@ func (self *Zip) PutString(val string) {
 
 
 func (self *Zip) PutColor(val Color) {
-	C.TCOD_zip_put_color(self.Data, fromColor(val))
+	cval := fromColor(val)
+	C._TCOD_zip_put_color(self.Data, (*C.TCOD_color_t)(&cval))
 }
 
 
