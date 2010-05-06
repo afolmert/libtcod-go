@@ -1,14 +1,10 @@
 What is it 
 ----------
-libtcod-go 1.5.0-1
+libtcod-go is a set of Go bindings for the libtcod library
 
-libtcod-go is a set of bindings for the libtcod library in Go programming language
 
-  
-
-libtcod http://doryen.eptalys.net/libtcod/
- is an open-source, cross-platform C library for writing roguelike games 
- 
+libtcod (http://doryen.eptalys.net/libtcod/) is an open-source, cross-platform C
+library for writing roguelike games 
 It provides many utilities frequently used in roguelike games, like  
 - truecolor console (SDL and OpenGL backends)
 - keyboard/mouse input
@@ -20,8 +16,7 @@ It provides many utilities frequently used in roguelike games, like
   etc.
  
 
-Go is a new programming language released in 2009 by Google 
-http://golang.org/. 
+Go (http://golang.org/) is a programming language released in 2009 by Google. 
 It is a static language with dynamic feel, compiles to native code, has clean syntax (somewhat
 between C and Python) with garbage collection and language support for unicode
 and concurrency. 
@@ -33,21 +28,14 @@ serve as examples on how to use the library.
 
 
 
-
-
 Installation
 ------------
 To build the bindings, you will need the libtcod library and Go language installed. 
-
-Please refer to 
-http://golang.org/doc/install.html
-for Go installation
-and to
-http://doryen.eptalys.net/libtcod/download/
-for litcod installation 
+Please refer to http://golang.org/doc/install.html for Go installation
+and to http://doryen.eptalys.net/libtcod/download/ for libtcod installation.
 
 
-To build litcod-go bindings, type 
+To build libtcod-go bindings, type 
 make
 in the main directory.
 This should automatically build and install the bindings and build demos.
@@ -95,7 +83,7 @@ Please report any other bugs to afolmert (at) gmail (dot) com
 Credits
 --------
 Thanks to:
-Go Authors for Go language 
-Jice, Mingos and others for libtcod library 
-Chris Hamons for some API design ideas in libtcod-net bindings
-
+Go Authors for the Go language 
+Jice, Mingos and others for the libtcod library 
+Chris Hamons for API design ideas in the libtcod-net bindings
+Felipe Bichued for comments and ideas
