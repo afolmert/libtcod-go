@@ -217,7 +217,7 @@ func ClampF(a, b, x float) float {
 	return If(x < a, a, If(x > b, b, x).(float)).(float)
 }
 
-// 
+//
 // TODO should free those strings?
 func toStringSlice(l C.TCOD_list_t, free bool) (result []string) {
 	size := C.TCOD_list_size(l)
@@ -621,21 +621,29 @@ func (self *Console) GetData() C.TCOD_console_t {
 
 
 func NewRootConsole(w, h int, title string, fullscreen bool) *RootConsole {
-	C.TCOD_console_init_root(C.int(w), C.int(h), C.CString(title), fromBool(fullscreen))
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen))
 	// in root console, Data field is nil
 	return &RootConsole{}
 }
 
 func NewRootConsoleWithFont(w, h int, title string, fullscreen bool, fontFile string, fontFlags, nbCharHoriz, nbCharVertic int) *RootConsole {
-	C.TCOD_console_set_custom_font(C.CString(fontFile), C.int(fontFlags), C.int(nbCharHoriz), C.int(nbCharVertic))
-	C.TCOD_console_init_root(C.int(w), C.int(h), C.CString(title), fromBool(fullscreen))
+	cfontFile := C.CString(fontFile)
+	defer C.free(unsafe.Pointer(cfontFile))
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+	C.TCOD_console_set_custom_font(cfontFile, C.int(fontFlags), C.int(nbCharHoriz), C.int(nbCharVertic))
+	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen))
 	// in root console, Data field is nil
 	return &RootConsole{}
 }
 
 
 func (self *RootConsole) SetWindowTitle(title string) {
-	C.TCOD_console_set_window_title(C.CString(title))
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+	C.TCOD_console_set_window_title(ctitle)
 
 }
 
@@ -654,7 +662,9 @@ func (self *RootConsole) IsWindowClosed() bool {
 
 
 func (self *RootConsole) SetCustomFont(fontFile string, flags int, nbCharHoriz int, nbCharVertic int) {
-	C.TCOD_console_set_custom_font(C.CString(fontFile), C.int(flags), C.int(nbCharHoriz), C.int(nbCharVertic))
+	cfontFile := C.CString(fontFile)
+	defer C.free(unsafe.Pointer(cfontFile))
+	C.TCOD_console_set_custom_font(cfontFile, C.int(flags), C.int(nbCharHoriz), C.int(nbCharVertic))
 }
 
 
@@ -669,7 +679,9 @@ func (self *RootConsole) MapAsciiCodesToFont(asciiCode, fontCharX, fontCharY int
 
 
 func (self *RootConsole) MapStringToFont(s string, fontCharX, fontCharY int) {
-	C.TCOD_console_map_string_to_font(C.CString(s), C.int(fontCharX), C.int(fontCharY))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	C.TCOD_console_map_string_to_font(cs, C.int(fontCharX), C.int(fontCharY))
 }
 
 func (self *RootConsole) SetDirty(x, y, w, h int) {
@@ -718,47 +730,65 @@ func (self *Console) PutCharEx(x, y, c int, fore, back Color) {
 
 func (self *Console) PrintLeft(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
 	s := fmt.Sprintf(fmts, v)
-	C._TCOD_console_print_left(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), C.CString(s))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	C._TCOD_console_print_left(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
 }
 
 func (self *Console) PrintRight(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
 	s := fmt.Sprintf(fmts, v)
-	C._TCOD_console_print_right(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), C.CString(s))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	C._TCOD_console_print_right(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
 }
 
 func (self *Console) PrintCenter(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
 	s := fmt.Sprintf(fmts, v)
-	C._TCOD_console_print_center(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), C.CString(s))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	C._TCOD_console_print_center(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
 }
 
 func (self *Console) PrintLeftRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v)
-	return int(C._TCOD_console_print_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), C.CString(s)))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return int(C._TCOD_console_print_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
 }
 
 func (self *Console) PrintRightRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v)
-	return int(C._TCOD_console_print_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), C.CString(s)))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return int(C._TCOD_console_print_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
 }
 
 func (self *Console) PrintCenterRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v)
-	return int(C._TCOD_console_print_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), C.CString(s)))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return int(C._TCOD_console_print_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
 }
 
 func (self *Console) HeightLeftRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v)
-	return int(C._TCOD_console_height_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.CString(s)))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return int(C._TCOD_console_height_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
 func (self *Console) HeightRightRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v)
-	return int(C._TCOD_console_height_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.CString(s)))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return int(C._TCOD_console_height_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
 func (self *Console) HeightCenterRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v)
-	return int(C._TCOD_console_height_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.CString(s)))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return int(C._TCOD_console_height_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
 func (self *Console) Rect(x, y, w, h int, clear bool, flag BkgndFlag) {
@@ -776,13 +806,15 @@ func (self *Console) Vline(x, y, l int, flag BkgndFlag) {
 
 func (self *Console) PrintFrame(x, y, w, h int, empty bool, flag BkgndFlag, fmts string, v ...interface{}) {
 	s := fmt.Sprintf(fmts, v)
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
 	C._TCOD_console_print_frame(self.Data, C.int(x), C.int(y), C.int(w), C.int(h),
-		fromBool(empty), C.TCOD_bkgnd_flag_t(flag), C.CString(s))
+		fromBool(empty), C.TCOD_bkgnd_flag_t(flag), cs)
 
 }
 
 
-// TODO check unicode support 
+// TODO check unicode support
 //TCODLIB_API void TCOD_console_map_string_to_font_utf(const wchar_t *s, int fontCharX, int fontCharY);
 //TCODLIB_API void TCOD_console_print_left_utf(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, const wchar_t *fmt, ...);
 //TCODLIB_API void TCOD_console_print_right_utf(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, const wchar_t *fmt, ...);
@@ -1038,19 +1070,27 @@ func LinePoints(xo, yo, xd, yd int) vector.Vector {
 
 //
 func NamegenParse(filename string, random *Random) {
-	C.TCOD_namegen_parse(C.CString(filename), random.Data)
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	C.TCOD_namegen_parse(cfilename, random.Data)
 }
 
 // generate a name
 func NamegenGenerate(name string) string {
-	c := C.TCOD_namegen_generate(C.CString(name), fromBool(true))
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	c := C.TCOD_namegen_generate(cname, fromBool(true))
 	defer C.free(unsafe.Pointer(c))
 	return C.GoString(c)
 }
 
 // generate a name using a custom generation rule
 func NamegenGenerateCustom(name, rule string) string {
-	c := C.TCOD_namegen_generate_custom(C.CString(name), C.CString(rule), fromBool(true))
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	crule := C.CString(rule)
+	defer C.free(unsafe.Pointer(crule))
+	c := C.TCOD_namegen_generate_custom(cname, crule, fromBool(true))
 	defer C.free(unsafe.Pointer(c))
 	return C.GoString(c)
 }
@@ -1066,13 +1106,11 @@ func NamegenDestroy() {
 }
 
 
-
-
-// 
+//
 //
 // Text field
 // TODO this is available only in debug version? (1.5.0)
-// 
+//
 //
 type Text struct {
 	Data C.TCOD_text_t
@@ -1084,7 +1122,9 @@ func NewText(x, y, w, h, maxChars int) *Text {
 
 
 func (self *Text) SetProperties(cursorChar int, blinkInterval int, prompt string, tabSize int) {
-	C.TCOD_text_set_properties(self.Data, C.int(cursorChar), C.int(blinkInterval), C.CString(prompt), C.int(tabSize))
+	cprompt := C.CString(prompt)
+	defer C.free(unsafe.Pointer(cprompt))
+	C.TCOD_text_set_properties(self.Data, C.int(cursorChar), C.int(blinkInterval), cprompt, C.int(tabSize))
 }
 
 
@@ -1146,7 +1186,9 @@ func SysSaveScreenshotToFile(filename string) {
 	if filename == "" {
 		C.TCOD_sys_save_screenshot(nil)
 	} else {
-		C.TCOD_sys_save_screenshot(C.CString(filename))
+		cfilename := C.CString(filename)
+		defer C.free(unsafe.Pointer(cfilename))
+		C.TCOD_sys_save_screenshot(cfilename)
 	}
 }
 
@@ -1187,11 +1229,15 @@ func SysGetCharSize() (w, h int) {
 
 // filesystem stuff
 func SysCreateDirectory(path string) bool {
-	return toBool(C.TCOD_sys_create_directory(C.CString(path)))
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+	return toBool(C.TCOD_sys_create_directory(cpath))
 }
 
 func SysDeleteFile(path string) bool {
-	return toBool(C.TCOD_sys_delete_file(C.CString(path)))
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+	return toBool(C.TCOD_sys_delete_file(cpath))
 }
 
 func SysDeleteDirectory(path string) bool {
@@ -1199,13 +1245,19 @@ func SysDeleteDirectory(path string) bool {
 }
 
 func SysIsDirectory(path string) bool {
-	return toBool(C.TCOD_sys_is_directory(C.CString(path)))
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+	return toBool(C.TCOD_sys_is_directory(cpath))
 }
 
 func SysGetDirectoryContent(path, pattern string) []string {
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+	cpattern := C.CString(pattern)
+	defer C.free(unsafe.Pointer(cpattern))
 	return toStringSlice(
 		C.TCOD_sys_get_directory_content(
-			C.CString(path), C.CString(pattern)),
+			cpath, cpattern),
 		true)
 }
 
@@ -2058,11 +2110,16 @@ func (self ParserStruct) GetName() string {
 
 
 func (self ParserStruct) AddProperty(name string, valueType ParserValueType, mandatory bool) {
-	C.TCOD_struct_add_property(self.Data, C.CString(name), C.TCOD_value_type_t(valueType), fromBool(mandatory))
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	C.TCOD_struct_add_property(self.Data, cname, C.TCOD_value_type_t(valueType), fromBool(mandatory))
 }
 
 func (self ParserStruct) AddListProperty(name string, valueType ParserValueType, mandatory bool) {
-	C.TCOD_struct_add_list_property(self.Data, C.CString(name), C.TCOD_value_type_t(valueType), fromBool(mandatory))
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	C.TCOD_struct_add_list_property(self.Data, cname, C.TCOD_value_type_t(valueType), fromBool(mandatory))
 }
 
 
@@ -2074,10 +2131,16 @@ func (self ParserStruct) AddValueList(name string, valueList []string, mandatory
 	C.TCOD_struct_add_value_list_sized(self.Data, C.CString(name),
 		(**C.char)(unsafe.Pointer(&cvalueList[0])), C.int(len(valueList)), fromBool(mandatory))
 
+	for i := range cvalueList {
+		C.free(unsafe.Pointer(cvalueList[i]))
+	}
+
 }
 
 func (self ParserStruct) AddFlag(propname string) {
-	C.TCOD_struct_add_flag(self.Data, C.CString(propname))
+	cpropname := C.CString(propname)
+	defer C.free(unsafe.Pointer(cpropname))
+	C.TCOD_struct_add_flag(self.Data, cpropname)
 }
 
 
@@ -2090,12 +2153,16 @@ func (self ParserStruct) AddStructure(substruct ParserStruct) {
 
 
 func (self *ParserStruct) IsMandatory(propname string) bool {
-	return toBool(C.TCOD_struct_is_mandatory(self.Data, C.CString(propname)))
+	cpropname := C.CString(propname)
+	defer C.free(unsafe.Pointer(cpropname))
+	return toBool(C.TCOD_struct_is_mandatory(self.Data, cpropname))
 }
 
 
 func (self *ParserStruct) GetType(propname string) ParserValueType {
-	return ParserValueType(C.TCOD_struct_get_type(self.Data, C.CString(propname)))
+	cpropname := C.CString(propname)
+	defer C.free(unsafe.Pointer(cpropname))
+	return ParserValueType(C.TCOD_struct_get_type(self.Data, cpropname))
 }
 
 
@@ -2109,7 +2176,9 @@ func (self *Parser) Delete() {
 
 
 func (self *Parser) RegisterStruct(name string) ParserStruct {
-	return ParserStruct{C.TCOD_parser_new_struct(self.Data, C.CString(name))}
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	return ParserStruct{C.TCOD_parser_new_struct(self.Data, cname)}
 }
 
 
@@ -2117,14 +2186,15 @@ func (self *Parser) RegisterStruct(name string) ParserStruct {
 // TCODLIB_API TCOD_value_type_t TCOD_parser_new_custom_type(TCOD_parser_t parser,TCOD_parser_custom_t custom_type_parser);
 
 
-
 // TODO listeners are not supported
 // Running parser return list of parsed properties
 func (self *Parser) Run(filename string) []ParserProperty {
 	// run parser with default listeners
-	C.TCOD_parser_run(self.Data, C.CString(filename), nil)
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	C.TCOD_parser_run(self.Data, cfilename, nil)
 
-	// extract properties to Go structures 
+	// extract properties to Go structures
 	var cprop *C._prop_t
 	var prop ParserProperty
 	var l C.TCOD_list_t = C.TCOD_list_t(((*C.TCOD_parser_int_t)(self.Data)).props)
@@ -2157,37 +2227,37 @@ func (self *Parser) Run(filename string) []ParserProperty {
 				prop.Value = make([]string, elListSize)
 				for j := 0; j < elListSize; j++ {
 					elValue := (*C.char)(unsafe.Pointer(C.TCOD_list_get(elList, C.int(j))))
-					prop.Value.([]string)[j] = C.GoString(elValue) 
+					prop.Value.([]string)[j] = C.GoString(elValue)
 				}
 			} else if elType == TYPE_INT {
 				prop.Value = make([]int, elListSize)
 				for j := 0; j < elListSize; j++ {
 					elValue := C.TCOD_list_get(elList, C.int(j))
-					prop.Value.([]int)[j] = int(*(*C.int)(unsafe.Pointer(&elValue))) 
+					prop.Value.([]int)[j] = int(*(*C.int)(unsafe.Pointer(&elValue)))
 				}
 			} else if elType == TYPE_FLOAT {
 				prop.Value = make([]float, elListSize)
 				for j := 0; j < elListSize; j++ {
 					elValue := C.TCOD_list_get(elList, C.int(j))
-					prop.Value.([]float)[j] = float(*(*C.float)(unsafe.Pointer(&elValue))) 
+					prop.Value.([]float)[j] = float(*(*C.float)(unsafe.Pointer(&elValue)))
 				}
 			} else if elType == TYPE_BOOL {
 				prop.Value = make([]bool, elListSize)
 				for j := 0; j < elListSize; j++ {
 					elValue := C.TCOD_list_get(elList, C.int(j))
-					prop.Value.([]bool)[j] = toBool(*(*C.bool)(unsafe.Pointer(&elValue))) 
+					prop.Value.([]bool)[j] = toBool(*(*C.bool)(unsafe.Pointer(&elValue)))
 				}
 			} else if elType == TYPE_DICE {
 				prop.Value = make([]Dice, elListSize)
 				for j := 0; j < elListSize; j++ {
 					elValue := *(*C.TCOD_dice_t)(unsafe.Pointer(C.TCOD_list_get(elList, C.int(j))))
-					prop.Value.([]Dice)[j] = toDice(elValue) 
+					prop.Value.([]Dice)[j] = toDice(elValue)
 				}
 			} else if elType == TYPE_COLOR {
 				prop.Value = make([]Color, elListSize)
 				for j := 0; j < elListSize; j++ {
 					elValue := *(*C.TCOD_color_t)(unsafe.Pointer(C.TCOD_list_get(elList, C.int(j))))
-					prop.Value.([]Color)[j] = toColor(elValue) 
+					prop.Value.([]Color)[j] = toColor(elValue)
 				}
 			}
 		}
@@ -2306,7 +2376,9 @@ func (self *Zip) PutFloat(val float) {
 
 
 func (self *Zip) PutString(val string) {
-	C.TCOD_zip_put_string(self.Data, C.CString(val))
+	cval := C.CString(val)
+	defer C.free(unsafe.Pointer(cval))
+	C.TCOD_zip_put_string(self.Data, cval)
 }
 
 
@@ -2331,14 +2403,18 @@ func (self *Zip) PutData(nbBytes int, data unsafe.Pointer) {
 
 
 func (self *Zip) SaveToFile(filename string) {
-	C.TCOD_zip_save_to_file(self.Data, C.CString(filename))
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	C.TCOD_zip_save_to_file(self.Data, cfilename)
 }
 
 
 // input interface
 
 func (self *Zip) LoadFromFile(filename string) {
-	C.TCOD_zip_load_from_file(self.Data, C.CString(filename))
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	C.TCOD_zip_load_from_file(self.Data, cfilename)
 }
 
 
