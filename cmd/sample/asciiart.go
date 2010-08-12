@@ -84,7 +84,7 @@ func (self *AsciiArtStatic) isArtsLoaded() bool {
 func (self *AsciiArtStatic) loadAsciiArt(fname string) (art IAsciiArt, err os.Error) {
 
 	fin, err := os.Open(fname, os.O_RDONLY, 0664)
-	i, err := zlib.NewInflater(fin)
+	i, err := zlib.NewReader(fin)
 	defer i.Close()
 	if err != nil {
 		return nil, err

@@ -462,11 +462,11 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 		self.addCode(s)
 	}
 	self.addCode(HEADER2[codeType])
-	for e := range self.list.Iter() {
+	self.list.Do(func(e interface{}){
 		op := e.(IOperation)
 		code := op.getCode(codeType)
 		self.addCode(code)
-	}
+	})
 	self.addCode(FOOTER1[codeType])
 	if (self.needsRandom || self.needsNoise) && codeType == C {
 		self.addCode(fmt.Sprintf("\trnd=tcod.TCOD_random_new_from_seed(%uU);\n", seed))
