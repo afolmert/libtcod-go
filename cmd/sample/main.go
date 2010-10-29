@@ -574,32 +574,32 @@ func (self *NoiseDemo) Render(first bool, key *Key) {
 	// render the 2d noise fun
 	for y = 0; y < 2*DEMO_SCREEN_HEIGHT; y++ {
 		for x = 0; x < 2*DEMO_SCREEN_WIDTH; x++ {
-			var f [2]float
 			var value float
 			var c uint8
 			var col Color
+			f := make([]float, 2)
 			f[0] = self.zoom*float(x)/(2*DEMO_SCREEN_WIDTH) + self.dx
 			f[1] = self.zoom*float(y)/(2*DEMO_SCREEN_HEIGHT) + self.dy
 			value = 0.0
 			switch self.fun {
 			case PERLIN:
-				value = self.noise.Perlin(&f)
+				value = self.noise.Perlin(f)
 			case SIMPLEX:
-				value = self.noise.Simplex(&f)
+				value = self.noise.Simplex(f)
 			case WAVELET:
-				value = self.noise.Wavelet(&f)
+				value = self.noise.Wavelet(f)
 			case FBM_PERLIN:
-				value = self.noise.FbmPerlin(&f, self.octaves)
+				value = self.noise.FbmPerlin(f, self.octaves)
 			case TURBULENCE_PERLIN:
-				value = self.noise.TurbulencePerlin(&f, self.octaves)
+				value = self.noise.TurbulencePerlin(f, self.octaves)
 			case FBM_SIMPLEX:
-				value = self.noise.FbmSimplex(&f, self.octaves)
+				value = self.noise.FbmSimplex(f, self.octaves)
 			case TURBULENCE_SIMPLEX:
-				value = self.noise.TurbulenceSimplex(&f, self.octaves)
+				value = self.noise.TurbulenceSimplex(f, self.octaves)
 			case FBM_WAVELET:
-				value = self.noise.FbmWavelet(&f, self.octaves)
+				value = self.noise.FbmWavelet(f, self.octaves)
 			case TURBULENCE_WAVELET:
-				value = self.noise.TurbulenceWavelet(&f, self.octaves)
+				value = self.noise.TurbulenceWavelet(f, self.octaves)
 			}
 			c = (uint8)((value + 1.0) / 2.0 * 255)
 			// use a bluish color
@@ -706,7 +706,7 @@ type FovDemo struct {
 	noise        *Noise
 	algoNum      int
 	algoNames    []string
-	torchx       [1]float // torch light position in the perlin noise
+	torchx       []float // torch light position in the perlin noise
 }
 
 
@@ -723,8 +723,10 @@ func NewFovDemo() *FovDemo {
 		darkGround:   Color{50, 50, 150},
 		lightGround:  Color{200, 180, 50},
 		noise:        nil,
-		algoNum:      0}
+		algoNum:      0,
+		torchx:       make([]float, 1)}
 
+	result.torchx[0] = 0.0
 	result.algoNames = []string{
 		"BASIC      ", "DIAMOND    ", "SHADOW     ",
 		"PERMISSIVE0", "PERMISSIVE1", "PERMISSIVE2", "PERMISSIVE3", "PERMISSIVE4",
@@ -793,8 +795,6 @@ func NewFovDemo() *FovDemo {
 		"####           #     ####                ####################################",
 		"########       #     #### #####          ####################################"}
 	return result
-	result.torchx = [1]float{0.0}
-	return result
 }
 
 func (self *FovDemo) Delete() {
@@ -850,15 +850,15 @@ func (self *FovDemo) Render(first bool, key *Key) {
 		self.map_.ComputeFov(self.px, self.py, If(self.torch, int(TORCH_RADIUS), 0).(int), self.lightWalls, FovAlgorithm(self.algoNum))
 	}
 	if self.torch {
-		var tdx [1]float
+		tdx := make([]float, 1)
 		// slightly change the perlin noise parameter
 		self.torchx[0] += 0.2
 		// randomize the light position between -1.5 and 1.5
 		tdx[0] = self.torchx[0] + 20.0
-		dx = self.noise.Simplex(&tdx) * 1.5
+		dx = self.noise.Simplex(tdx) * 1.5
 		tdx[0] += 30.0
-		dy = self.noise.Simplex(&tdx) * 1.5
-		di = 0.2 * self.noise.Simplex(&self.torchx)
+		dy = self.noise.Simplex(tdx) * 1.5
+		di = 0.2 * self.noise.Simplex(self.torchx)
 	}
 	for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
 		for x = 0; x < DEMO_SCREEN_WIDTH; x++ {

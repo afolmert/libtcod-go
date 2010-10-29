@@ -250,8 +250,7 @@ var params *tcod.ToolBar
 var history *tcod.ToolBar
 var colorMapGui *tcod.ToolBar
 
-var voronoiCoef [2]float = [2]float{
-	-1.0, 1.0}
+var voronoiCoef []float = []float{-1.0, 1.0}
 
 /* light 3x3 smoothing kernel :
 1  2 1
@@ -260,22 +259,19 @@ var voronoiCoef [2]float = [2]float{
 */
 var smoothKernelSize int = 9
 
-var smoothKernelDx [9]int = [9]int{
-	-1, 0, 1, -1, 0, 1, -1, 0, 1}
+var smoothKernelDx []int = []int{-1, 0, 1, -1, 0, 1, -1, 0, 1}
 
-var smoothKernelDy [9]int = [9]int{
-	-1, -1, -1, 0, 0, 0, 1, 1, 1}
+var smoothKernelDy []int = []int{-1, -1, -1, 0, 0, 0, 1, 1, 1}
 
-var smoothKernelWeight [9]float = [9]float{
-	1, 2, 1, 2, 20, 2, 1, 2, 1}
+var smoothKernelWeight []float = []float{1, 2, 1, 2, 20, 2, 1, 2, 1}
 
-var mapGradient [256]tcod.Color
+var mapGradient []tcod.Color = make([]tcod.Color, 256)
 
 const MAX_COLOR_KEY = 10
 
 
 // TCOD's land color map
-var keyIndex [MAX_COLOR_KEY]int = [MAX_COLOR_KEY]int{0,
+var keyIndex []int = []int{0,
 	int(sandHeight * 255),
 	int(sandHeight*255) + 4,
 	int(grassHeight * 255),
@@ -284,7 +280,7 @@ var keyIndex [MAX_COLOR_KEY]int = [MAX_COLOR_KEY]int{0,
 	int(snowHeight*255) + 10,
 	255}
 
-var keyColor [MAX_COLOR_KEY]tcod.Color = [MAX_COLOR_KEY]tcod.Color{
+var keyColor []tcod.Color = []tcod.Color{
 	tcod.Color{0, 0, 50},      // deep water
 	tcod.Color{30, 30, 170},   // water-sand transition
 	tcod.Color{114, 150, 71},  // sand
@@ -462,7 +458,7 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 		self.addCode(s)
 	}
 	self.addCode(HEADER2[codeType])
-	self.list.Do(func(e interface{}){
+	self.list.Do(func(e interface{}) {
 		op := e.(IOperation)
 		code := op.getCode(codeType)
 		self.addCode(code)
@@ -1271,7 +1267,7 @@ func (self *SmoothOperation) getCode(codeType CodeType) string {
 		return fmt.Sprintf(
 			"    smoothKernelWeight[4] = %g\n"+
 				"    for i := %d; i >= 0; i-- {\n"+
-				"        hm.KernelTransform(smoothKernelSize,&smoothKernelDx,&smoothKernelDy,&smoothKernelWeight,%g,%g)\n"+
+				"        hm.KernelTransform(smoothKernelSize,smoothKernelDx,smoothKernelDy,smoothKernelWeight,%g,%g)\n"+
 				"    }\n ",
 			20-self.radius*19, self.count, self.minLevel, self.maxLevel)
 	default:
@@ -1283,7 +1279,7 @@ func (self *SmoothOperation) getCode(codeType CodeType) string {
 func (self *SmoothOperation) runInternal() {
 	smoothKernelWeight[4] = 20 - self.radius*19
 	for i := self.count; i >= 0; i-- {
-		hm.KernelTransform(smoothKernelSize, &smoothKernelDx, &smoothKernelDy, &smoothKernelWeight, self.minLevel, self.maxLevel)
+		hm.KernelTransform(smoothKernelSize, smoothKernelDx, smoothKernelDy, smoothKernelWeight, self.minLevel, self.maxLevel)
 	}
 }
 
@@ -1602,13 +1598,14 @@ type VoronoiOperation struct {
 	Operation
 	nbPoints   int
 	nbCoef     int
-	coef       [MAX_VORONOI_COEF]float
+	coef       []float
 	coefSlider [MAX_VORONOI_COEF]*tcod.Slider
 }
 
 
 func NewVoronoiOperation(nbPoints, nbCoef int, coef []float) *VoronoiOperation {
 	result := &VoronoiOperation{}
+	result.coef = make([]float, MAX_VORONOI_COEF)
 	result.initializeVoronoiOperation(VORONOI, nbPoints, nbCoef, coef)
 	return result
 }
@@ -1682,7 +1679,7 @@ func (self *VoronoiOperation) getCode(codeType CodeType) string {
 func (self *VoronoiOperation) runInternal() {
 	tmp := tcod.NewHeightMap(HM_WIDTH, HM_HEIGHT)
 	defer tmp.Delete()
-	tmp.AddVoronoi(self.nbPoints, self.nbCoef, &self.coef, rnd)
+	tmp.AddVoronoi(self.nbPoints, self.nbCoef, self.coef, rnd)
 	tmp.Normalize()
 	hm.AddHm(hm, tmp)
 }
@@ -1779,7 +1776,7 @@ func (self *VoronoiOperation) createParamUi() {
 
 
 func initColors() {
-	tcod.ColorGenMap(&mapGradient, nbColorKeys, &keyColor, &keyIndex)
+	tcod.ColorGenMap(mapGradient, nbColorKeys, keyColor, keyIndex)
 }
 
 func render() {
@@ -1856,7 +1853,7 @@ func render() {
 }
 
 func message(delay float, fmts string, v ...interface{}) {
-	msg = fmt.Sprintf(fmts, v)
+	msg = fmt.Sprintf(fmts, v...)
 	msgDelay = delay
 }
 
@@ -1958,7 +1955,7 @@ func smoothCbk(w tcod.IWidget, data interface{}) {
 }
 
 func voronoiCbk(w tcod.IWidget, data interface{}) {
-	operations.add(NewVoronoiOperation(100, 2, &voronoiCoef))
+	operations.add(NewVoronoiOperation(100, 2, voronoiCoef))
 }
 
 func noiseLerpCbk(w tcod.IWidget, data interface{}) {
@@ -2217,7 +2214,6 @@ func main() {
 	program := os.Args[0]
 	dir, _ := path.Split(program)
 	os.Chdir(dir)
-
 
 	root = tcod.NewRootConsole(HM_WIDTH, HM_HEIGHT, "height map tool", false)
 	guicon = tcod.NewConsole(HM_WIDTH, HM_HEIGHT)

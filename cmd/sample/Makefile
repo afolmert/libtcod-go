@@ -1,8 +1,9 @@
-include $(GOROOT)/src/Make.$(GOARCH)
+include $(GOROOT)/src/Make.inc
 
 TARG=sample
 GOFILES=\
-	main.go\
 	asciiart.go\
+	main.go\
+\
 
 include $(GOROOT)/src/Make.cmd

@@ -776,63 +776,63 @@ func (self *Console) PutCharEx(x, y, c int, fore, back Color) {
 }
 
 func (self *Console) PrintLeft(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	C._TCOD_console_print_left(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
 }
 
 func (self *Console) PrintRight(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	C._TCOD_console_print_right(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
 }
 
 func (self *Console) PrintCenter(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	C._TCOD_console_print_center(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
 }
 
 func (self *Console) PrintLeftRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	return int(C._TCOD_console_print_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
 }
 
 func (self *Console) PrintRightRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	return int(C._TCOD_console_print_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
 }
 
 func (self *Console) PrintCenterRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	return int(C._TCOD_console_print_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
 }
 
 func (self *Console) HeightLeftRect(x, y, w, h int, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	return int(C._TCOD_console_height_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
 func (self *Console) HeightRightRect(x, y, w, h int, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	return int(C._TCOD_console_height_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
 func (self *Console) HeightCenterRect(x, y, w, h int, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	return int(C._TCOD_console_height_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
@@ -852,7 +852,7 @@ func (self *Console) Vline(x, y, l int, flag BkgndFlag) {
 }
 
 func (self *Console) PrintFrame(x, y, w, h int, empty bool, flag BkgndFlag, fmts string, v ...interface{}) {
-	s := fmt.Sprintf(fmts, v)
+	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	C._TCOD_console_print_frame(self.Data, C.int(x), C.int(y), C.int(w), C.int(h),
