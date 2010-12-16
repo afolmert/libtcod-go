@@ -186,7 +186,7 @@ func (self *AsciiArtDemo) Delete() {
 
 func (self *AsciiArtDemo) Render(first bool, key *Key) {
 	if aas == nil {
-		aas = NewAsciiArtStatic()
+		aas = NewAsciiArtGallery()
 	}
 
 	if self.asciiArt == nil || SysElapsedSeconds()-self.lastSlideTime > ASCII_ART_SLIDE_DELAY {
@@ -1623,7 +1623,7 @@ func (self *MouseDemo) Delete() {
 func (self *MouseDemo) Render(first bool, key *Key) {
 	var mouse Mouse
 	if aas == nil {
-		aas = NewAsciiArtStatic()
+		aas = NewAsciiArtGallery()
 	}
 
 	if first {
