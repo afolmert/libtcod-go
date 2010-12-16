@@ -1854,6 +1854,21 @@ func (self *ParserDemo) Render(first bool, key *Key) {
 //
 //
 
+const (
+	SAMPLE_TRUE_COLORS = iota
+	SAMPLE_MOUSE_SUPPORT
+	SAMPLE_OFFSCREEN_CONSOLE
+	SAMPLE_LINE_DRAWING
+	SAMPLE_NOISE
+	SAMPLE_PATH_FINDING
+	SAMPLE_FIELD_OF_VIEW
+	SAMPLE_BSP_TOOLKIT
+	SAMPLE_IMAGE_TOOLKIT
+	SAMPLE_NAME_GENERATOR
+	SAMPLE_PARSER_DEMO
+	SAMPLE_ASCII_SLIDESHOW
+)
+
 func Initialize() {
 
 	// change dir to program dir 
@@ -1925,7 +1940,7 @@ func buildGui() {
 
 func Run() {
 
-	curSample = 0 // index of the current sample
+	curSample = SAMPLE_MOUSE_SUPPORT // index of the current sample
 	first = true  // first time we render a sample
 	//var i int
 	key := Key{Vk: K_NONE, C: 0}
@@ -1955,7 +1970,6 @@ func Run() {
 	//
 	font = "data/fonts/terminal8x8.png"
 	fontFlags = FONT_LAYOUT_ASCII_INCOL
-
 
 	// initialize the rootConsole console (open the game window)
 	for argn = 1; argn < flag.NArg(); argn++ {
@@ -2052,7 +2066,6 @@ func Run() {
 		demoConsole.Blit(0, 0, DEMO_SCREEN_WIDTH, DEMO_SCREEN_HEIGHT, // the source console & zone to blit
 			rootConsole, DEMO_SCREEN_X, DEMO_SCREEN_Y, // the destination console & position
 			1.0, 1.0) // alpha coefs  )
-
 
 		// update the game screen
 		rootConsole.Flush()
