@@ -1640,26 +1640,36 @@ func (self *MouseDemo) Render(first bool, key *Key) {
 	if self.asciiArt == nil {
 		self.asciiArt = aas.randomAsciiArt()
 	}
-	if self.asciiArt != nil {
-		self.asciiArt.Render(demoConsole, INSTANT, first)
-	}
+	self.asciiArt.Render(demoConsole, INSTANT, first)
 
 	mouse = MouseGetStatus()
 
-	cx := mouse.Cx
-	cy := mouse.Cy
 	for x := 0; x < DEMO_SCREEN_WIDTH; x++ {
 		for y := 0; y < DEMO_SCREEN_HEIGHT; y++ {
+			cx := abs(x + DEMO_SCREEN_X - mouse.Cx)
+			cy := abs(y + DEMO_SCREEN_Y - mouse.Cy)
 
 			fore := demoConsole.GetFore(x, y)
 
-			dist := sqrt(float(sqr(abs(x+DEMO_SCREEN_X-cx)) + sqr(abs(y+DEMO_SCREEN_Y-cy))))
+			dist := sqrt(float((sqr(cx)) + sqr(cy)))
 			dist = minf(float(DEMO_SCREEN_WIDTH), dist)
 
 			fore = fore.Lighten(0.6 * sqrf((1 - dist/DEMO_SCREEN_WIDTH)))
 
 			demoConsole.SetFore(x, y, fore)
 		}
+	}
+
+	// get colors and chars under cursor
+	var char, foreColor, backColor string
+
+	if mouse.Cx >= DEMO_SCREEN_X && mouse.Cx-DEMO_SCREEN_X < DEMO_SCREEN_WIDTH &&
+		mouse.Cy >= DEMO_SCREEN_Y && mouse.Cy-DEMO_SCREEN_Y < DEMO_SCREEN_HEIGHT {
+		cx := abs(DEMO_SCREEN_X - mouse.Cx)
+		cy := abs(DEMO_SCREEN_Y - mouse.Cy)
+		char = fmt.Sprintf("%s (%d)", string(demoConsole.GetChar(cx, cy)), demoConsole.GetChar(cx, cy))
+		foreColor = fmt.Sprintf("%d", demoConsole.GetFore(cx, cy))
+		backColor = fmt.Sprintf("%d", demoConsole.GetBack(cx, cy))
 	}
 
 	if mouse.LButtonPressed {
@@ -1672,22 +1682,32 @@ func (self *MouseDemo) Render(first bool, key *Key) {
 		self.mbut = !self.mbut
 	}
 	self.secondary.SetForegroundColor(COLOR_WHITE)
-	self.secondary.SetBackgroundColor(COLOR_WHITE)
+	self.secondary.SetBackgroundColor(COLOR_BLACK)
+	self.secondary.Clear()
+
 	self.secondary.PrintLeft(1, 1, BKGND_NONE,
-		"Mouse position : %4dx%4d\n"+
-			"Mouse cell     : %4dx%4d\n"+
-			"Mouse movement : %4dx%4d\n"+
-			"Left button    : %s (toggle %s)\n"+
-			"Right button   : %s (toggle %s)\n"+
-			"Middle button  : %s (toggle %s)\n",
+		`Mouse position : %4dx%4d
+Mouse cell     : %4dx%4d
+Mouse movement : %4dx%4d
+Left button    : %s (toggle %s)
+Right button   : %s (toggle %s)
+Middle button  : %s (toggle %s)
+
+Fore color     : %s
+Back color     : %s
+Char           : %s
+
+1 : Hide cursor
+2 : Show cursor
+`,
 		mouse.X, mouse.Y,
 		mouse.Cx, mouse.Cy,
 		mouse.Dx, mouse.Dy,
 		If(mouse.LButton, " ON", "OFF").(string), If(self.lbut, " ON", "OFF").(string),
 		If(mouse.RButton, " ON", "OFF").(string), If(self.rbut, " ON", "OFF").(string),
-		If(mouse.MButton, " ON", "OFF").(string), If(self.mbut, " ON", "OFF").(string))
+		If(mouse.MButton, " ON", "OFF").(string), If(self.mbut, " ON", "OFF").(string),
+		foreColor, backColor, char)
 
-	self.secondary.PrintLeft(1, 10, BKGND_NONE, "1 : Hide cursor\n2 : Show cursor")
 	if key.C == '1' {
 		MouseShowCursor(false)
 	} else if key.C == '2' {
