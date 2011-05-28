@@ -84,19 +84,19 @@ var HEADER1 []string = []string{
 		"// size of the heightmap\n" +
 		"const HM_WIDTH=100\n" +
 		"const HM_HEIGHT=80\n\n" +
-		"func min(a, b float) float {\n" +
+		"func min(a, b float32) float32 {\n" +
 		"  if a < b { \n" +
 		"	  return a  \n" +
 		"  } \n" +
 		"  return b  \n" +
 		"} \n\n " +
 		"  \n " +
-		"func sin(f float) float { \n " +
-		"	return float(math.Sin(float64(f))) \n " +
+		"func sin(f float32) float32 { \n " +
+		"	return float32(math.Sin(float3264(f))) \n " +
 		"} \n " +
 		" \n " +
-		"func cos(f float) float { \n " +
-		"	return float(math.Cos(float64(f))) \n " +
+		"func cos(f float32) float32 { \n " +
+		"	return float32(math.Cos(float3264(f))) \n " +
 		"} \n " +
 		" \n ",
 }
@@ -140,7 +140,7 @@ var FOOTER1 []string = []string{
 		"\tTCODConsole::initRoot(HM_WIDTH,HM_HEIGHT,\"height map test\",false);\n" +
 		"\tfor (int x=0; x < HM_WIDTH; x ++ ) {\n" +
 		"\t\tfor (int y=0;y < HM_HEIGHT; y++ ) {\n" +
-		"\t\t\tfloat z = hm.getValue(x,y);\n" +
+		"\t\t\tfloat32 z = hm.getValue(x,y);\n" +
 		"\t\t\tuint8 val=(uint8)(z*255);\n" +
 		"\t\t\tTCODColor c(val,val,val);\n" +
 		"\t\t\tTCODConsole::root->setBack(x,y,c);\n" +
@@ -191,7 +191,7 @@ var FOOTER2 []string = []string{
 		"\tTCOD_console_init_root(HM_WIDTH,HM_HEIGHT,\"height map test\",false);\n" +
 		"\tfor (x=0; x < HM_WIDTH; x ++ ) {\n" +
 		"\t\tfor (y=0;y < HM_HEIGHT; y++ ) {\n" +
-		"\t\t\tfloat z = TCOD_heightmap_get_value(hm,x,y);\n" +
+		"\t\t\tfloat32 z = TCOD_heightmap_get_value(hm,x,y);\n" +
 		"\t\t\tuint8 val=(uint8)(z*255);\n" +
 		"\t\t\tTCOD_color_t c={val,val,val};\n" +
 		"\t\t\tTCOD_console_set_back(NULL,x,y,c,TCOD_BKGND_SET);\n" +
@@ -225,32 +225,32 @@ var isNormalized bool = true
 var oldNormalized bool = true
 
 var msg string
-var msgDelay float = 0.0
-var hillRadius float = 0.1
-var hillVariation float = 0.5
-var addFbmDelta float = 0.0
-var scaleFbmDelta float = 0.0
+var msgDelay float32 = 0.0
+var hillRadius float32 = 0.1
+var hillVariation float32 = 0.5
+var addFbmDelta float32 = 0.0
+var scaleFbmDelta float32 = 0.0
 var seed uint32 = 0xdeadbeef
 
-var sandHeight float = 0.12
-var grassHeight float = 0.315
-var snowHeight float = 0.785
+var sandHeight float32 = 0.12
+var grassHeight float32 = 0.315
+var snowHeight float32 = 0.785
 
 var landMassLabel *tcod.Label
 var minZLabel *tcod.Label
 var maxZLabel *tcod.Label
 var seedLabel *tcod.Label
 
-var mapmin float = 0.0
-var mapmax float = 0.0
-var oldmapmin float = 0.0
-var oldmapmax float = 0.0
+var mapmin float32 = 0.0
+var mapmax float32 = 0.0
+var oldmapmin float32 = 0.0
+var oldmapmax float32 = 0.0
 
 var params *tcod.ToolBar
 var history *tcod.ToolBar
 var colorMapGui *tcod.ToolBar
 
-var voronoiCoef []float = []float{-1.0, 1.0}
+var voronoiCoef []float32 = []float32{-1.0, 1.0}
 
 /* light 3x3 smoothing kernel :
 1  2 1
@@ -263,7 +263,7 @@ var smoothKernelDx []int = []int{-1, 0, 1, -1, 0, 1, -1, 0, 1}
 
 var smoothKernelDy []int = []int{-1, -1, -1, 0, 0, 0, 1, 1, 1}
 
-var smoothKernelWeight []float = []float{1, 2, 1, 2, 20, 2, 1, 2, 1}
+var smoothKernelWeight []float32 = []float32{1, 2, 1, 2, 20, 2, 1, 2, 1}
 
 var mapGradient []tcod.Color = make([]tcod.Color, 256)
 
@@ -311,7 +311,7 @@ func min(a, b int) int {
 	return a
 }
 
-func minf(a, b float) float {
+func minf(a, b float32) float32 {
 	if a < b {
 		return a
 	} else {
@@ -329,7 +329,7 @@ func max(a, b int) int {
 	return a
 }
 
-func maxf(a, b float) float {
+func maxf(a, b float32) float32 {
 	if a < b {
 		return b
 	} else {
@@ -338,12 +338,12 @@ func maxf(a, b float) float {
 	return a
 }
 
-func sin(f float) float {
-	return float(math.Sin(float64(f)))
+func sin(f float32) float32 {
+	return float32(math.Sin(float64(f)))
 }
 
-func cos(f float) float {
-	return float(math.Cos(float64(f)))
+func cos(f float32) float32 {
+	return float32(math.Cos(float64(f)))
 }
 
 func vectorRemove(v vector.Vector, el interface{}) {
@@ -626,23 +626,23 @@ func (self *Operation) getOpType() OpType {
 // normalize the heightmap
 type NormalizeOperation struct {
 	Operation
-	min, max float
+	min, max float32
 }
 
 
-func NewNormalizeOperation(min, max float) *NormalizeOperation {
+func NewNormalizeOperation(min, max float32) *NormalizeOperation {
 	result := &NormalizeOperation{}
 	result.initializeNormalizeOperation(NORM, min, max)
 	return result
 }
 
-func NewNormalizeOperationWithOptions(min, max float) *NormalizeOperation {
+func NewNormalizeOperationWithOptions(min, max float32) *NormalizeOperation {
 	result := &NormalizeOperation{}
 	result.initializeNormalizeOperation(NORM, min, max)
 	return result
 }
 
-func (self *NormalizeOperation) initializeNormalizeOperation(opType OpType, min, max float) {
+func (self *NormalizeOperation) initializeNormalizeOperation(opType OpType, min, max float32) {
 	self.Operation.initializeOperation(opType)
 	self.min, self.max = min, max
 }
@@ -676,7 +676,7 @@ func (self *NormalizeOperation) addInternal() bool {
 }
 
 func normalizeMinValueCbk(w tcod.IWidget, val string, data interface{}) {
-	f, err := strconv.Atof(val)
+	f, err := strconv.Atof32(val)
 	if err != nil {
 		op := data.(*NormalizeOperation)
 		if f < op.max {
@@ -691,7 +691,7 @@ func normalizeMinValueCbk(w tcod.IWidget, val string, data interface{}) {
 }
 
 func normalizeMaxValueCbk(w tcod.IWidget, val string, data interface{}) {
-	f, err := strconv.Atof(val)
+	f, err := strconv.Atof32(val)
 	if err != nil {
 		op := data.(*NormalizeOperation)
 		if f > op.min {
@@ -729,17 +729,17 @@ func (self *NormalizeOperation) createParamUi() {
 //
 type AddFbmOperation struct {
 	Operation
-	zoom, offsetx, offsety, octaves, scale, offset float
+	zoom, offsetx, offsety, octaves, scale, offset float32
 }
 
 
-func NewAddFbmOperation(zoom, offsetx, offsety, octaves, scale, offset float) *AddFbmOperation {
+func NewAddFbmOperation(zoom, offsetx, offsety, octaves, scale, offset float32) *AddFbmOperation {
 	result := &AddFbmOperation{}
 	result.initializeAddFbmOperation(ADDFBM, zoom, offsetx, offsety, octaves, scale, offset)
 	return result
 }
 
-func (self *AddFbmOperation) initializeAddFbmOperation(opType OpType, zoom, offsetx, offsety, octaves, scale, offset float) {
+func (self *AddFbmOperation) initializeAddFbmOperation(opType OpType, zoom, offsetx, offsety, octaves, scale, offset float32) {
 	self.Operation.initializeOperation(opType)
 	self.zoom = zoom
 	self.offsetx = offsetx
@@ -783,7 +783,7 @@ func (self *AddFbmOperation) addInternal() bool {
 	return true
 }
 
-func addFbmZoomValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addFbmZoomValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddFbmOperation)
 	op.zoom = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -794,7 +794,7 @@ func addFbmZoomValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addFbmXOffsetValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addFbmXOffsetValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddFbmOperation)
 	op.offsetx = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -805,7 +805,7 @@ func addFbmXOffsetValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addFbmYOffsetValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addFbmYOffsetValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddFbmOperation)
 	op.offsety = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -816,7 +816,7 @@ func addFbmYOffsetValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addFbmOctavesValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addFbmOctavesValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddFbmOperation)
 	op.octaves = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -827,7 +827,7 @@ func addFbmOctavesValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addFbmOffsetValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addFbmOffsetValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddFbmOperation)
 	op.offset = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -838,7 +838,7 @@ func addFbmOffsetValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addFbmScaleValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addFbmScaleValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddFbmOperation)
 	op.scale = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -897,13 +897,13 @@ type ScaleFbmOperation struct {
 }
 
 
-func NewScaleFbmOperation(zoom, offsetx, offsety, octaves, scale, offset float) *ScaleFbmOperation {
+func NewScaleFbmOperation(zoom, offsetx, offsety, octaves, scale, offset float32) *ScaleFbmOperation {
 	result := &ScaleFbmOperation{}
 	result.initializeScaleFbmOperation(SCALEFBM, zoom, offsetx, offsety, octaves, scale, offset)
 	return result
 }
 
-func (self *ScaleFbmOperation) initializeScaleFbmOperation(opType OpType, zoom, offsetx, offsety, octaves, scale, offset float) {
+func (self *ScaleFbmOperation) initializeScaleFbmOperation(opType OpType, zoom, offsetx, offsety, octaves, scale, offset float32) {
 	self.AddFbmOperation.initializeAddFbmOperation(opType, zoom, offsetx, offsety, octaves, scale, offset)
 }
 
@@ -954,17 +954,17 @@ func (self *ScaleFbmOperation) addInternal() bool {
 type AddHillOperation struct {
 	Operation
 	nbHill                    int
-	radius, radiusVar, height float
+	radius, radiusVar, height float32
 }
 
 
-func NewAddHillOperation(nbHill int, radius, radiusVar, height float) *AddHillOperation {
+func NewAddHillOperation(nbHill int, radius, radiusVar, height float32) *AddHillOperation {
 	result := &AddHillOperation{}
 	result.initializeAddHillOperation(ADDHILL, nbHill, radius, radiusVar, height)
 	return result
 }
 
-func (self *AddHillOperation) initializeAddHillOperation(opType OpType, nbHill int, radius, radiusVar, height float) {
+func (self *AddHillOperation) initializeAddHillOperation(opType OpType, nbHill int, radius, radiusVar, height float32) {
 	self.Operation.initializeOperation(opType)
 	self.nbHill = nbHill
 	self.radius = radius
@@ -996,31 +996,31 @@ func (self *AddHillOperation) runInternal() {
 func (self *AddHillOperation) addInternal() bool {
 	operations.addInitCode(C,
 		"#include <math.h>\n"+
-			"void addHill(TCOD_heightmap_t *hm,int nbHill, float baseRadius, float radiusVar, float height)  {\n"+
+			"void addHill(TCOD_heightmap_t *hm,int nbHill, float32 baseRadius, float32 radiusVar, float32 height)  {\n"+
 			"\tint i;\n"+
 			"\tfor (i=0; i<  nbHill; i++ ) {\n"+
-			"\t\tfloat hillMinRadius=baseRadius*(1.0f-radiusVar);\n"+
-			"\t\tfloat hillMaxRadius=baseRadius*(1.0f+radiusVar);\n"+
-			"\t\tfloat radius = TCOD_random_get_float(rnd,hillMinRadius, hillMaxRadius);\n"+
-			"\t\tfloat theta = TCOD_random_get_float(rnd,0.0f, 6.283185f); // between 0 and 2Pi\n"+
-			"\t\tfloat dist = TCOD_random_get_float(rnd,0.0f, (float)MIN(HM_WIDTH,HM_HEIGHT)/2 - radius);\n"+
+			"\t\tfloat32 hillMinRadius=baseRadius*(1.0f-radiusVar);\n"+
+			"\t\tfloat32 hillMaxRadius=baseRadius*(1.0f+radiusVar);\n"+
+			"\t\tfloat32 radius = TCOD_random_get_float32(rnd,hillMinRadius, hillMaxRadius);\n"+
+			"\t\tfloat32 theta = TCOD_random_get_float32(rnd,0.0f, 6.283185f); // between 0 and 2Pi\n"+
+			"\t\tfloat32 dist = TCOD_random_get_float32(rnd,0.0f, (float32)MIN(HM_WIDTH,HM_HEIGHT)/2 - radius);\n"+
 			"\t\tint xh = (int) (HM_WIDTH/2 + cos(theta) * dist);\n"+
 			"\t\tint yh = (int) (HM_HEIGHT/2 + sin(theta) * dist);\n"+
-			"\t\tTCOD_heightmap_add_hill(hm,(float)xh,(float)yh,radius,height);\n"+
+			"\t\tTCOD_heightmap_add_hill(hm,(float32)xh,(float32)yh,radius,height);\n"+
 			"\t}\n"+
 			"}\n")
 	operations.addInitCode(CPP,
 		"#include <math.h>\n"+
-			"void addHill(TCODHeightMap *hm,int nbHill, float baseRadius, float radiusVar, float height)  {\n"+
+			"void addHill(TCODHeightMap *hm,int nbHill, float32 baseRadius, float32 radiusVar, float32 height)  {\n"+
 			"\tfor (int i=0; i<  nbHill; i++ ) {\n"+
-			"\t\tfloat hillMinRadius=baseRadius*(1.0f-radiusVar);\n"+
-			"\t\tfloat hillMaxRadius=baseRadius*(1.0f+radiusVar);\n"+
-			"\t\tfloat radius = rnd->getFloat(hillMinRadius, hillMaxRadius);\n"+
-			"\t\tfloat theta = rnd->getFloat(0.0f, 6.283185f); // between 0 and 2Pi\n"+
-			"\t\tfloat dist = rnd->getFloat(0.0f, (float)MIN(HM_WIDTH,HM_HEIGHT)/2 - radius);\n"+
+			"\t\tfloat32 hillMinRadius=baseRadius*(1.0f-radiusVar);\n"+
+			"\t\tfloat32 hillMaxRadius=baseRadius*(1.0f+radiusVar);\n"+
+			"\t\tfloat32 radius = rnd->getfloat32(hillMinRadius, hillMaxRadius);\n"+
+			"\t\tfloat32 theta = rnd->getfloat32(0.0f, 6.283185f); // between 0 and 2Pi\n"+
+			"\t\tfloat32 dist = rnd->getfloat32(0.0f, (float32)MIN(HM_WIDTH,HM_HEIGHT)/2 - radius);\n"+
 			"\t\tint xh = (int) (HM_WIDTH/2 + cos(theta) * dist);\n"+
 			"\t\tint yh = (int) (HM_HEIGHT/2 + sin(theta) * dist);\n"+
-			"\t\thm->addHill((float)xh,(float)yh,radius,height);\n"+
+			"\t\thm->addHill((float32)xh,(float32)yh,radius,height);\n"+
 			"\t}\n"+
 			"}\n")
 	operations.addInitCode(PY,
@@ -1028,24 +1028,24 @@ func (self *AddHillOperation) addInternal() bool {
 			"    for i in range(nbHill) :\n"+
 			"        hillMinRadius=baseRadius*(1.0-radiusVar)\n"+
 			"        hillMaxRadius=baseRadius*(1.0+radiusVar)\n"+
-			"        radius = libtcod.random_get_float(rnd,hillMinRadius, hillMaxRadius)\n"+
-			"        theta = libtcod.random_get_float(rnd,0.0, 6.283185) # between 0 and 2Pi\n"+
-			"        dist = libtcod.random_get_float(rnd,0.0, float(min(HM_WIDTH,HM_HEIGHT))/2 - radius)\n"+
+			"        radius = libtcod.random_get_float32(rnd,hillMinRadius, hillMaxRadius)\n"+
+			"        theta = libtcod.random_get_float32(rnd,0.0, 6.283185) # between 0 and 2Pi\n"+
+			"        dist = libtcod.random_get_float32(rnd,0.0, float32(min(HM_WIDTH,HM_HEIGHT))/2 - radius)\n"+
 			"        xh = int(HM_WIDTH/2 + math.cos(theta) * dist)\n"+
 			"        yh = int(HM_HEIGHT/2 + math.sin(theta) * dist)\n"+
-			"        libtcod.heightmap_add_hill(hm,float(xh),float(yh),radius,height)\n")
+			"        libtcod.heightmap_add_hill(hm,float32(xh),float32(yh),radius,height)\n")
 	operations.addInitCode(GO,
 
-		"func addHill(hm *tcod.HeightMap, nbHill int, baseRadius float, radiusVar float, height float)  {\n"+
+		"func addHill(hm *tcod.HeightMap, nbHill int, baseRadius float32, radiusVar float32, height float32)  {\n"+
 			"\tfor i:=0; i<  nbHill; i++ {\n"+
 			"\t\thillMinRadius:=baseRadius*(1.0-radiusVar)\n"+
 			"\t\thillMaxRadius:=baseRadius*(1.0+radiusVar)\n"+
-			"\t\tradius := rnd.GetFloat(hillMinRadius, hillMaxRadius)\n"+
-			"\t\ttheta := rnd.GetFloat(0.0, 6.283185) // between 0 and 2Pi\n"+
-			"\t\tdist := rnd.GetFloat(0.0, float(min(HM_WIDTH,HM_HEIGHT)/2 - radius))\n"+
+			"\t\tradius := rnd.Getfloat32(hillMinRadius, hillMaxRadius)\n"+
+			"\t\ttheta := rnd.Getfloat32(0.0, 6.283185) // between 0 and 2Pi\n"+
+			"\t\tdist := rnd.Getfloat32(0.0, float32(min(HM_WIDTH,HM_HEIGHT)/2 - radius))\n"+
 			"\t\txh := int(HM_WIDTH/2 + cos(theta) * dist)\n"+
 			"\t\tyh := int(HM_HEIGHT/2 + sin(theta) * dist)\n"+
-			"\t\thm.AddHill(float(xh),float(yh),radius,height)\n"+
+			"\t\thm.AddHill(float32(xh),float32(yh),radius,height)\n"+
 			"\t}\n"+
 			"}\n")
 
@@ -1053,7 +1053,7 @@ func (self *AddHillOperation) addInternal() bool {
 }
 
 
-func addHillNbHillValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addHillNbHillValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddHillOperation)
 	op.nbHill = int(val)
 	if peekOperation(operations.list) == IOperation(op) {
@@ -1064,7 +1064,7 @@ func addHillNbHillValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addHillRadiusValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addHillRadiusValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddHillOperation)
 	op.radius = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -1075,7 +1075,7 @@ func addHillRadiusValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addHillRadiusVarValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addHillRadiusVarValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddHillOperation)
 	op.radiusVar = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -1086,7 +1086,7 @@ func addHillRadiusVarValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func addHillHeightValueCbk(w tcod.IWidget, val float, data interface{}) {
+func addHillHeightValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddHillOperation)
 	op.height = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -1108,7 +1108,7 @@ func (self *AddHillOperation) createParamUi() {
 	slider.SetFormat("%.0f")
 	slider.SetSensitivity(2.0)
 	params.AddWidget(slider)
-	slider.SetValue(float(self.nbHill))
+	slider.SetValue(float32(self.nbHill))
 
 	slider = gui.NewSlider(0, 0, 8, 1.0, 30.0, "radius   ", "Average radius of the hills")
 	slider.SetCallback(addHillRadiusValueCbk, self)
@@ -1121,7 +1121,7 @@ func (self *AddHillOperation) createParamUi() {
 	params.AddWidget(slider)
 	slider.SetValue(self.radiusVar)
 
-	slider = gui.NewSlider(0, 0, 8, 0.0, tcod.If(mapmax == mapmin, 1.0, (mapmax-mapmin)*0.5).(float), "height   ", "Height of the hills")
+	slider = gui.NewSlider(0, 0, 8, 0.0, tcod.If(mapmax == mapmin, 1.0, (mapmax-mapmin)*0.5).(float32), "height   ", "Height of the hills")
 	slider.SetCallback(addHillHeightValueCbk, self)
 	params.AddWidget(slider)
 	slider.SetValue(self.height)
@@ -1132,17 +1132,17 @@ func (self *AddHillOperation) createParamUi() {
 //
 type AddLevelOperation struct {
 	Operation
-	level float
+	level float32
 }
 
 
-func NewAddLevelOperation(level float) *AddLevelOperation {
+func NewAddLevelOperation(level float32) *AddLevelOperation {
 	result := &AddLevelOperation{}
 	result.initializeAddLevelOperation(ADDLEVEL, level)
 	return result
 }
 
-func (self *AddLevelOperation) initializeAddLevelOperation(opType OpType, level float) {
+func (self *AddLevelOperation) initializeAddLevelOperation(opType OpType, level float32) {
 	self.Operation.initializeOperation(opType)
 	self.level = level
 }
@@ -1164,7 +1164,7 @@ func (self *AddLevelOperation) getCode(codeType CodeType) string {
 }
 
 func (self *AddLevelOperation) runInternal() {
-	var min, max float
+	var min, max float32
 	min, max = hm.GetMinMax()
 	hm.Add(self.level)
 	if min != max {
@@ -1186,7 +1186,7 @@ func (self *AddLevelOperation) addInternal() bool {
 	return ret
 }
 
-func raiseLowerValueCbk(w tcod.IWidget, val float, data interface{}) {
+func raiseLowerValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddLevelOperation)
 	op.level = val
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1219,17 +1219,17 @@ func (self *AddLevelOperation) createParamUi() {
 //
 type SmoothOperation struct {
 	Operation
-	minLevel, maxLevel, radius float
+	minLevel, maxLevel, radius float32
 	count                      int
 }
 
-func NewSmoothOperation(minLevel, maxLevel float, count int) *SmoothOperation {
+func NewSmoothOperation(minLevel, maxLevel float32, count int) *SmoothOperation {
 	result := &SmoothOperation{}
 	result.initializeSmoothOperation(SMOOTH, minLevel, maxLevel, count)
 	return result
 }
 
-func (self *SmoothOperation) initializeSmoothOperation(opType OpType, minLevel, maxLevel float, count int) {
+func (self *SmoothOperation) initializeSmoothOperation(opType OpType, minLevel, maxLevel float32, count int) {
 	self.Operation.initializeOperation(opType)
 	self.minLevel = minLevel
 	self.maxLevel = maxLevel
@@ -1289,13 +1289,13 @@ func (self *SmoothOperation) addInternal() bool {
 			"int smoothKernelSize=9;\n"+
 			"int smoothKernelDx[9]={-1,0,1,-1,0,1,-1,0,1};\n"+
 			"int smoothKernelDy[9]={-1,-1,-1,0,0,0,1,1,1};\n"+
-			"float smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1};\n")
+			"float32 smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1};\n")
 	operations.addInitCode(CPP,
 		"// 3x3 kernel for smoothing operations\n"+
 			"int smoothKernelSize=9;\n"+
 			"int smoothKernelDx[9]={-1,0,1,-1,0,1,-1,0,1};\n"+
 			"int smoothKernelDy[9]={-1,-1,-1,0,0,0,1,1,1};\n"+
-			"float smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1};\n")
+			"float32 smoothKernelWeight[9]={1,2,1,2,20,2,1,2,1};\n")
 	operations.addInitCode(PY,
 		"# 3x3 kernel for smoothing operations\n"+
 			"smoothKernelSize=9\n"+
@@ -1307,12 +1307,12 @@ func (self *SmoothOperation) addInternal() bool {
 			"var smoothKernelSize int = 9\n"+
 			"var smoothKernelDx [9]int =[9]int {-1,0,1,-1,0,1,-1,0,1}\n"+
 			"var smoothKernelDy [9]int = [9]int {-1,-1,-1,0,0,0,1,1,1}\n"+
-			"var smoothKernelWeight [9]float = [9]float {1,2,1,2,20,2,1,2,1}\n")
+			"var smoothKernelWeight [9]float32 = [9]float32 {1,2,1,2,20,2,1,2,1}\n")
 
 	return true
 }
 
-func smoothMinValueCbk(w tcod.IWidget, val float, data interface{}) {
+func smoothMinValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*SmoothOperation)
 	op.minLevel = val
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1323,7 +1323,7 @@ func smoothMinValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func smoothMaxValueCbk(w tcod.IWidget, val float, data interface{}) {
+func smoothMaxValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*SmoothOperation)
 	op.maxLevel = val
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1334,7 +1334,7 @@ func smoothMaxValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func smoothRadiusValueCbk(w tcod.IWidget, val float, data interface{}) {
+func smoothRadiusValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*SmoothOperation)
 	op.radius = val
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1345,7 +1345,7 @@ func smoothRadiusValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func smoothCountValueCbk(w tcod.IWidget, val float, data interface{}) {
+func smoothCountValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*SmoothOperation)
 	op.count = int(val)
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1376,7 +1376,7 @@ func (self *SmoothOperation) createParamUi() {
 	slider.SetFormat("%.0f")
 	slider.SetSensitivity(4.0)
 	params.AddWidget(slider)
-	slider.SetValue(float(self.count))
+	slider.SetValue(float32(self.count))
 
 	slider = gui.NewSlider(0, 0, 8, 0.0, 1.0, "sharpness", "Radius of the blurring effect")
 	slider.SetCallback(smoothRadiusValueCbk, self)
@@ -1393,17 +1393,17 @@ func (self *SmoothOperation) createParamUi() {
 type RainErosionOperation struct {
 	Operation
 	nbDroperations                 int
-	erosionCoef, sedimentationCoef float
+	erosionCoef, sedimentationCoef float32
 }
 
 
-func NewRainErosionOperation(nbDroperations int, erosionCoef, sedimentationCoef float) *RainErosionOperation {
+func NewRainErosionOperation(nbDroperations int, erosionCoef, sedimentationCoef float32) *RainErosionOperation {
 	result := &RainErosionOperation{}
 	result.initializeRainErosionOperation(RAIN, nbDroperations, erosionCoef, sedimentationCoef)
 	return result
 }
 
-func (self *RainErosionOperation) initializeRainErosionOperation(opType OpType, nbDroperations int, erosionCoef, sedimentationCoef float) {
+func (self *RainErosionOperation) initializeRainErosionOperation(opType OpType, nbDroperations int, erosionCoef, sedimentationCoef float32) {
 	self.Operation.initializeOperation(opType)
 	self.nbDroperations = nbDroperations
 	self.erosionCoef = erosionCoef
@@ -1439,7 +1439,7 @@ func (self *RainErosionOperation) addInternal() bool {
 	return true
 }
 
-func rainErosionNbDroperationsValueCbk(w tcod.IWidget, val float, data interface{}) {
+func rainErosionNbDroperationsValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*RainErosionOperation)
 	op.nbDroperations = int(val)
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1450,7 +1450,7 @@ func rainErosionNbDroperationsValueCbk(w tcod.IWidget, val float, data interface
 	}
 }
 
-func rainErosionErosionCoefValueCbk(w tcod.IWidget, val float, data interface{}) {
+func rainErosionErosionCoefValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*RainErosionOperation)
 	op.erosionCoef = val
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1461,7 +1461,7 @@ func rainErosionErosionCoefValueCbk(w tcod.IWidget, val float, data interface{})
 	}
 }
 
-func rainErosionSedimentationCoefValueCbk(w tcod.IWidget, val float, data interface{}) {
+func rainErosionSedimentationCoefValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*RainErosionOperation)
 	op.sedimentationCoef = val
 	if IOperation(op) == peekOperation(operations.list) {
@@ -1481,7 +1481,7 @@ func (self *RainErosionOperation) createParamUi() {
 	slider.SetCallback(rainErosionNbDroperationsValueCbk, self)
 	params.AddWidget(slider)
 	slider.SetFormat("%.0f")
-	slider.SetValue(float(self.nbDroperations))
+	slider.SetValue(float32(self.nbDroperations))
 
 	slider = gui.NewSlider(0, 0, 8, 0.01, 1.0, "erosion      ", "Erosion effect amount")
 	slider.SetCallback(rainErosionErosionCoefValueCbk, self)
@@ -1501,16 +1501,16 @@ func (self *RainErosionOperation) createParamUi() {
 //
 type NoiseLerpOperation struct {
 	AddFbmOperation
-	coef float
+	coef float32
 }
 
-func NewNoiseLerpOperation(coef, zoom, offsetx, offsety, octaves, scale, offset float) *NoiseLerpOperation {
+func NewNoiseLerpOperation(coef, zoom, offsetx, offsety, octaves, scale, offset float32) *NoiseLerpOperation {
 	result := &NoiseLerpOperation{}
 	result.initializeNoiseLerpOperation(NOISELERP, coef, zoom, offsetx, offsety, octaves, scale, offset)
 	return result
 }
 
-func (self *NoiseLerpOperation) initializeNoiseLerpOperation(opType OpType, coef, zoom, offsetx, offsety, octaves, scale, offset float) {
+func (self *NoiseLerpOperation) initializeNoiseLerpOperation(opType OpType, coef, zoom, offsetx, offsety, octaves, scale, offset float32) {
 	self.AddFbmOperation.initializeAddFbmOperation(opType, zoom, offsetx, offsety, octaves, scale, offset)
 	self.coef = coef
 }
@@ -1568,7 +1568,7 @@ func (self *NoiseLerpOperation) addInternal() bool {
 	return true
 }
 
-func noiseLerpValueCbk(w tcod.IWidget, val float, data interface{}) {
+func noiseLerpValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*NoiseLerpOperation)
 	op.coef = val
 	if peekOperation(operations.list) == IOperation(op) {
@@ -1598,19 +1598,19 @@ type VoronoiOperation struct {
 	Operation
 	nbPoints   int
 	nbCoef     int
-	coef       []float
+	coef       []float32
 	coefSlider [MAX_VORONOI_COEF]*tcod.Slider
 }
 
 
-func NewVoronoiOperation(nbPoints, nbCoef int, coef []float) *VoronoiOperation {
+func NewVoronoiOperation(nbPoints, nbCoef int, coef []float32) *VoronoiOperation {
 	result := &VoronoiOperation{}
-	result.coef = make([]float, MAX_VORONOI_COEF)
+	result.coef = make([]float32, MAX_VORONOI_COEF)
 	result.initializeVoronoiOperation(VORONOI, nbPoints, nbCoef, coef)
 	return result
 }
 
-func (self *VoronoiOperation) initializeVoronoiOperation(opType OpType, nbPoints, nbCoef int, coef []float) {
+func (self *VoronoiOperation) initializeVoronoiOperation(opType OpType, nbPoints, nbCoef int, coef []float32) {
 	self.Operation.initializeOperation(opType)
 	self.nbPoints = nbPoints
 	self.nbCoef = nbCoef
@@ -1635,7 +1635,7 @@ func (self *VoronoiOperation) getCode(codeType CodeType) string {
 	case C:
 		return fmt.Sprintf(
 			"\t{\n"+
-				"\t\tfloat coef[]={%s};\n"+
+				"\t\tfloat32 coef[]={%s};\n"+
 				"\t\ttcod.TCOD_heightmap_t *tmp =tcod.TCOD_heightmap_new(HM_WIDTH,HM_HEIGHT);\n"+
 				"\t\ttcod.TCOD_heightmap_add_voronoi(tmp,%d,%d,coef,rnd);\n"+
 				"\t\ttcod.TCOD_heightmap_normalize(tmp,0.0f,1.0f);\n"+
@@ -1646,7 +1646,7 @@ func (self *VoronoiOperation) getCode(codeType CodeType) string {
 	case CPP:
 		return fmt.Sprintf(
 			"\t{\n"+
-				"\t\tfloat coef[]={%s};\n"+
+				"\t\tfloat32 coef[]={%s};\n"+
 				"\t\tTCODHeightMap tmp(HM_WIDTH,HM_HEIGHT);\n"+
 				"\t\ttmp.addVoronoi(%d,%d,coef,rnd);\n"+
 				"\t\ttmp.normalize();\n"+
@@ -1664,7 +1664,7 @@ func (self *VoronoiOperation) getCode(codeType CodeType) string {
 			coefstr, self.nbPoints, self.nbCoef)
 	case GO:
 		return fmt.Sprintf(
-			"    var coef []float = []float {%s}\n"+
+			"    var coef []float32 = []float32 {%s}\n"+
 				"    tmp := tcod.NewHeightMap(HM_WIDTH,HM_HEIGHT)\n"+
 				"    tmp.AddVoronoi(%d,%d,coef,rnd)\n"+
 				"    tmp.Normalize()\n"+
@@ -1689,7 +1689,7 @@ func (self *VoronoiOperation) addInternal() bool {
 	return true
 }
 
-func voronoiNbPointsValueCbk(w tcod.IWidget, val float, data interface{}) {
+func voronoiNbPointsValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*VoronoiOperation)
 	op.nbPoints = int(val)
 	if peekOperation(operations.list) == IOperation(op) {
@@ -1700,7 +1700,7 @@ func voronoiNbPointsValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func voronoiNbCoefValueCbk(w tcod.IWidget, val float, data interface{}) {
+func voronoiNbCoefValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*VoronoiOperation)
 	op.nbCoef = int(val)
 	for i := 0; i < MAX_VORONOI_COEF; i++ {
@@ -1719,7 +1719,7 @@ func voronoiNbCoefValueCbk(w tcod.IWidget, val float, data interface{}) {
 	}
 }
 
-func voronoiCoefValueCbk(w tcod.IWidget, val float, data interface{}) {
+func voronoiCoefValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*VoronoiOperation)
 	var coefnum int
 	for coefnum = 0; coefnum < op.nbCoef; coefnum++ {
@@ -1747,21 +1747,21 @@ func (self *VoronoiOperation) createParamUi() {
 	params.AddWidget(slider)
 	slider.SetFormat("%.0f")
 	slider.SetSensitivity(2.0)
-	slider.SetValue(float(self.nbPoints))
+	slider.SetValue(float32(self.nbPoints))
 
-	slider = gui.NewSlider(0, 0, 8, 1.0, float(MAX_VORONOI_COEF-1), "nbCoef  ", "Number of Voronoi coefficients")
+	slider = gui.NewSlider(0, 0, 8, 1.0, float32(MAX_VORONOI_COEF-1), "nbCoef  ", "Number of Voronoi coefficients")
 	slider.SetCallback(voronoiNbCoefValueCbk, self)
 	params.AddWidget(slider)
 	slider.SetSensitivity(4.0)
 	slider.SetFormat("%.0f")
-	slider.SetValue(float(self.nbCoef))
+	slider.SetValue(float32(self.nbCoef))
 
 	for i := 0; i < MAX_VORONOI_COEF; i++ {
 		tmp := fmt.Sprintf("coef[%d] ", i)
 		self.coefSlider[i] = gui.NewSlider(0, 0, 8, -5.0, 5.0, tmp, "Coefficient of Voronoi points")
 		self.coefSlider[i].SetCallback(voronoiCoefValueCbk, self)
 		params.AddWidget(self.coefSlider[i])
-		self.coefSlider[i].SetValue(float(self.coef[i]))
+		self.coefSlider[i].SetValue(float32(self.coef[i]))
 		if i >= self.nbCoef {
 			self.coefSlider[i].SetVisible(false)
 		}
@@ -1781,8 +1781,8 @@ func initColors() {
 
 func render() {
 	isNormalized = true
-	root.SetBackgroundColor(tcod.COLOR_BLACK)
-	root.SetForegroundColor(tcod.COLOR_WHITE)
+	root.SetDefaultBackground(tcod.COLOR_BLACK)
+	root.SetDefaultForeground(tcod.COLOR_WHITE)
 	root.Clear()
 	backupMap.Copy(hm)
 	mapmin = 1e8
@@ -1813,21 +1813,21 @@ func render() {
 				// render the slope map
 				z = tcod.ClampF(0.0, 1.0, hm.GetSlope(x, y)*10.0)
 				val = uint8(z * 255)
-				root.SetBack(x, y, tcod.Color{val, val, val}, tcod.BKGND_SET)
+				root.SetCharBackground(x, y, tcod.Color{val, val, val}, tcod.BKGND_SET)
 			} else if greyscale {
 				// render the greyscale heightmap
-				root.SetBack(x, y, tcod.Color{val, val, val}, tcod.BKGND_SET)
+				root.SetCharBackground(x, y, tcod.Color{val, val, val}, tcod.BKGND_SET)
 			} else if normal {
 				// render the normal map
-				var n [3]float
-				hm.GetNormal(float(x), float(y), &n, mapmin)
+				var n [3]float32
+				hm.GetNormal(float32(x), float32(y), &n, mapmin)
 				r := byte((n[0]*0.5 + 0.5) * 255)
 				g := byte((n[1]*0.5 + 0.5) * 255)
 				b := byte((n[2]*0.5 + 0.5) * 255)
-				root.SetBack(x, y, tcod.Color{r, g, b}, tcod.BKGND_SET)
+				root.SetCharBackground(x, y, tcod.Color{r, g, b}, tcod.BKGND_SET)
 			} else {
 				// render the colored heightmap
-				root.SetBack(x, y, mapGradient[val], tcod.BKGND_SET)
+				root.SetCharBackground(x, y, mapGradient[val], tcod.BKGND_SET)
 			}
 		}
 	}
@@ -1838,21 +1838,21 @@ func render() {
 	landProportion := 100.0 - 100.0*backupMap.CountCells(0.0, sandHeight)/(hm.GetWidth()*hm.GetHeight())
 	landMassLabel.SetValue(fmt.Sprintf("landMass : %d %%%%", int(landProportion)))
 	if !isNormalized {
-		root.PrintCenter(HM_WIDTH/2, HM_HEIGHT-1, tcod.BKGND_NONE, "the map is not normalized !")
+		root.PrintEx(HM_WIDTH/2, HM_HEIGHT-1, tcod.BKGND_NONE, tcod.CENTER, "the map is not normalized !")
 	}
 	// message
 	msgDelay -= tcod.SysGetLastFrameLength()
 	if msg != "" && msgDelay > 0.0 {
-		h := root.PrintCenterRect(HM_WIDTH/2, HM_HEIGHT/2+1, HM_WIDTH/2-2, 0, tcod.BKGND_NONE, msg)
-		root.SetBackgroundColor(tcod.COLOR_LIGHT_BLUE)
+		h := root.PrintRectEx(HM_WIDTH/2, HM_HEIGHT/2+1, HM_WIDTH/2-2, 0, tcod.BKGND_NONE, tcod.CENTER, msg)
+		root.SetDefaultBackground(tcod.COLOR_LIGHT_BLUE)
 		if h > 0 {
 			root.Rect(HM_WIDTH/4, HM_HEIGHT/2, HM_WIDTH/2, h+2, false, tcod.BKGND_SET)
 		}
-		root.SetBackgroundColor(tcod.COLOR_BLACK)
+		root.SetDefaultBackground(tcod.COLOR_BLACK)
 	}
 }
 
-func message(delay float, fmts string, v ...interface{}) {
+func message(delay float32, fmts string, v ...interface{}) {
 	msg = fmt.Sprintf(fmts, v...)
 	msgDelay = delay
 }
@@ -1895,16 +1895,16 @@ func load() {
 	// TODO
 }
 
-func addHill(nbHill int, baseRadius, radiusVar, height float) {
+func addHill(nbHill int, baseRadius, radiusVar, height float32) {
 	for i := 0; i < nbHill; i++ {
 		hillMinRadius := baseRadius * (1.0 - radiusVar)
 		hillMaxRadius := baseRadius * (1.0 + radiusVar)
 		radius := rnd.GetFloat(hillMinRadius, hillMaxRadius)
 		theta := rnd.GetFloat(0.0, 6.283185) // between 0 and 2Pi
-		dist := rnd.GetFloat(0.0, float(min(HM_WIDTH, HM_HEIGHT)/2)-radius)
+		dist := rnd.GetFloat(0.0, float32(min(HM_WIDTH, HM_HEIGHT)/2)-radius)
 		xh := int(HM_WIDTH/2 + cos(theta)*dist)
 		yh := int(HM_HEIGHT/2 + sin(theta)*dist)
-		hm.AddHill(float(xh), float(yh), radius, height)
+		hm.AddHill(float32(xh), float32(yh), radius, height)
 	}
 }
 
@@ -1943,7 +1943,7 @@ func scaleFbmCbk(w tcod.IWidget, data interface{}) {
 }
 
 func addHillCbk(w tcod.IWidget, data interface{}) {
-	operations.add(NewAddHillOperation(25, 10.0, 0.5, tcod.If(mapmax == mapmin, 0.5, (mapmax-mapmin)*0.1).(float)))
+	operations.add(NewAddHillOperation(25, 10.0, 0.5, tcod.If(mapmax == mapmin, 0.5, (mapmax-mapmin)*0.1).(float32)))
 }
 
 func rainErosionCbk(w tcod.IWidget, data interface{}) {
@@ -2013,8 +2013,8 @@ func exportBmpCbk(w tcod.IWidget, data interface{}) {
 				img.PutPixel(x, y, tcod.Color{val, val, val})
 			} else if normal {
 				// render the normal map
-				var n [3]float
-				hm.GetNormal(float(x), float(y), &n, mapmin)
+				var n [3]float32
+				hm.GetNormal(float32(x), float32(y), &n, mapmin)
 				r := uint8((n[0]*0.5 + 0.5) * 255)
 				g := uint8((n[1]*0.5 + 0.5) * 255)
 				b := uint8((n[2]*0.5 + 0.5) * 255)
@@ -2054,33 +2054,33 @@ func normalCbk(w tcod.IWidget, data interface{}) {
 	normal = true
 }
 
-func changeColorMapIdxCbk(w tcod.IWidget, val float, data interface{}) {
+func changeColorMapIdxCbk(w tcod.IWidget, val float32, data interface{}) {
 	i := data.(int)
 	keyIndex[i] = int(val)
 	if i == 1 {
-		sandHeight = float(i) / 255.0
+		sandHeight = float32(i) / 255.0
 	}
 	initColors()
 }
 
-func changeColorMapRedCbk(w tcod.IWidget, val float, data interface{}) {
+func changeColorMapRedCbk(w tcod.IWidget, val float32, data interface{}) {
 	i := data.(int)
 	keyColor[i].R = byte(val)
-	keyImages[i].SetBackgroundColor(keyColor[i], tcod.COLOR_BLACK)
+	keyImages[i].SetDefaultBackground(keyColor[i], tcod.COLOR_BLACK)
 	initColors()
 }
 
-func changeColorMapGreenCbk(w tcod.IWidget, val float, data interface{}) {
+func changeColorMapGreenCbk(w tcod.IWidget, val float32, data interface{}) {
 	i := data.(int)
 	keyColor[i].G = byte(val)
-	keyImages[i].SetBackgroundColor(keyColor[i], tcod.COLOR_BLACK)
+	keyImages[i].SetDefaultBackground(keyColor[i], tcod.COLOR_BLACK)
 	initColors()
 }
 
-func changeColorMapBlueCbk(w tcod.IWidget, val float, data interface{}) {
+func changeColorMapBlueCbk(w tcod.IWidget, val float32, data interface{}) {
 	i := data.(int)
 	keyColor[i].B = byte(val)
-	keyImages[i].SetBackgroundColor(keyColor[i], tcod.COLOR_BLACK)
+	keyImages[i].SetDefaultBackground(keyColor[i], tcod.COLOR_BLACK)
 	initColors()
 }
 
@@ -2098,12 +2098,12 @@ func changeColorMapCbk(w tcod.IWidget, data interface{}) {
 		vbox := gui.NewVBox(0, 0, 0)
 		colorMapGui.AddWidget(hbox)
 		idxSlider := gui.NewSlider(0, 0, 3, 0.0, 255.0, "index", "Index of the key in the color map (0-255)")
-		idxSlider.SetValue(float(keyIndex[i]))
+		idxSlider.SetValue(float32(keyIndex[i]))
 		idxSlider.SetFormat("%.0f")
 		idxSlider.SetCallback(changeColorMapIdxCbk, i)
 		vbox.AddWidget(idxSlider)
 		keyImages[i] = gui.NewImageWidget(0, 0, 0, 2)
-		keyImages[i].SetBackgroundColor(keyColor[i], keyColor[i])
+		keyImages[i].SetDefaultBackground(keyColor[i], keyColor[i])
 		vbox.AddWidget(keyImages[i])
 		hbox.AddWidget(vbox)
 
@@ -2111,17 +2111,17 @@ func changeColorMapCbk(w tcod.IWidget, data interface{}) {
 		hbox.AddWidget(vbox)
 
 		redSlider := gui.NewSlider(0, 0, 3, 0.0, 255.0, "r", "Red component of the color")
-		redSlider.SetValue(float(keyColor[i].R))
+		redSlider.SetValue(float32(keyColor[i].R))
 		redSlider.SetFormat("%.0f")
 		redSlider.SetCallback(changeColorMapRedCbk, i)
 		vbox.AddWidget(redSlider)
 		greenSlider := gui.NewSlider(0, 0, 3, 0.0, 255.0, "g", "Green component of the color")
-		greenSlider.SetValue(float(keyColor[i].G))
+		greenSlider.SetValue(float32(keyColor[i].G))
 		greenSlider.SetFormat("%.0f")
 		greenSlider.SetCallback(changeColorMapGreenCbk, i)
 		vbox.AddWidget(greenSlider)
 		blueSlider := gui.NewSlider(0, 0, 3, 0.0, 255.0, "b", "Blue component of the color")
-		blueSlider.SetValue(float(keyColor[i].B))
+		blueSlider.SetValue(float32(keyColor[i].B))
 		blueSlider.SetFormat("%.0f")
 		blueSlider.SetCallback(changeColorMapBlueCbk, i)
 		vbox.AddWidget(blueSlider)
@@ -2233,7 +2233,7 @@ func main() {
 
 	for !root.IsWindowClosed() {
 		render()
-		guicon.SetBackgroundColor(tcod.Color{255, 0, 255})
+		guicon.SetDefaultBackground(tcod.Color{255, 0, 255})
 		guicon.Clear()
 		gui.RenderWidgets()
 		if !creditsEnd {
@@ -2249,7 +2249,7 @@ func main() {
 			}
 
 		}
-		guicon.Blit(0, 0, HM_WIDTH, HM_HEIGHT, root, 0, 0, float(fade)/255.0, float(fade)/255.0)
+		guicon.Blit(0, 0, HM_WIDTH, HM_HEIGHT, root, 0, 0, float32(fade)/255.0, float32(fade)/255.0)
 		root.Flush()
 		key := root.CheckForKeypress(tcod.KEY_PRESSED)
 		gui.UpdateWidgets(key)

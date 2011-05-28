@@ -24,26 +24,31 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-* Mingos' NameGen
-* This file was written by Dominik "Mingos" Marczuk.
-*/
 
-#ifndef _TCOD_NAMEGEN_H
-#define _TCOD_NAMEGEN_H
+#ifndef _TCOD_FOV_TYPES_H
+#define _TCOD_FOV_TYPES_H
 
-/* the generator typedef */
-typedef void * TCOD_namegen_t;
+/* FOV_BASIC : http://roguebasin.roguelikedevelopment.org/index.php?title=Ray_casting
+   FOV_DIAMOND : http://www.geocities.com/temerra/los_rays.html
+   FOV_SHADOW : http://roguebasin.roguelikedevelopment.org/index.php?title=FOV_using_recursive_shadowcasting
+   FOV_PERMISSIVE : http://roguebasin.roguelikedevelopment.org/index.php?title=Precise_Permissive_Field_of_View
+   FOV_RESTRICTIVE : Mingos' Restrictive Precise Angle Shadowcasting (contribution by Mingos) */
 
-/* parse a file with syllable sets */
-TCODLIB_API void TCOD_namegen_parse (const char * filename, TCOD_random_t random);
-/* generate a name */
-TCODLIB_API char * TCOD_namegen_generate (char * name, bool allocate);
-/* generate a name using a custom generation rule */
-TCODLIB_API char * TCOD_namegen_generate_custom (char * name, char * rule, bool allocate);
-/* retrieve the list of all available syllable set names */
-TCODLIB_API TCOD_list_t TCOD_namegen_get_sets (void);
-/* delete a generator */
-TCODLIB_API void TCOD_namegen_destroy (void);
+typedef enum {
+	FOV_BASIC,
+	FOV_DIAMOND,
+	FOV_SHADOW,
+	FOV_PERMISSIVE_0,
+	FOV_PERMISSIVE_1,
+	FOV_PERMISSIVE_2,
+	FOV_PERMISSIVE_3,
+	FOV_PERMISSIVE_4,
+	FOV_PERMISSIVE_5,
+	FOV_PERMISSIVE_6,
+	FOV_PERMISSIVE_7,
+	FOV_PERMISSIVE_8,
+	FOV_RESTRICTIVE,
+	NB_FOV_ALGORITHMS } TCOD_fov_algorithm_t;
+#define FOV_PERMISSIVE(x) ((TCOD_fov_algorithm_t)(FOV_PERMISSIVE_0 + (x)))
 
-#endif
+#endif /* _TCOD_FOV_TYPES_H */

@@ -19,73 +19,45 @@ package tcod
  // These functions are copied verbatim from console_c and replaced ... with simple string
  // Formatting will be done in Go functions
 
-
- void _TCOD_console_print_left(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, char *s) {
+ void _TCOD_console_print(TCOD_console_t con,int x, int y, char *s) {
  	TCOD_console_data_t *dat;
- 	if (! con ) con=TCOD_root;
+ 	if (! con ) con=TCOD_ctx.root;
  	dat=(TCOD_console_data_t *)con;
 	char *t = strdup(s);
-	//printf("console_print_left  text %s\n", t);
- 	TCOD_console_print(con,x,y,dat->w-x,dat->h-y,flag,LEFT,t, false, false);
-// 	TCOD_console_print(con,x,y,dat->w-x,dat->h-y,flag,LEFT,"printing another text", false, false);
+ 	TCOD_console_print(con,x,y,"%s",t);
 	free(t);
  }
 
 
- void _TCOD_console_print_right(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, char *s) {
+ void  _TCOD_console_print_ex(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, TCOD_alignment_t alignment, const
+ char *s) {
  	TCOD_console_data_t *dat;
- 	if (! con ) con=TCOD_root;
+ 	if (! con ) con=TCOD_ctx.root;
  	dat=(TCOD_console_data_t *)con;
- 	TCOD_console_print(con,x,y,x+1,dat->h-y,flag,RIGHT,s, false, false);
+	char *t = strdup(s);
+ 	TCOD_console_print_ex(con,x,y,flag,alignment,"%s",t);
+	free(t);
+ }
+
+ int _TCOD_console_print_rect(TCOD_console_t con,int x, int y, int w, int h, char *s) {
+ 	return TCOD_console_print_rect(con,x,y,w,h,"%s",s);
  }
 
 
- void _TCOD_console_print_center(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, char *s) {
- 	TCOD_console_data_t *dat;
- 	if (! con ) con=TCOD_root;
- 	dat=(TCOD_console_data_t *)con;
- 	TCOD_console_print(con,x,y,dat->w,dat->h-y,flag,CENTER,s , false, false);
+ int _TCOD_console_print_rect_ex(TCOD_console_t con,int x, int y, int w, int h, TCOD_bkgnd_flag_t flag, TCOD_alignment_t alignment, const char *s) {
+	return TCOD_console_print_rect_ex(con, x, y, w, h, flag, alignment, "%s", s);
  }
 
- int _TCOD_console_print_left_rect(TCOD_console_t con,int x, int y, int w, int h, TCOD_bkgnd_flag_t flag, char *s) {
+ int _TCOD_console_height_rect(TCOD_console_t con,int x, int y, int w, int h, char *s) {
  	int ret;
- 	ret = TCOD_console_print(con,x,y,w,h,flag,LEFT, s, true, false);
+ 	ret = TCOD_console_get_height_rect(con,x,y,w,h, "%s", s);
  	return ret;
  }
 
- int _TCOD_console_print_right_rect(TCOD_console_t con,int x, int y, int w, int h, TCOD_bkgnd_flag_t flag, char *s) {
- 	int ret;
- 	ret=TCOD_console_print(con,x,y,w,h,flag,RIGHT, s, true, false);
- 	return ret;
- }
-
- int _TCOD_console_print_center_rect(TCOD_console_t con,int x, int y, int w, int h, TCOD_bkgnd_flag_t flag, char *s) {
- 	int ret;
- 	ret=TCOD_console_print(con,x,y,w,h,flag,CENTER, s, true, false);
- 	return ret;
- }
-
- int _TCOD_console_height_left_rect(TCOD_console_t con,int x, int y, int w, int h, char *s) {
- 	int ret;
- 	ret = TCOD_console_print(con,x,y,w,h,TCOD_BKGND_NONE,LEFT, s, true, true);
- 	return ret;
- }
-
- int _TCOD_console_height_right_rect(TCOD_console_t con,int x, int y, int w, int h, char *s) {
- 	int ret;
- 	ret=TCOD_console_print(con,x,y,w,h,TCOD_BKGND_NONE,RIGHT, s, true, true);
- 	return ret;
- }
-
- int _TCOD_console_height_center_rect(TCOD_console_t con,int x, int y, int w, int h, char *s) {
- 	int ret;
- 	ret=TCOD_console_print(con,x,y,w,h,TCOD_BKGND_NONE,CENTER, s, true, true);
- 	return ret;
- }
 
  void _TCOD_console_print_frame(TCOD_console_t con,int x,int y,int w,int h, bool empty, TCOD_bkgnd_flag_t flag, char *s) {
  	TCOD_console_data_t *dat;
- 	if (! con ) con=TCOD_root;
+ 	if (! con ) con=TCOD_ctx.root;
  	dat=(TCOD_console_data_t *)con;
  	TCOD_console_put_char(con,x,y,TCOD_CHAR_NW,flag);
  	TCOD_console_put_char(con,x+w-1,y,TCOD_CHAR_NE,flag);
@@ -107,7 +79,7 @@ package tcod
  		tmp=dat->back; // swap colors
  		dat->back=dat->fore;
  		dat->fore=tmp;
- 		TCOD_console_print_left(con,xs,y,TCOD_BKGND_SET," %s ",s);
+ 		TCOD_console_print(con,xs,y," %s ",s);
  		tmp=dat->back; // swap colors
  		dat->back=dat->fore;
  		dat->fore=tmp;
@@ -159,20 +131,13 @@ package tcod
 	TCOD_console_set_key_color(console, *color);
   }
 
-  void _TCOD_console_set_background_color(TCOD_console_t console, TCOD_color_t *color) {
-	TCOD_console_set_background_color(console, *color);
+
+  void _TCOD_console_set_char_background(TCOD_console_t console, int x, int y, TCOD_color_t *color, TCOD_bkgnd_flag_t flag) {
+	TCOD_console_set_char_background(console, x, y, *color, flag);
   }
 
-  void _TCOD_console_set_foreground_color(TCOD_console_t console, TCOD_color_t *color) {
-	TCOD_console_set_foreground_color(console, *color);
-  }
-
-  void _TCOD_console_set_back(TCOD_console_t console, int x, int y, TCOD_color_t *color, TCOD_bkgnd_flag_t flag) {
-	TCOD_console_set_back(console, x, y, *color, flag);
-  }
-
-  void _TCOD_console_set_fore(TCOD_console_t console, int x, int y, TCOD_color_t *color) {
-	TCOD_console_set_fore(console, x, y, *color);
+  void _TCOD_console_set_char_foreground(TCOD_console_t console, int x, int y, TCOD_color_t *color) {
+	TCOD_console_set_char_foreground(console, x, y, *color);
   }
 
   void _TCOD_console_set_fade(uint8 val, TCOD_color_t *color) {
@@ -234,11 +199,11 @@ type void unsafe.Pointer
 type BkgndFlag C.TCOD_bkgnd_flag_t
 
 
-func BkgndAlpha(alpha float) BkgndFlag {
+func BkgndAlpha(alpha float32) BkgndFlag {
 	return BkgndFlag(BKGND_ALPH | (((uint8)(alpha * 255)) << 8))
 }
 
-func BkgndAddAlpha(alpha float) BkgndFlag {
+func BkgndAddAlpha(alpha float32) BkgndFlag {
 	return BkgndFlag(BKGND_ADDA | (((uint8)(alpha * 255)) << 8))
 }
 
@@ -255,8 +220,8 @@ func Clamp(a, b, x int) int {
 	return If(x < a, a, If(x > b, b, x).(int)).(int)
 }
 
-func ClampF(a, b, x float) float {
-	return If(x < a, a, If(x > b, b, x).(float)).(float)
+func ClampF(a, b, x float32) float32 {
+	return If(x < a, a, If(x > b, b, x).(float32)).(float32)
 }
 
 //
@@ -482,37 +447,37 @@ func (self Color) Multiply(c2 Color) Color {
 	return toColor(C._TCOD_color_multiply((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2)))
 }
 
-func (self Color) MultiplyScalar(value float) Color {
+func (self Color) MultiplyScalar(value float32) Color {
 	c := fromColor(self)
 	return toColor(C._TCOD_color_multiply_scalar((*C.TCOD_color_t)(&c), C.float(value)))
 }
 
-func (self Color) Lerp(c2 Color, coef float) Color {
+func (self Color) Lerp(c2 Color, coef float32) Color {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
 	return toColor(C._TCOD_color_lerp((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2), C.float(coef)))
 }
 
-func (self Color) Lighten(ratio float) Color {
+func (self Color) Lighten(ratio float32) Color {
 	return self.Lerp(COLOR_WHITE, ratio)
 }
 
-func (self Color) Darken(ratio float) Color {
+func (self Color) Darken(ratio float32) Color {
 	return self.Lerp(COLOR_BLACK, ratio)
 }
 
-func (self Color) SetHSV(h float, s float, v float) Color {
+func (self Color) SetHSV(h float32, s float32, v float32) Color {
 	c := C.TCOD_color_t{}
 	C.TCOD_color_set_HSV(&c, C.float(h), C.float(s), C.float(v))
 	return toColor(c)
 }
 
-func (self Color) GetHSV() (h, s, v float) {
+func (self Color) GetHSV() (h, s, v float32) {
 	var ch, cs, sv C.float
 	C.TCOD_color_get_HSV(fromColor(self), &ch, &cs, &sv)
-	h = float(ch)
-	s = float(cs)
-	v = float(sv)
+	h = float32(ch)
+	s = float32(cs)
+	v = float32(sv)
 	return
 }
 
@@ -521,7 +486,7 @@ func ColorGenMap(cmap []Color, nbKey int, keyColor []Color, keyIndex []int) {
 		idxStart := keyIndex[segment]
 		idxEnd := keyIndex[segment+1]
 		for idx := idxStart; idx <= idxEnd; idx++ {
-			cmap[idx] = keyColor[segment].Lerp(keyColor[segment+1], float(idx-idxStart)/float(idxEnd-idxStart))
+			cmap[idx] = keyColor[segment].Lerp(keyColor[segment+1], float32(idx-idxStart)/float32(idxEnd-idxStart))
 		}
 	}
 }
@@ -609,30 +574,29 @@ func MouseMove(x, y int) {
 // Console
 //
 //
+type Alignment C.TCOD_alignment_t
+type Renderer C.TCOD_renderer_t
+
 
 type IConsole interface {
 	GetData() C.TCOD_console_t
-	GetBackgroundColor() Color
-	GetForegroundColor() Color
-	SetForegroundColor(color Color)
-	SetBackgroundColor(color Color)
+	GetDefaultBackground() Color
+	GetDefaultForeground() Color
+	SetDefaultForeground(color Color)
+	SetDefaultBackground(color Color)
 	Clear()
-	GetBack(x, y int) Color
-	GetFore(x, y int) Color
-	SetBack(x, y int, color Color, flag BkgndFlag)
-	SetFore(x, y int, color Color)
+	GetCharBackground(x, y int) Color
+	GetCharForeground(x, y int) Color
+	SetCharBackground(x, y int, color Color, flag BkgndFlag)
+	SetCharForeground(x, y int, color Color)
 	SetChar(x, y int, c int)
 	PutChar(x, y, c int, flag BkgndFlag)
 	PutCharEx(x, y, c int, fore, back Color)
-	PrintLeft(x, y int, flag BkgndFlag, fmts string, v ...interface{})
-	PrintRight(x, y int, flag BkgndFlag, fmts string, v ...interface{})
-	PrintCenter(x, y int, flag BkgndFlag, fmts string, v ...interface{})
-	PrintLeftRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int
-	PrintRightRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int
-	PrintCenterRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int
-	HeightLeftRect(x, y, w, h int, fmts string, v ...interface{}) int
-	HeightRightRect(x, y, w, h int, fmts string, v ...interface{}) int
-	HeightCenterRect(x, y, w, h int, fmts string, v ...interface{}) int
+	Print(x, y int, fmts string, v ...interface{})
+	PrintEx(x, y int, flag BkgndFlag, alignment Alignment, fmts string, v ...interface{})
+	PrintRect(x, y, w, h int, fmts string, v ...interface{}) int
+	PrintRectEx(x, y, w, h int, flag BkgndFlag, alignment Alignment, fmts string, v ...interface{}) int
+	HeightRect(x, y, w, h int, fmts string, v ...interface{}) int
 	Rect(x, y, w, h int, clear bool, flag BkgndFlag)
 	Hline(x, y, l int, flag BkgndFlag)
 	Vline(x, y, l int, flag BkgndFlag)
@@ -641,7 +605,7 @@ type IConsole interface {
 	GetWidth() int
 	GetHeight() int
 	SetKeyColor(color Color)
-	Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float)
+	Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32)
 	Delete()
 }
 
@@ -666,18 +630,19 @@ func (self *Console) GetData() C.TCOD_console_t {
 func NewRootConsole(w, h int, title string, fullscreen bool) *RootConsole {
 	ctitle := C.CString(title)
 	defer C.free(unsafe.Pointer(ctitle))
-	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen))
+	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen), C.TCOD_renderer_t(RENDERER_SDL))
 	// in root console, Data field is nil
 	return &RootConsole{}
 }
 
-func NewRootConsoleWithFont(w, h int, title string, fullscreen bool, fontFile string, fontFlags, nbCharHoriz, nbCharVertic int) *RootConsole {
+func NewRootConsoleWithFont(w, h int, title string, fullscreen bool, fontFile string, fontFlags, nbCharHoriz,
+nbCharVertic int, renderer Renderer) *RootConsole {
 	cfontFile := C.CString(fontFile)
 	defer C.free(unsafe.Pointer(cfontFile))
 	ctitle := C.CString(title)
 	defer C.free(unsafe.Pointer(ctitle))
 	C.TCOD_console_set_custom_font(cfontFile, C.int(fontFlags), C.int(nbCharHoriz), C.int(nbCharVertic))
-	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen))
+	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen), C.TCOD_renderer_t(renderer))
 	// in root console, Data field is nil
 	return &RootConsole{}
 }
@@ -732,14 +697,12 @@ func (self *RootConsole) SetDirty(x, y, w, h int) {
 }
 
 
-func (self *Console) SetBackgroundColor(color Color) {
-	ccolor := fromColor(color)
-	C._TCOD_console_set_background_color(self.Data, (*C.TCOD_color_t)(&ccolor))
+func (self *Console) SetDefaultBackground(color Color) {
+	C.TCOD_console_set_default_background(self.Data, fromColor(color))
 }
 
-func (self *Console) SetForegroundColor(color Color) {
-	ccolor := fromColor(color)
-	C._TCOD_console_set_foreground_color(self.Data, (*C.TCOD_color_t)(&ccolor))
+func (self *Console) SetDefaultForeground(color Color) {
+	C.TCOD_console_set_default_foreground(self.Data, fromColor(color))
 }
 
 
@@ -748,14 +711,14 @@ func (self *Console) Clear() {
 }
 
 
-func (self *Console) SetBack(x, y int, color Color, flag BkgndFlag) {
+func (self *Console) SetCharBackground(x, y int, color Color, flag BkgndFlag) {
 	ccolor := fromColor(color)
-	C._TCOD_console_set_back(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor), C.TCOD_bkgnd_flag_t(flag))
+	C._TCOD_console_set_char_background(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor), C.TCOD_bkgnd_flag_t(flag))
 }
 
-func (self *Console) SetFore(x, y int, color Color) {
+func (self *Console) SetCharForeground(x, y int, color Color) {
 	ccolor := fromColor(color)
-	C._TCOD_console_set_fore(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
+	C._TCOD_console_set_char_foreground(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
 }
 
 
@@ -775,68 +738,45 @@ func (self *Console) PutCharEx(x, y, c int, fore, back Color) {
 		(*C.TCOD_color_t)(&forec), (*C.TCOD_color_t)(&backc))
 }
 
-func (self *Console) PrintLeft(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
+func (self *Console) Print(x, y int, fmts string, v ...interface{}) {
 	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
-	C._TCOD_console_print_left(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
+	C._TCOD_console_print(self.Data, C.int(x), C.int(y), cs)
 }
 
-func (self *Console) PrintRight(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
+func (self *Console) PrintEx(x, y int, flag BkgndFlag, alignment Alignment, fmts string, v ...interface{}) {
 	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
-	C._TCOD_console_print_right(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
+	C._TCOD_console_print_ex(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), C.TCOD_alignment_t(alignment), cs)
 }
 
-func (self *Console) PrintCenter(x, y int, flag BkgndFlag, fmts string, v ...interface{}) {
+
+func (self *Console) PrintRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
-	C._TCOD_console_print_center(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), cs)
+	return int(C._TCOD_console_print_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
-func (self *Console) PrintLeftRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
+func (self *Console) PrintRectEx(x, y, w, h int, flag BkgndFlag, alignment Alignment, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
-	return int(C._TCOD_console_print_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
+	return int(C._TCOD_console_print_rect_ex(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag),
+		C.TCOD_alignment_t(alignment), cs))
 }
 
-func (self *Console) PrintRightRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
+
+
+func (self *Console) HeightRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
-	return int(C._TCOD_console_print_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
+	return int(C._TCOD_console_height_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
-func (self *Console) PrintCenterRect(x, y, w, h int, flag BkgndFlag, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v...)
-	cs := C.CString(s)
-	defer C.free(unsafe.Pointer(cs))
-	return int(C._TCOD_console_print_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag), cs))
-}
-
-func (self *Console) HeightLeftRect(x, y, w, h int, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v...)
-	cs := C.CString(s)
-	defer C.free(unsafe.Pointer(cs))
-	return int(C._TCOD_console_height_left_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
-}
-
-func (self *Console) HeightRightRect(x, y, w, h int, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v...)
-	cs := C.CString(s)
-	defer C.free(unsafe.Pointer(cs))
-	return int(C._TCOD_console_height_right_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
-}
-
-func (self *Console) HeightCenterRect(x, y, w, h int, fmts string, v ...interface{}) int {
-	s := fmt.Sprintf(fmts, v...)
-	cs := C.CString(s)
-	defer C.free(unsafe.Pointer(cs))
-	return int(C._TCOD_console_height_center_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
-}
 
 func (self *Console) Rect(x, y, w, h int, clear bool, flag BkgndFlag) {
 	C.TCOD_console_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), fromBool(clear), C.TCOD_bkgnd_flag_t(flag))
@@ -875,20 +815,20 @@ func (self *Console) PrintFrame(x, y, w, h int, empty bool, flag BkgndFlag, fmts
 //#endif
 
 
-func (self *Console) GetBackgroundColor() Color {
-	return toColor(C.TCOD_console_get_background_color(self.Data))
+func (self *Console) GetDefaultBackground() Color {
+	return toColor(C.TCOD_console_get_default_background(self.Data))
 }
 
-func (self *Console) GetForegroundColor() Color {
-	return toColor(C.TCOD_console_get_background_color(self.Data))
+func (self *Console) GetDefaultForeground() Color {
+	return toColor(C.TCOD_console_get_default_foreground(self.Data))
 }
 
-func (self *Console) GetBack(x, y int) Color {
-	return toColor(C.TCOD_console_get_back(self.Data, C.int(x), C.int(y)))
+func (self *Console) GetCharBackground(x, y int) Color {
+	return toColor(C.TCOD_console_get_char_background(self.Data, C.int(x), C.int(y)))
 }
 
-func (self *Console) GetFore(x, y int) Color {
-	return toColor(C.TCOD_console_get_fore(self.Data, C.int(x), C.int(y)))
+func (self *Console) GetCharForeground(x, y int) Color {
+	return toColor(C.TCOD_console_get_char_foreground(self.Data, C.int(x), C.int(y)))
 }
 
 
@@ -961,7 +901,7 @@ func (self *Console) SetKeyColor(color Color) {
 	C._TCOD_console_set_key_color(self.Data, (*C.TCOD_color_t)(&ccolor))
 }
 
-func (self *Console) Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float) {
+func (self *Console) Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32) {
 	C.TCOD_console_blit(self.Data, C.int(xSrc), C.int(ySrc), C.int(wSrc), C.int(hSrc),
 		dst.GetData(), C.int(xDst), C.int(yDst), C.float(foregroundAlpha), C.float(backgroundAlpha))
 }
@@ -1177,7 +1117,7 @@ func (self *Text) SetProperties(cursorChar int, blinkInterval int, prompt string
 }
 
 
-func (self *Text) SetColors(fore, back Color, backTransparency float) {
+func (self *Text) SetColors(fore, back Color, backTransparency float32) {
 	forec := fromColor(fore)
 	backc := fromColor(back)
 	C._TCOD_text_set_colors(self.Data,
@@ -1192,11 +1132,11 @@ func (self *Text) Update(key Key) {
 
 
 func (self *Text) Render(console IConsole) {
-	C.TCOD_text_render(console.GetData(), self.Data)
+	C.TCOD_text_render(self.Data, console.GetData())
 }
 
 func (self *Console) RenderText(text *Text) {
-	C.TCOD_text_render(self.Data, text.Data)
+	C.TCOD_text_render(text.Data, self.Data)
 }
 
 
@@ -1219,8 +1159,8 @@ func SysElapsedMilliseconds() uint32 {
 	return uint32(C.TCOD_sys_elapsed_milli())
 }
 
-func SysElapsedSeconds() float {
-	return float(C.TCOD_sys_elapsed_seconds())
+func SysElapsedSeconds() float32 {
+	return float32(C.TCOD_sys_elapsed_seconds())
 }
 
 func SysSleepMilliseconds(val uint32) {
@@ -1253,8 +1193,8 @@ func SysGetFps() int {
 	return int(C.TCOD_sys_get_fps())
 }
 
-func SysGetLastFrameLength() float {
-	return float(C.TCOD_sys_get_last_frame_length())
+func SysGetLastFrameLength() float32 {
+	return float32(C.TCOD_sys_get_last_frame_length())
 }
 
 func SysGetCurrentResolution() (w, h int) {
@@ -1331,8 +1271,8 @@ func NewMap(width, height int) *Map {
 
 
 // set all cells as solid rock (cannot see through nor walk)
-func (self *Map) Clear() {
-	C.TCOD_map_clear(self.Data)
+func (self *Map) Clear(isTransparent bool, isWalkable bool) {
+	C.TCOD_map_clear(self.Data, fromBool(isTransparent), fromBool(isWalkable))
 }
 
 // copy a map to another, reallocating it when needed
@@ -1585,16 +1525,16 @@ func (self *Bsp) SplitOnce(horizontal bool, position int) {
 	self.AddSon(NewBspIntern(self, false))
 }
 
-func (self *Bsp) SplitRecursive(randomizer *Random, nb int, minHSize int, minVSize int, maxHRatio float, maxVRatio float) {
+func (self *Bsp) SplitRecursive(randomizer *Random, nb int, minHSize int, minVSize int, maxHRatio float32, maxVRatio float32) {
 	var horiz bool
 	var position int
 	if nb == 0 || (self.W < 2*minHSize && self.H < 2*minVSize) {
 		return
 	}
 	// promote square rooms
-	if self.H < 2*minVSize || float(self.W) > float(self.H)*maxHRatio {
+	if self.H < 2*minVSize || float32(self.W) > float32(self.H)*maxHRatio {
 		horiz = false
-	} else if self.W < 2*minHSize || float(self.H) > float(self.W)*maxVRatio {
+	} else if self.W < 2*minHSize || float32(self.H) > float32(self.W)*maxVRatio {
 		horiz = true
 	} else {
 		horiz = (randomizer.GetInt(0, 1) == 0)
@@ -1669,8 +1609,8 @@ func (self *HeightMap) Delete() {
 	C.TCOD_heightmap_delete(self.Data)
 }
 
-func (self *HeightMap) GetValue(x, y int) float {
-	return float(C.TCOD_heightmap_get_value(self.Data, C.int(x), C.int(y)))
+func (self *HeightMap) GetValue(x, y int) float32 {
+	return float32(C.TCOD_heightmap_get_value(self.Data, C.int(x), C.int(y)))
 }
 
 
@@ -1682,44 +1622,44 @@ func (self *HeightMap) GetHeight() int {
 	return int(self.Data.h)
 }
 
-func (self *HeightMap) GetInterpolatedValue(x, y float) float {
-	return float(C.TCOD_heightmap_get_interpolated_value(self.Data, C.float(x), C.float(y)))
+func (self *HeightMap) GetInterpolatedValue(x, y float32) float32 {
+	return float32(C.TCOD_heightmap_get_interpolated_value(self.Data, C.float(x), C.float(y)))
 }
 
-func (self *HeightMap) SetValue(x, y int, value float) {
+func (self *HeightMap) SetValue(x, y int, value float32) {
 	C.TCOD_heightmap_set_value(self.Data, C.int(x), C.int(y), C.float(value))
 }
 
-func (self *HeightMap) GetNthValue(nth int) float {
-	return float(C._TCOD_heightmap_get_nth_value(self.Data, C.int(nth)))
+func (self *HeightMap) GetNthValue(nth int) float32 {
+	return float32(C._TCOD_heightmap_get_nth_value(self.Data, C.int(nth)))
 }
 
-func (self *HeightMap) SetNthValue(nth int, value float) {
+func (self *HeightMap) SetNthValue(nth int, value float32) {
 	C._TCOD_heightmap_set_nth_value(self.Data, C.int(nth), C.float(value))
 }
 
-func (self *HeightMap) GetSlope(x, y int) float {
-	return float(C.TCOD_heightmap_get_slope(self.Data, C.int(x), C.int(y)))
+func (self *HeightMap) GetSlope(x, y int) float32 {
+	return float32(C.TCOD_heightmap_get_slope(self.Data, C.int(x), C.int(y)))
 }
 
-func (self *HeightMap) GetNormal(x, y float, n *[3]float, waterLevel float) {
+func (self *HeightMap) GetNormal(x, y float32, n *[3]float32, waterLevel float32) {
 	C.TCOD_heightmap_get_normal(self.Data, C.float(x), C.float(y),
 		(*C.float)(unsafe.Pointer(&n[0])),
 		C.float(waterLevel))
 }
 
-func (self *HeightMap) CountCells(min, max float) int {
+func (self *HeightMap) CountCells(min, max float32) int {
 	return int(C.TCOD_heightmap_count_cells(self.Data, C.float(min), C.float(max)))
 }
 
-func (self *HeightMap) HasLandOnBorder(waterLevel float) bool {
+func (self *HeightMap) HasLandOnBorder(waterLevel float32) bool {
 	return toBool(C.TCOD_heightmap_has_land_on_border(self.Data, C.float(waterLevel)))
 }
 
-func (self *HeightMap) GetMinMax() (min, max float) {
+func (self *HeightMap) GetMinMax() (min, max float32) {
 	var cmin, cmax C.float
 	C.TCOD_heightmap_get_minmax(self.Data, &cmin, &cmax)
-	min, max = float(cmin), float(cmax)
+	min, max = float32(cmin), float32(cmax)
 	return
 }
 
@@ -1727,15 +1667,15 @@ func (self *HeightMap) Copy(source *HeightMap) {
 	C.TCOD_heightmap_copy(source.Data, self.Data)
 }
 
-func (self *HeightMap) Add(value float) {
+func (self *HeightMap) Add(value float32) {
 	C.TCOD_heightmap_add(self.Data, C.float(value))
 }
 
-func (self *HeightMap) Scale(value float) {
+func (self *HeightMap) Scale(value float32) {
 	C.TCOD_heightmap_scale(self.Data, C.float(value))
 }
 
-func (self *HeightMap) Clamp(min, max float) {
+func (self *HeightMap) Clamp(min, max float32) {
 	C.TCOD_heightmap_clamp(self.Data, C.float(min), C.float(max))
 }
 
@@ -1744,7 +1684,7 @@ func (self *HeightMap) Normalize() {
 	self.NormalizeRange(0, 1)
 }
 
-func (self *HeightMap) NormalizeRange(min, max float) {
+func (self *HeightMap) NormalizeRange(min, max float32) {
 	C.TCOD_heightmap_normalize(self.Data, C.float(min), C.float(max))
 }
 
@@ -1752,7 +1692,7 @@ func (self *HeightMap) Clear() {
 	C.TCOD_heightmap_clear(self.Data)
 }
 
-func (self *HeightMap) Lerp(hm1 *HeightMap, hm2 *HeightMap, coef float) {
+func (self *HeightMap) Lerp(hm1 *HeightMap, hm2 *HeightMap, coef float32) {
 	C.TCOD_heightmap_lerp_hm(hm1.Data, hm2.Data, self.Data, C.float(coef))
 }
 
@@ -1766,27 +1706,27 @@ func (self *HeightMap) Multiply(hm1 *HeightMap, hm2 *HeightMap) {
 	C.TCOD_heightmap_multiply_hm(hm1.Data, hm2.Data, self.Data)
 }
 
-func (self *HeightMap) AddHill(hx, hy, hradius, hheight float) {
+func (self *HeightMap) AddHill(hx, hy, hradius, hheight float32) {
 	C.TCOD_heightmap_add_hill(self.Data, C.float(hx), C.float(hy), C.float(hradius), C.float(hheight))
 }
 
 
-func (self *HeightMap) DigHill(hx, hy, hradius, hheight float) {
+func (self *HeightMap) DigHill(hx, hy, hradius, hheight float32) {
 	C.TCOD_heightmap_dig_hill(self.Data, C.float(hx), C.float(hy), C.float(hradius), C.float(hheight))
 }
 
-func (self *HeightMap) DigBezier(px, py *[4]int, startRadius, startDepth, endRadius, endDepth float) {
+func (self *HeightMap) DigBezier(px, py *[4]int, startRadius, startDepth, endRadius, endDepth float32) {
 	C.TCOD_heightmap_dig_bezier(self.Data,
 		(*C.int)(unsafe.Pointer(&px[0])),
 		(*C.int)(unsafe.Pointer(&py[0])),
 		C.float(startRadius), C.float(startDepth), C.float(endRadius), C.float(endDepth))
 }
 
-func (self *HeightMap) RainErosion(nbDrops int, erosionCoef, sedimentationCoef float, rnd *Random) {
+func (self *HeightMap) RainErosion(nbDrops int, erosionCoef, sedimentationCoef float32, rnd *Random) {
 	C.TCOD_heightmap_rain_erosion(self.Data, C.int(nbDrops), C.float(erosionCoef), C.float(sedimentationCoef), rnd.Data)
 }
 
-func (self *HeightMap) KernelTransform(kernelsize int, dx, dy []int, weight []float, minLevel, maxLevel float) {
+func (self *HeightMap) KernelTransform(kernelsize int, dx, dy []int, weight []float32, minLevel, maxLevel float32) {
 	C.TCOD_heightmap_kernel_transform(self.Data, C.int(kernelsize),
 		(*C.int)(unsafe.Pointer(&dx[0])),
 		(*C.int)(unsafe.Pointer(&dy[0])),
@@ -1796,21 +1736,21 @@ func (self *HeightMap) KernelTransform(kernelsize int, dx, dy []int, weight []fl
 }
 
 
-func (self *HeightMap) AddVoronoi(nbPoints, nbCoef int, coef []float, rnd *Random) {
+func (self *HeightMap) AddVoronoi(nbPoints, nbCoef int, coef []float32, rnd *Random) {
 	C.TCOD_heightmap_add_voronoi(self.Data, C.int(nbPoints), C.int(nbCoef), (*C.float)(unsafe.Pointer(&coef[0])), rnd.Data)
 }
 
-func (self *HeightMap) AddFbm(noise *Noise, mulx, muly, addx, addy, octaves, delta, scale float) {
+func (self *HeightMap) AddFbm(noise *Noise, mulx, muly, addx, addy, octaves, delta, scale float32) {
 	C.TCOD_heightmap_add_fbm(self.Data, noise.Data, C.float(mulx),
 		C.float(muly), C.float(addx), C.float(addy), C.float(octaves), C.float(delta), C.float(scale))
 }
 
-func (self *HeightMap) ScaleFbm(noise *Noise, mulx, muly, addx, addy, octaves, delta, scale float) {
+func (self *HeightMap) ScaleFbm(noise *Noise, mulx, muly, addx, addy, octaves, delta, scale float32) {
 	C.TCOD_heightmap_scale_fbm(self.Data, noise.Data, C.float(mulx),
 		C.float(muly), C.float(addx), C.float(addy), C.float(octaves), C.float(delta), C.float(scale))
 }
 
-func (self *HeightMap) Islandify(seaLevel float, random *Random) {
+func (self *HeightMap) Islandify(seaLevel float32, random *Random) {
 	C.TCOD_heightmap_islandify(self.Data, C.float(seaLevel), random.Data)
 }
 
@@ -1883,7 +1823,7 @@ func (self *Image) GetAlpha(x, y int) int {
 	return int(C.TCOD_image_get_alpha(self.Data, C.int(x), C.int(y)))
 }
 
-func (self *Image) GetMipmapPixel(x0, y0, x1, y1 float) Color {
+func (self *Image) GetMipmapPixel(x0, y0, x1, y1 float32) Color {
 	return toColor(C.TCOD_image_get_mipmap_pixel(self.Data, C.float(x0), C.float(y0),
 		C.float(x1), C.float(y1)))
 }
@@ -1893,7 +1833,7 @@ func (self *Image) PutPixel(x, y int, color Color) {
 	C._TCOD_image_put_pixel(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
 }
 
-func (self *Image) Blit(console *Console, x, y float, bkgndFlag BkgndFlag, scalex, scaley, angle float) {
+func (self *Image) Blit(console *Console, x, y float32, bkgndFlag BkgndFlag, scalex, scaley, angle float32) {
 	C.TCOD_image_blit(self.Data, console.Data, C.float(x), C.float(y),
 		C.TCOD_bkgnd_flag_t(bkgndFlag), C.float(scalex), C.float(scaley), C.float(angle))
 }
@@ -1928,7 +1868,7 @@ type Path struct {
 	Data C.TCOD_path_t
 }
 
-func NewPathUsingMap(m *Map, diagonalCost float) *Path {
+func NewPathUsingMap(m *Map, diagonalCost float32) *Path {
 	return &Path{C.TCOD_path_new_using_map(m.Data, C.float(diagonalCost))}
 }
 
@@ -1992,7 +1932,7 @@ type Dijkstra struct {
 }
 
 
-func NewDijkstraUsingMap(m *Map, diagonalCost float) *Dijkstra {
+func NewDijkstraUsingMap(m *Map, diagonalCost float32) *Dijkstra {
 	return &Dijkstra{C.TCOD_dijkstra_new(m.Data, C.float(diagonalCost))}
 }
 
@@ -2007,8 +1947,8 @@ func (self *Dijkstra) Compute(rootX, rootY int) {
 	C.TCOD_dijkstra_compute(self.Data, C.int(rootX), C.int(rootY))
 }
 
-func (self *Dijkstra) GetDistance(x, y int) float {
-	return float(C.TCOD_dijkstra_get_distance(self.Data, C.int(x), C.int(y)))
+func (self *Dijkstra) GetDistance(x, y int) float32 {
+	return float32(C.TCOD_dijkstra_get_distance(self.Data, C.int(x), C.int(y)))
 }
 
 
@@ -2092,21 +2032,12 @@ func (self *Random) GetInt(min, max int) int {
 	return int(C.TCOD_random_get_int(self.Data, C.int(min), C.int(max)))
 }
 
-func (self *Random) GetFloat(min, max float) float {
-	return float(C.TCOD_random_get_float(self.Data, C.float(min), C.float(max)))
+func (self *Random) GetFloat(min, max float32) float32 {
+	return float32(C.TCOD_random_get_float(self.Data, C.float(min), C.float(max)))
 }
 
 func (self *Random) Delete() {
 	C.TCOD_random_delete(self.Data)
-}
-
-func (self *Random) GetGaussianFloat(min, max float) float {
-	return float(C.TCOD_random_get_gaussian_float(self.Data, C.float(min), C.float(max)))
-}
-
-
-func (self *Random) GetGaussianInt(min, max int) int {
-	return int(C.TCOD_random_get_gaussian_int(self.Data, C.int(min), C.int(max)))
 }
 
 
@@ -2132,16 +2063,16 @@ type ParserProperty struct {
 }
 
 type Dice struct {
-	NbDices    int
+	NbRolls    int
 	NbFaces    int
-	Multiplier float
-	AddSub     float
+	Multiplier float32
+	AddSub     float32
 }
 
 
 func fromDice(d Dice) C.TCOD_dice_t {
 	return C.TCOD_dice_t{
-		nb_dices:   C.int(d.NbDices),
+		nb_rolls:   C.int(d.NbRolls),
 		nb_faces:   C.int(d.NbFaces),
 		multiplier: C.float(d.Multiplier),
 		addsub:     C.float(d.AddSub)}
@@ -2149,10 +2080,10 @@ func fromDice(d Dice) C.TCOD_dice_t {
 
 func toDice(d C.TCOD_dice_t) Dice {
 	return Dice{
-		NbDices:    int(d.nb_dices),
+		NbRolls:    int(d.nb_rolls),
 		NbFaces:    int(d.nb_faces),
-		Multiplier: float(d.multiplier),
-		AddSub:     float(d.addsub)}
+		Multiplier: float32(d.multiplier),
+		AddSub:     float32(d.addsub)}
 }
 
 
@@ -2264,7 +2195,7 @@ func (self *Parser) Run(filename string) []ParserProperty {
 		} else if cprop.value_type == TYPE_INT {
 			prop.Value = int(*((*C.int)(unsafe.Pointer(&cprop.value))))
 		} else if cprop.value_type == TYPE_FLOAT {
-			prop.Value = float(*((*C.float)(unsafe.Pointer(&cprop.value))))
+			prop.Value = float32(*((*C.float)(unsafe.Pointer(&cprop.value))))
 		} else if cprop.value_type == TYPE_BOOL {
 			prop.Value = toBool(*((*C.bool)(unsafe.Pointer(&cprop.value))))
 		} else if cprop.value_type == TYPE_COLOR {
@@ -2288,10 +2219,10 @@ func (self *Parser) Run(filename string) []ParserProperty {
 					prop.Value.([]int)[j] = int(*(*C.int)(unsafe.Pointer(&elValue)))
 				}
 			} else if elType == TYPE_FLOAT {
-				prop.Value = make([]float, elListSize)
+				prop.Value = make([]float32, elListSize)
 				for j := 0; j < elListSize; j++ {
 					elValue := C.TCOD_list_get(elList, C.int(j))
-					prop.Value.([]float)[j] = float(*(*C.float)(unsafe.Pointer(&elValue)))
+					prop.Value.([]float32)[j] = float32(*(*C.float)(unsafe.Pointer(&elValue)))
 				}
 			} else if elType == TYPE_BOOL {
 				prop.Value = make([]bool, elListSize)
@@ -2323,76 +2254,67 @@ func (self *Parser) Run(filename string) []ParserProperty {
 // Perlin noise
 //
 
+// Noise NEW 
+
+
 const NOISE_MAX_OCTAVES = 128
 const NOISE_MAX_DIMENSIONS = 4
 const NOISE_DEFAULT_HURST = 0.5
 const NOISE_DEFAULT_LACUNARITY = 2.0
+
+type NoiseType  C.TCOD_noise_type_t;
 
 
 type Noise struct {
 	Data C.TCOD_noise_t
 }
 
-type FloatArray []float
+type FloatArray []float32
 
 func NewNoise(dimensions int, random *Random) *Noise {
 	return &Noise{C.TCOD_noise_new(C.int(dimensions), C.float(NOISE_DEFAULT_HURST), C.float(NOISE_DEFAULT_LACUNARITY), random.Data)}
 }
 
-func NewNoiseWithOptions(dimensions int, hurst float, lacunarity float, random *Random) *Noise {
+func NewNoiseWithOptions(dimensions int, hurst float32, lacunarity float32, random *Random) *Noise {
 	return &Noise{C.TCOD_noise_new(C.int(dimensions), C.float(hurst), C.float(lacunarity), random.Data)}
 }
 
 
-// basic perlin noise
-func (self *Noise) Perlin(f FloatArray) float {
-	return float(C.TCOD_noise_perlin(self.Data, (*C.float)(unsafe.Pointer(&f[0]))))
+func (self *Noise) GetEx(f FloatArray, noiseType NoiseType) float32 {
+	return float32(C.TCOD_noise_get_ex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.TCOD_noise_type_t(noiseType)))
 }
 
-// fractional brownian motion (fractal sum of perlin noises)
-func (self *Noise) FbmPerlin(f FloatArray, octaves float) float {
-	return float(C.TCOD_noise_fbm_perlin(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
+func (self *Noise) SetType(noiseType NoiseType) {
+	C.TCOD_noise_set_type(self.Data, C.TCOD_noise_type_t(noiseType))
 }
 
-// turbulence (fractal sum of abs(perlin noise) )
-func (self *Noise) TurbulencePerlin(f FloatArray, octaves float) float {
-	return float(C.TCOD_noise_turbulence_perlin(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
+func (self *Noise) GetFbmEx(f FloatArray, octaves float32, noiseType NoiseType) float32 {
+	return float32(C.TCOD_noise_get_fbm_ex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves),
+	C.TCOD_noise_type_t(noiseType)))
 }
 
-// simplex noise
-func (self *Noise) Simplex(f FloatArray) float {
-	return float(C.TCOD_noise_simplex(self.Data, (*C.float)(unsafe.Pointer(&f[0]))))
+func (self *Noise) GetTurbulenceEx(f FloatArray, octaves float32, noiseType NoiseType) float32 {
+	return float32(C.TCOD_noise_get_turbulence_ex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves),
+	C.TCOD_noise_type_t(noiseType)))
 }
 
-// fractional brownian motion (fractal sum of simplex noises)
-func (self *Noise) FbmSimplex(f FloatArray, octaves float) float {
-	return float(C.TCOD_noise_fbm_simplex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
+
+func (self *Noise) Get(f FloatArray) float32 {
+	return float32(C.TCOD_noise_get(self.Data, (*C.float)(unsafe.Pointer(&f[0]))))
 }
 
-// turbulence (fractal sum of abs(simplex noise) )
-func (self *Noise) TurbulenceSimplex(f FloatArray, octaves float) float {
-	return float(C.TCOD_noise_turbulence_simplex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
+func (self *Noise) GetFbm(f FloatArray, octaves float32) float32 {
+	return float32(C.TCOD_noise_get_fbm(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
 }
 
-// wavelet noise
-func (self *Noise) Wavelet(f FloatArray) float {
-	return float(C.TCOD_noise_wavelet(self.Data, (*C.float)(unsafe.Pointer(&f[0]))))
+func (self *Noise) GetTurbulence(f FloatArray, octaves float32) float32 {
+	return float32(C.TCOD_noise_get_turbulence(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
 }
-
-// fractional brownian motion (fractal sum of wavelet noises)
-func (self *Noise) FbmWavelet(f FloatArray, octaves float) float {
-	return float(C.TCOD_noise_fbm_wavelet(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
-}
-
-// turbulence (fractal sum of abs(simplex noise)
-func (self *Noise) TurbulenceWavelet(f FloatArray, octaves float) float {
-	return float(C.TCOD_noise_turbulence_wavelet(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
-}
-
 
 func (self *Noise) Delete() {
 	C.TCOD_noise_delete(self.Data)
 }
+
 
 
 //
@@ -2422,7 +2344,7 @@ func (self *Zip) PutInt(val int) {
 }
 
 
-func (self *Zip) PutFloat(val float) {
+func (self *Zip) PutFloat(val float32) {
 	C.TCOD_zip_put_float(self.Data, C.float(val))
 }
 
@@ -2480,8 +2402,8 @@ func (self *Zip) GetInt() int {
 }
 
 
-func (self *Zip) GetFloat() float {
-	return float(C.TCOD_zip_get_float(self.Data))
+func (self *Zip) GetFloat() float32 {
+	return float32(C.TCOD_zip_get_float(self.Data))
 }
 
 func (self *Zip) GetString() string {

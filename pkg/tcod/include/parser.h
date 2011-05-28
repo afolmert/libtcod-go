@@ -1,6 +1,6 @@
 /*
-* libtcod 1.5.0
-* Copyright (c) 2008,2009,2010 Jice
+* libtcod 1.5.1
+* Copyright (c) 2008,2009,2010 Jice & Mingos
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -10,13 +10,13 @@
 *     * Redistributions in binary form must reproduce the above copyright
 *       notice, this list of conditions and the following disclaimer in the
 *       documentation and/or other materials provided with the distribution.
-*     * The name of Jice may not be used to endorse or promote products
+*     * The name of Jice or Mingos may not be used to endorse or promote products
 *       derived from this software without specific prior written permission.
 *
-* THIS SOFTWARE IS PROVIDED BY Jice ``AS IS'' AND ANY
+* THIS SOFTWARE IS PROVIDED BY JICE AND MINGOS ``AS IS'' AND ANY
 * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL Jice BE LIABLE FOR ANY
+* DISCLAIMED. IN NO EVENT SHALL JICE OR MINGOS BE LIABLE FOR ANY
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -29,7 +29,7 @@
 #define _TCOD_PARSER_H
 
 /* generic type */
-typedef enum { 
+typedef enum {
 	TCOD_TYPE_NONE,
 	TCOD_TYPE_BOOL,
 	TCOD_TYPE_CHAR,
@@ -72,14 +72,6 @@ typedef enum {
 	TCOD_TYPE_CUSTOM15,
 	TCOD_TYPE_LIST=1024
 } TCOD_value_type_t;
-
-/* dice roll */
-typedef struct {
-	int nb_dices;
-	int nb_faces;
-	float multiplier;
-	float addsub;
-} TCOD_dice_t;
 
 /* generic value */
 typedef union {
@@ -162,7 +154,7 @@ typedef struct {
 	TCOD_parser_custom_t customs[16];
 	/* fatal error occured */
 	bool fatal;
-	// list of properties if default listener is used
+	/* list of properties if default listener is used */
 	TCOD_list_t props;
 } TCOD_parser_int_t;
 TCODLIB_API TCOD_value_t TCOD_parse_bool_value();

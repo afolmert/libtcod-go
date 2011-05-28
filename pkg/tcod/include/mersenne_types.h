@@ -24,26 +24,30 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-* Mingos' NameGen
-* This file was written by Dominik "Mingos" Marczuk.
-*/
 
-#ifndef _TCOD_NAMEGEN_H
-#define _TCOD_NAMEGEN_H
+#ifndef _TCOD_RANDOM_TYPES_H
+#define _TCOD_RANDOM_TYPES_H
 
-/* the generator typedef */
-typedef void * TCOD_namegen_t;
+/* dice roll */
+typedef struct {
+	int nb_rolls;
+	int nb_faces;
+	float multiplier;
+	float addsub;
+} TCOD_dice_t;
 
-/* parse a file with syllable sets */
-TCODLIB_API void TCOD_namegen_parse (const char * filename, TCOD_random_t random);
-/* generate a name */
-TCODLIB_API char * TCOD_namegen_generate (char * name, bool allocate);
-/* generate a name using a custom generation rule */
-TCODLIB_API char * TCOD_namegen_generate_custom (char * name, char * rule, bool allocate);
-/* retrieve the list of all available syllable set names */
-TCODLIB_API TCOD_list_t TCOD_namegen_get_sets (void);
-/* delete a generator */
-TCODLIB_API void TCOD_namegen_destroy (void);
+/* PRNG algorithms */
+typedef enum {
+    TCOD_RNG_MT,
+    TCOD_RNG_CMWC
+} TCOD_random_algo_t;
 
-#endif
+typedef enum {
+	TCOD_DISTRIBUTION_LINEAR,
+	TCOD_DISTRIBUTION_GAUSSIAN,
+	TCOD_DISTRIBUTION_GAUSSIAN_RANGE,
+	TCOD_DISTRIBUTION_GAUSSIAN_INVERSE,
+	TCOD_DISTRIBUTION_GAUSSIAN_RANGE_INVERSE
+} TCOD_distribution_t;
+
+#endif /* _TCOD_RANDOM_TYPES_H */

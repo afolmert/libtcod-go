@@ -28,7 +28,7 @@ func max(a, b int) int {
 	return a
 }
 
-func absf(v float) float {
+func absf(v float32) float32 {
 	if v < 0 {
 		return -v
 	}
@@ -104,10 +104,10 @@ type IWidget interface {
 	SetVisible(visible bool)
 	SetGui(*Gui)
 	GetGui() *Gui
-	SetBackgroundColor(col, colFocus Color)
-	SetForegroundColor(col, colFocus Color)
-	GetBackgroundColor() (col, colFocus Color)
-	GetForegroundColor() (col, colFocus Color)
+	SetDefaultBackground(col, colFocus Color)
+	SetDefaultForeground(col, colFocus Color)
+	GetDefaultBackground() (col, colFocus Color)
+	GetDefaultForeground() (col, colFocus Color)
 	GetCurrentColors() (fore, back Color)
 	onMouseIn()
 	onMouseOut()
@@ -179,7 +179,7 @@ type Gui struct {
 	focus         IWidget // focused widget
 	keyboardFocus IWidget // keyboard focused widget
 	mouse         Mouse
-	elapsed       float
+	elapsed       float32
 	con           IConsole
 	widgetVector  *WidgetVector
 	rbs           *RadioButtonStatic
@@ -234,10 +234,10 @@ func (self *Gui) RenderWidgets() {
 	for e := range self.widgetVector.Iter() {
 		w := e.(IWidget)
 		if w.IsVisible() {
-			fore, back := self.con.GetForegroundColor(), self.con.GetBackgroundColor()
+			fore, back := self.con.GetDefaultForeground(), self.con.GetDefaultBackground()
 			w.Render(w)
-			self.con.SetForegroundColor(fore)
-			self.con.SetBackgroundColor(back)
+			self.con.SetDefaultForeground(fore)
+			self.con.SetDefaultBackground(back)
 		}
 	}
 }
@@ -416,27 +416,27 @@ func (self *Widget) SetVisible(visible bool) {
 	self.visible = visible
 }
 
-func (self *Widget) SetBackgroundColor(col, colFocus Color) {
+func (self *Widget) SetDefaultBackground(col, colFocus Color) {
 	self.back = col
 	self.backFocus = colFocus
 }
 
-func (self *Widget) SetForegroundColor(col, colFocus Color) {
+func (self *Widget) SetDefaultForeground(col, colFocus Color) {
 	self.fore = col
 	self.foreFocus = colFocus
 }
 
-func (self *Widget) GetBackgroundColor() (col, colFocus Color) {
+func (self *Widget) GetDefaultBackground() (col, colFocus Color) {
 	return self.back, self.backFocus
 }
 
-func (self *Widget) GetForegroundColor() (col, colFocus Color) {
+func (self *Widget) GetDefaultForeground() (col, colFocus Color) {
 	return self.fore, self.foreFocus
 }
 
 func (self *Widget) GetCurrentColors() (fore, back Color) {
-	return If(self.mouseIn, self.foreFocus, self.fore).(Color), 
-			 If(self.mouseIn, self.backFocus, self.back).(Color)
+	return If(self.mouseIn, self.foreFocus, self.fore).(Color),
+		If(self.mouseIn, self.backFocus, self.back).(Color)
 }
 
 // both self and iself denote the same object
@@ -589,19 +589,19 @@ func (self *Button) ComputeSize() {
 func (self *Button) Render(iself IWidget) {
 	con := self.gui.con
 	fore, back := iself.GetCurrentColors()
-	con.SetForegroundColor(fore)
-	con.SetBackgroundColor(back)
-	con.PrintCenter(self.x+self.w/2, self.y, BKGND_NONE, self.label)
+	con.SetDefaultForeground(fore)
+	con.SetDefaultBackground(back)
+	con.PrintEx(self.x+self.w/2, self.y, BKGND_NONE, CENTER, self.label)
 	if self.w > 0 && self.h > 0 {
 		con.Rect(self.x, self.y, self.w, self.h, true, BKGND_SET)
 	}
 	if self.label != "" {
 		if self.pressed && self.mouseIn {
 			//con.PrintCenter(self.x+self.w/2, self.y, BKGND_NONE, "-%s-", self.label)
-			con.PrintCenter(self.x+self.w/2, self.y, BKGND_NONE, "%s", self.label)
+			con.PrintEx(self.x+self.w/2, self.y, BKGND_NONE, CENTER, "%s", self.label)
 			//con.PrintLeft(self.x + 1, self.y, BKGND_NONE, self.label)
 		} else {
-			con.PrintCenter(self.x+self.w/2, self.y, BKGND_NONE, self.label)
+			con.PrintEx(self.x+self.w/2, self.y, BKGND_NONE, CENTER, self.label)
 			//con.PrintLeft(self.x + 1, self.y, BKGND_NONE, self.label)
 		}
 	}
@@ -662,11 +662,11 @@ func (self *StatusBar) initializeStatusBar(x, y, w, h int) {
 func (self *StatusBar) Render(iself IWidget) {
 	con := self.gui.con
 	focus := self.gui.focus
-	con.SetBackgroundColor(self.back)
+	con.SetDefaultBackground(self.back)
 	con.Rect(self.x, self.y, self.w, self.h, true, BKGND_SET)
 	if focus != nil && focus.GetTip() != "" {
-		con.SetForegroundColor(self.fore)
-		con.PrintLeftRect(self.x+1, self.y, self.w, self.h, BKGND_NONE, focus.GetTip())
+		con.SetDefaultForeground(self.fore)
+		con.PrintRectEx(self.x+1, self.y, self.w, self.h, BKGND_NONE, LEFT, focus.GetTip())
 	}
 }
 
@@ -712,8 +712,8 @@ func (self *ImageWidget) initializeImageWidget(x, y, w, h int, tip string) {
 func (self *ImageWidget) Render(iself IWidget) {
 	con := self.gui.con
 	fore, back := self.GetCurrentColors()
-	con.SetForegroundColor(fore)
-	con.SetBackgroundColor(back)
+	con.SetDefaultForeground(fore)
+	con.SetDefaultBackground(back)
 	con.Rect(self.x, self.y, self.w, self.h, true, BKGND_SET)
 
 }
@@ -950,21 +950,21 @@ func (self *Separator) expand(width, height int) {
 
 func (self *Separator) Render(iself IWidget) {
 	con := self.gui.con
-	con.SetBackgroundColor(self.back)
-	con.SetForegroundColor(self.fore)
+	con.SetDefaultBackground(self.back)
+	con.SetDefaultForeground(self.fore)
 	con.Hline(self.x, self.y, self.w, BKGND_SET)
 	con.SetChar(self.x-1, self.y, CHAR_TEEE)
 	con.SetChar(self.x+self.w, self.y, CHAR_TEEW)
-	con.SetBackgroundColor(self.fore)
-	con.SetForegroundColor(self.back)
-	con.PrintCenter(self.x+self.w/2, self.y, BKGND_SET, " %s ", self.txt)
+	con.SetDefaultBackground(self.fore)
+	con.SetDefaultForeground(self.back)
+	con.PrintEx(self.x+self.w/2, self.y, BKGND_SET, CENTER, " %s ", self.txt)
 }
 
 
 type ToolBar struct {
 	Container
-	name       string
-	fixedWidth int
+	name             string
+	fixedWidth       int
 	shouldPrintFrame bool
 }
 
@@ -1017,9 +1017,9 @@ func (self *ToolBar) GetShouldPrintFrame() bool {
 
 func (self *ToolBar) Render(iself IWidget) {
 	con := self.gui.con
-   fore, back := iself.GetCurrentColors()
-	con.SetForegroundColor(fore)
-	con.SetBackgroundColor(back)
+	fore, back := iself.GetCurrentColors()
+	con.SetDefaultForeground(fore)
+	con.SetDefaultBackground(back)
 	if self.shouldPrintFrame {
 		con.PrintFrame(self.x, self.y, self.w, self.h, true, BKGND_SET, self.name)
 	}
@@ -1064,7 +1064,6 @@ func (self *ToolBar) ComputeSize() {
 		}
 	}
 }
-
 
 
 //
@@ -1119,14 +1118,14 @@ func (self *ToggleButton) Render(iself IWidget) {
 	con := self.gui.con
 
 	fore, back := iself.GetCurrentColors()
-	con.SetBackgroundColor(back)
-	con.SetForegroundColor(fore)
+	con.SetDefaultBackground(back)
+	con.SetDefaultForeground(fore)
 	con.Rect(self.x, self.y, self.w, self.h, true, BKGND_SET)
 	if self.label != "" {
-		con.PrintLeft(self.x, self.y, BKGND_NONE, "%c %s",
+		con.PrintEx(self.x, self.y, BKGND_NONE, LEFT, "%c %s",
 			If(self.pressed, CHAR_CHECKBOX_SET, CHAR_CHECKBOX_UNSET).(int), self.label)
 	} else {
-		con.PrintLeft(self.x, self.y, BKGND_NONE, "%c",
+		con.PrintEx(self.x, self.y, BKGND_NONE, LEFT, "%c",
 			If(self.pressed, CHAR_CHECKBOX_SET, CHAR_CHECKBOX_UNSET).(int), self.label)
 	}
 }
@@ -1174,9 +1173,9 @@ func (self *Label) initializeLabel(x, y int, label string, tip string) {
 
 func (self *Label) Render(iself IWidget) {
 	con := self.gui.con
-	con.SetBackgroundColor(self.back)
-	con.SetForegroundColor(self.fore)
-	con.PrintLeft(self.x, self.y, BKGND_NONE, self.label)
+	con.SetDefaultBackground(self.back)
+	con.SetDefaultForeground(self.fore)
+	con.PrintEx(self.x, self.y, BKGND_NONE, LEFT, self.label)
 }
 
 func (self *Label) ComputeSize() {
@@ -1202,7 +1201,7 @@ func (self *Label) expand(width, height int) {
 type TextBoxCallback func(w IWidget, val string, data interface{})
 
 type TextBoxStatic struct {
-	blinkingDelay float
+	blinkingDelay float32
 }
 
 
@@ -1216,7 +1215,7 @@ type TextBox struct {
 	Widget
 	label            string
 	txt              string
-	blink            float
+	blink            float32
 	pos, offset      int
 	boxx, boxw, maxw int
 	insert           bool
@@ -1270,30 +1269,31 @@ func (self *TextBox) Render(iself IWidget) {
 	con := self.gui.con
 	g := self.gui
 
-	con.SetBackgroundColor(self.back)
-	con.SetForegroundColor(self.fore)
+	con.SetDefaultBackground(self.back)
+	con.SetDefaultForeground(self.fore)
 	con.Rect(self.x, self.y, self.w, self.h, true, BKGND_SET)
 	if self.label != "" {
-		con.PrintLeft(self.x, self.y, BKGND_NONE, self.label)
+		con.PrintEx(self.x, self.y, BKGND_NONE, LEFT, self.label)
 	}
 
-	con.SetBackgroundColor(If(g.IsKeyboardFocused(self), self.foreFocus, self.fore).(Color))
-	con.SetForegroundColor(If(g.IsKeyboardFocused(self), self.backFocus, self.back).(Color))
+	con.SetDefaultBackground(If(g.IsKeyboardFocused(self), self.foreFocus, self.fore).(Color))
+	con.SetDefaultForeground(If(g.IsKeyboardFocused(self), self.backFocus, self.back).(Color))
 	con.Rect(self.x+self.boxx, self.y, self.boxw, self.h, false, BKGND_SET)
 	length := len(self.txt) - self.offset
 	if length > self.boxw {
 		length = self.boxw
 	}
 	if self.txt != "" {
-		con.PrintLeft(self.x+self.boxx, self.y, BKGND_NONE, padRight(self.txt[self.offset:], length, ' '))
+		con.PrintEx(self.x+self.boxx, self.y, BKGND_NONE, LEFT, padRight(self.txt[self.offset:], length, ' '))
+
 	}
 	if g.IsKeyboardFocused(self) && self.blink > 0.0 {
 		if self.insert {
-			con.SetBack(self.x+self.boxx+self.pos-self.offset, self.y, self.fore, BKGND_SET)
-			con.SetFore(self.x+self.boxx+self.pos-self.offset, self.y, self.back)
+			con.SetCharBackground(self.x+self.boxx+self.pos-self.offset, self.y, self.fore, BKGND_SET)
+			con.SetCharForeground(self.x+self.boxx+self.pos-self.offset, self.y, self.back)
 		} else {
-			con.SetBack(self.x+self.boxx+self.pos-self.offset, self.y, self.back, BKGND_SET)
-			con.SetFore(self.x+self.boxx+self.pos-self.offset, self.y, self.fore)
+			con.SetCharBackground(self.x+self.boxx+self.pos-self.offset, self.y, self.back, BKGND_SET)
+			con.SetCharForeground(self.x+self.boxx+self.pos-self.offset, self.y, self.fore)
 		}
 	}
 }
@@ -1381,11 +1381,11 @@ func (self *TextBox) Update(iself IWidget, k Key) {
 }
 
 
-func (self *TextBox) SetBlinkingDelay(delay float) {
+func (self *TextBox) SetBlinkingDelay(delay float32) {
 	self.gui.tbs.blinkingDelay = delay
 }
 
-func (self *TextBox) GetBlinkingDelay() float {
+func (self *TextBox) GetBlinkingDelay() float32 {
 	return self.gui.tbs.blinkingDelay
 }
 
@@ -1446,9 +1446,9 @@ func (self *RadioButtonStatic) SetDefaultGroup(group int) {
 
 type RadioButton struct {
 	Button
-	foreSelection, backSelection Color 
-	useSelectionColor bool
-	group int
+	foreSelection, backSelection Color
+	useSelectionColor            bool
+	group                        int
 }
 
 
@@ -1508,8 +1508,8 @@ func (self *RadioButton) GetCurrentColors() (fore, back Color) {
 func (self *RadioButton) Render(iself IWidget) {
 	con := self.gui.con
 	fore, back := iself.GetCurrentColors()
-	con.SetForegroundColor(fore)
-	con.SetBackgroundColor(back)
+	con.SetDefaultForeground(fore)
+	con.SetDefaultBackground(back)
 	self.Button.Render(iself)
 	if self.IsSelected() && !self.GetUseSelectionColor() {
 		con.PutCharEx(self.x, self.y, '>', fore, back)
@@ -1543,17 +1543,17 @@ func (self *RadioButton) onButtonClick() {
 // Slider
 //
 
-type SliderCallback func(w IWidget, val float, data interface{})
+type SliderCallback func(w IWidget, val float32, data interface{})
 
 type Slider struct {
 	TextBox
-	min, max     float
-	value        float
-	sensitivity  float
+	min, max     float32
+	value        float32
+	sensitivity  float32
 	onArrows     bool
 	drag         bool
 	dragx, dragy int
-	dragValue    float
+	dragValue    float32
 	fmt          string
 	callback     SliderCallback
 	data         interface{}
@@ -1566,14 +1566,14 @@ func (self *Gui) newSlider() *Slider {
 	return result
 }
 
-func (self *Gui) NewSlider(x, y, w int, min, max float, label string, tip string) *Slider {
+func (self *Gui) NewSlider(x, y, w int, min, max float32, label string, tip string) *Slider {
 	result := self.newSlider()
 	result.initializeSlider(x, y, w, min, max, label, tip)
 	return result
 }
 
 
-func (self *Slider) initializeSlider(x, y, w int, min, max float, label string, tip string) {
+func (self *Slider) initializeSlider(x, y, w int, min, max float32, label string, tip string) {
 	self.TextBox.initializeTextBox(x, y, w, 10, label, "", tip)
 	self.min = min
 	self.max = max
@@ -1592,14 +1592,14 @@ func (self *Slider) initializeSlider(x, y, w int, min, max float, label string, 
 func (self *Slider) GetCurrentColors() (fore, back Color) {
 	fore = If(self.onArrows || self.drag, self.foreFocus, self.fore).(Color)
 	back = If(self.onArrows || self.drag, self.backFocus, self.back).(Color)
-	return 
+	return
 }
 
 func (self *Slider) Render(iself IWidget) {
 	con := self.gui.con
 	fore, back := iself.GetCurrentColors()
-	con.SetBackgroundColor(back)
-	con.SetForegroundColor(fore)
+	con.SetDefaultBackground(back)
+	con.SetDefaultForeground(fore)
 	self.w -= 2
 	self.TextBox.Render(iself)
 	self.w += 2
@@ -1626,8 +1626,8 @@ func (self *Slider) Update(iself IWidget, k Key) {
 			self.dragx = mouse.X
 			self.dragy = mouse.Y
 		} else {
-			mdx := (float(mouse.X-self.dragx) * self.sensitivity) / float(con.GetWidth()*8)
-			mdy := (float(mouse.Y-self.dragy) * self.sensitivity) / float(con.GetHeight()*8)
+			mdx := (float32(mouse.X-self.dragx) * self.sensitivity) / float32(con.GetWidth()*8)
+			mdy := (float32(mouse.Y-self.dragy) * self.sensitivity) / float32(con.GetHeight()*8)
 			oldValue := self.value
 			if absf(mdy) > absf(mdx) {
 				mdx = -mdy
@@ -1646,7 +1646,7 @@ func (self *Slider) Update(iself IWidget, k Key) {
 }
 
 
-func (self *Slider) SetMinMax(min, max float) {
+func (self *Slider) SetMinMax(min, max float32) {
 	self.min = min
 	self.max = max
 }
@@ -1660,12 +1660,12 @@ func (self *Slider) SetFormat(fmt string) {
 	self.fmt = fmt
 }
 
-func (self *Slider) SetValue(value float) {
+func (self *Slider) SetValue(value float32) {
 	self.value = ClampF(self.min, self.max, value)
 	self.valueToText()
 }
 
-func (self *Slider) SetSensitivity(sensitivity float) {
+func (self *Slider) SetSensitivity(sensitivity float32) {
 	self.sensitivity = sensitivity
 }
 
@@ -1680,7 +1680,7 @@ func (self *Slider) textToValue() {
 	if err != nil {
 		self.value = 0
 	} else {
-		self.value = float(f)
+		self.value = float32(f)
 	}
 }
 

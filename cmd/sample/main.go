@@ -20,12 +20,12 @@ import (
 //
 //
 
-func sin(f float) float {
-	return float(math.Sin(float64(f)))
+func sin(f float32) float32 {
+	return float32(math.Sin(float64(f)))
 }
 
-func cos(f float) float {
-	return float(math.Cos(float64(f)))
+func cos(f float32) float32 {
+	return float32(math.Cos(float64(f)))
 }
 
 func atoi(s string) int {
@@ -54,7 +54,7 @@ func min(a, b int) int {
 	return a
 }
 
-func minf(a, b float) float {
+func minf(a, b float32) float32 {
 	if a < b {
 		return a
 	} else {
@@ -72,7 +72,7 @@ func max(a, b int) int {
 	return a
 }
 
-func maxf(a, b float) float {
+func maxf(a, b float32) float32 {
 	if a < b {
 		return b
 	} else {
@@ -90,12 +90,12 @@ func sqr(i int) int {
 	return i * i
 }
 
-func sqrf(i float) float {
+func sqrf(i float32) float32 {
 	return i * i
 }
 
-func sqrt(i float) float {
-	return float(math.Sqrt(float64(i)))
+func sqrt(i float32) float32 {
+	return float32(math.Sqrt(float64(i)))
 }
 
 func abs(i int) int {
@@ -105,7 +105,7 @@ func abs(i int) int {
 	return i
 }
 
-func absf(i float) float {
+func absf(i float32) float32 {
 	if i < 0 {
 		return -i
 	}
@@ -171,7 +171,7 @@ const ASCII_ART_SLIDE_DELAY = 3 // every 3 seconds new slide shows
 
 type AsciiArtDemo struct {
 	asciiArt      IAsciiArt
-	lastSlideTime float // last
+	lastSlideTime float32 // last
 	transition    Transition
 }
 
@@ -193,10 +193,10 @@ func (self *AsciiArtDemo) Render(first bool, key *Key) {
 		self.asciiArt = aas.randomAsciiArt()
 		first = true
 		if self.asciiArt == nil {
-			demoConsole.SetBackgroundColor(COLOR_BLACK)
-			demoConsole.SetForegroundColor(COLOR_GREY)
+			demoConsole.SetDefaultBackground(COLOR_BLACK)
+			demoConsole.SetDefaultForeground(COLOR_GREY)
 			demoConsole.Clear()
-			demoConsole.PrintLeftRect(0, 0, demoConsole.GetWidth(), demoConsole.GetHeight(), BKGND_SET, "Loading images, please wait...")
+			demoConsole.PrintRectEx(0, 0, demoConsole.GetWidth(), demoConsole.GetHeight(), BKGND_SET, LEFT, "Loading images, please wait...")
 		} else {
 			self.transition = Transition(random.GetInt(INSTANT+1, NB_TRANSITIONS-1))
 			self.lastSlideTime = SysElapsedSeconds()
@@ -270,40 +270,40 @@ func (self *ColorsDemo) Render(first bool, key *Key) {
 
 	// scan the whole screen, interpolating corner colors
 	for x = 0; x < DEMO_SCREEN_WIDTH; x++ {
-		xcoef := float(x) / (DEMO_SCREEN_WIDTH - 1)
+		xcoef := float32(x) / (DEMO_SCREEN_WIDTH - 1)
 		// get the current column top and bottom colors
 		top := self.cols[TOPLEFT].Lerp(self.cols[TOPRIGHT], xcoef)
 		bottom := self.cols[BOTTOMLEFT].Lerp(self.cols[BOTTOMRIGHT], xcoef)
 		for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
-			ycoef := float(y) / (DEMO_SCREEN_HEIGHT - 1)
+			ycoef := float32(y) / (DEMO_SCREEN_HEIGHT - 1)
 			// get the current cell color
 			curColor := top.Lerp(bottom, ycoef)
-			demoConsole.SetBack(x, y, curColor, BKGND_SET)
+			demoConsole.SetCharBackground(x, y, curColor, BKGND_SET)
 		}
 	}
 
 	// print the text
 	// get the background color at the text position
-	textColor = demoConsole.GetBack(DEMO_SCREEN_WIDTH/2, 5)
+	textColor = demoConsole.GetCharBackground(DEMO_SCREEN_WIDTH/2, 5)
 	// and invert it
 	textColor.R = 255 - textColor.R
 	textColor.G = 255 - textColor.G
 	textColor.B = 255 - textColor.B
-	demoConsole.SetForegroundColor(textColor)
+	demoConsole.SetDefaultForeground(textColor)
 	// put random text (for performance tests)
 	for x = 0; x < DEMO_SCREEN_WIDTH; x++ {
 		for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
 			var c int
-			col := demoConsole.GetBack(x, y)
+			col := demoConsole.GetCharBackground(x, y)
 			col = col.Lerp(COLOR_BLACK, 0.5)
 			c = random.GetInt('a', 'z')
-			demoConsole.SetForegroundColor(col)
+			demoConsole.SetDefaultForeground(col)
 			demoConsole.PutChar(x, y, c, BKGND_NONE)
 		}
 	}
 	// the background behind the text is slightly darkened using the BKGND_MULTIPLY flag
-	demoConsole.SetBackgroundColor(COLOR_GREY)
-	demoConsole.PrintCenterRect(DEMO_SCREEN_WIDTH/2, 5, DEMO_SCREEN_WIDTH-2, DEMO_SCREEN_HEIGHT-1, BKGND_MULTIPLY,
+	demoConsole.SetDefaultBackground(COLOR_GREY)
+	demoConsole.PrintRectEx(DEMO_SCREEN_WIDTH/2, 5, DEMO_SCREEN_WIDTH-2, DEMO_SCREEN_HEIGHT-1, BKGND_MULTIPLY, CENTER,
 		"The Doryen library uses 24 bits colors, for both background and foreground.")
 }
 //
@@ -348,8 +348,8 @@ func (self *OffscreenDemo) Render(first bool, key *Key) {
 		self.secondary = NewConsole(DEMO_SCREEN_WIDTH/2, DEMO_SCREEN_HEIGHT/2)
 		self.screenshot = NewConsole(DEMO_SCREEN_WIDTH, DEMO_SCREEN_HEIGHT)
 		self.secondary.PrintFrame(0, 0, DEMO_SCREEN_WIDTH/2, DEMO_SCREEN_HEIGHT/2, false, BKGND_SET, "Offscreen console")
-		self.secondary.PrintCenterRect(DEMO_SCREEN_WIDTH/4, 2, DEMO_SCREEN_WIDTH/2-2, DEMO_SCREEN_HEIGHT/2,
-			BKGND_NONE, "You can render to an offscreen console and blit in on another one, simulating alpha transparency.")
+		self.secondary.PrintRectEx(DEMO_SCREEN_WIDTH/4, 2, DEMO_SCREEN_WIDTH/2-2, DEMO_SCREEN_HEIGHT/2,
+			BKGND_NONE, CENTER, "You can render to an offscreen console and blit in on another one, simulating alpha transparency.")
 	}
 	if first {
 		SysSetFps(30) // limited to 30 fps
@@ -423,17 +423,17 @@ func (self *LinesDemo) Delete() {
 
 func lineListener(x, y int, demo interface{}) bool {
 	if x >= 0 && y >= 0 && x < DEMO_SCREEN_WIDTH && y < DEMO_SCREEN_HEIGHT {
-		demoConsole.SetBack(x, y, COLOR_LIGHT_BLUE, BkgndFlag(demo.(*LinesDemo).bkFlag))
+		demoConsole.SetCharBackground(x, y, COLOR_LIGHT_BLUE, BkgndFlag(demo.(*LinesDemo).bkFlag))
 	}
 	return true
 }
 
 
 func (self *LinesDemo) Render(first bool, key *Key) {
-	var xo, yo, xd, yd, x, y int          // segment starting, ending, current position
-	var alpha float                       // alpha value when blending mode = BKGND_ALPHA
-	var angle, cos_angle, sin_angle float // segment angle data
-	var recty int                         // gradient vertical position
+	var xo, yo, xd, yd, x, y int            // segment starting, ending, current position
+	var alpha float32                       // alpha value when blending mode = BKGND_ALPHA
+	var angle, cos_angle, sin_angle float32 // segment angle data
+	var recty int                           // gradient vertical position
 	if key.Vk == K_ENTER || key.Vk == K_KPENTER {
 		// switch to the next blending mode
 		self.bkFlag++
@@ -443,11 +443,11 @@ func (self *LinesDemo) Render(first bool, key *Key) {
 	}
 	if (self.bkFlag & 0xff) == BKGND_ALPH {
 		// for the alpha mode, update alpha every frame
-		alpha = (1.0 + cos(float(SysElapsedSeconds()))*2) / 2.0
+		alpha = (1.0 + cos(float32(SysElapsedSeconds()))*2) / 2.0
 		self.bkFlag = BkgndAlpha(alpha)
 	} else if (self.bkFlag & 0xff) == BKGND_ADDA {
 		// for the add alpha mode, update alpha every frame
-		alpha = (1.0 + cos(float(SysElapsedSeconds()))*2) / 2.0
+		alpha = (1.0 + cos(float32(SysElapsedSeconds()))*2) / 2.0
 		self.bkFlag = BkgndAddAlpha(alpha)
 	}
 	if !self.init {
@@ -459,30 +459,30 @@ func (self *LinesDemo) Render(first bool, key *Key) {
 				col.R = (uint8)(x * 255 / (DEMO_SCREEN_WIDTH - 1))
 				col.G = (uint8)((x + y) * 255 / (DEMO_SCREEN_WIDTH - 1 + DEMO_SCREEN_HEIGHT - 1))
 				col.B = (uint8)(y * 255 / (DEMO_SCREEN_HEIGHT - 1))
-				self.bk.SetBack(x, y, col, BKGND_SET)
+				self.bk.SetCharBackground(x, y, col, BKGND_SET)
 			}
 		}
 		self.init = true
 	}
 	if first {
 		SysSetFps(30) // limited to 30 fps
-		demoConsole.SetForegroundColor(COLOR_WHITE)
+		demoConsole.SetDefaultForeground(COLOR_WHITE)
 	}
 	// blit the background
 	self.bk.Blit(0, 0, DEMO_SCREEN_WIDTH, DEMO_SCREEN_HEIGHT, demoConsole, 0, 0, 1.0, 1.0)
 	// render the gradient
-	recty = (int)((DEMO_SCREEN_HEIGHT - 2) * ((1.0 + cos(float(SysElapsedSeconds()))) / 2.0))
+	recty = (int)((DEMO_SCREEN_HEIGHT - 2) * ((1.0 + cos(float32(SysElapsedSeconds()))) / 2.0))
 	for x = 0; x < DEMO_SCREEN_WIDTH; x++ {
 		var col Color
 		col.R = uint8(x * 255 / DEMO_SCREEN_WIDTH)
 		col.G = uint8(x * 255 / DEMO_SCREEN_WIDTH)
 		col.B = uint8(x * 255 / DEMO_SCREEN_WIDTH)
-		demoConsole.SetBack(x, recty, col, BkgndFlag(self.bkFlag))
-		demoConsole.SetBack(x, recty+1, col, BkgndFlag(self.bkFlag))
-		demoConsole.SetBack(x, recty+2, col, BkgndFlag(self.bkFlag))
+		demoConsole.SetCharBackground(x, recty, col, BkgndFlag(self.bkFlag))
+		demoConsole.SetCharBackground(x, recty+1, col, BkgndFlag(self.bkFlag))
+		demoConsole.SetCharBackground(x, recty+2, col, BkgndFlag(self.bkFlag))
 	}
 	// calculate the segment ends
-	angle = float(SysElapsedSeconds()) * 2.0
+	angle = float32(SysElapsedSeconds()) * 2.0
 	cos_angle = cos(angle)
 	sin_angle = sin(angle)
 	xo = (int)(DEMO_SCREEN_WIDTH / 2 * (1 + cos_angle))
@@ -492,7 +492,7 @@ func (self *LinesDemo) Render(first bool, key *Key) {
 	// render the line
 	Line(xo, yo, xd, yd, self, lineListener)
 	// print the current flag
-	demoConsole.PrintLeft(2, 2, BKGND_NONE, "%s (ENTER to change)", self.flagNames[self.bkFlag&0xff])
+	demoConsole.PrintEx(2, 2, BKGND_NONE, LEFT, "%s (ENTER to change)", self.flagNames[self.bkFlag&0xff])
 }
 
 
@@ -517,12 +517,12 @@ type NoiseDemo struct {
 	funName    []string
 	fun        int
 	noise      *Noise
-	dx, dy     float
-	octaves    float
-	hurst      float
-	lacunarity float
+	dx, dy     float32
+	octaves    float32
+	hurst      float32
+	lacunarity float32
 	img        *Image
-	zoom       float
+	zoom       float32
 }
 
 func NewNoiseDemo() *NoiseDemo {
@@ -574,32 +574,32 @@ func (self *NoiseDemo) Render(first bool, key *Key) {
 	// render the 2d noise fun
 	for y = 0; y < 2*DEMO_SCREEN_HEIGHT; y++ {
 		for x = 0; x < 2*DEMO_SCREEN_WIDTH; x++ {
-			var value float
+			var value float32
 			var c uint8
 			var col Color
-			f := make([]float, 2)
-			f[0] = self.zoom*float(x)/(2*DEMO_SCREEN_WIDTH) + self.dx
-			f[1] = self.zoom*float(y)/(2*DEMO_SCREEN_HEIGHT) + self.dy
+			f := make([]float32, 2)
+			f[0] = self.zoom*float32(x)/(2*DEMO_SCREEN_WIDTH) + self.dx
+			f[1] = self.zoom*float32(y)/(2*DEMO_SCREEN_HEIGHT) + self.dy
 			value = 0.0
 			switch self.fun {
 			case PERLIN:
-				value = self.noise.Perlin(f)
+				value = self.noise.GetEx(f, NOISE_PERLIN)
 			case SIMPLEX:
-				value = self.noise.Simplex(f)
+				value = self.noise.GetEx(f, NOISE_SIMPLEX)
 			case WAVELET:
-				value = self.noise.Wavelet(f)
+				value = self.noise.GetEx(f, NOISE_WAVELET)
 			case FBM_PERLIN:
-				value = self.noise.FbmPerlin(f, self.octaves)
+				value = self.noise.GetFbmEx(f, self.octaves, NOISE_PERLIN)
 			case TURBULENCE_PERLIN:
-				value = self.noise.TurbulencePerlin(f, self.octaves)
+				value = self.noise.GetTurbulenceEx(f, self.octaves, NOISE_PERLIN)
 			case FBM_SIMPLEX:
-				value = self.noise.FbmSimplex(f, self.octaves)
+				value = self.noise.GetFbmEx(f, self.octaves, NOISE_SIMPLEX)
 			case TURBULENCE_SIMPLEX:
-				value = self.noise.TurbulenceSimplex(f, self.octaves)
+				value = self.noise.GetTurbulenceEx(f, self.octaves, NOISE_SIMPLEX)
 			case FBM_WAVELET:
-				value = self.noise.FbmWavelet(f, self.octaves)
+				value = self.noise.GetFbmEx(f, self.octaves, NOISE_WAVELET)
 			case TURBULENCE_WAVELET:
-				value = self.noise.TurbulenceWavelet(f, self.octaves)
+				value = self.noise.GetTurbulenceEx(f, self.octaves, NOISE_WAVELET)
 			}
 			c = (uint8)((value + 1.0) / 2.0 * 255)
 			// use a bluish color
@@ -613,34 +613,34 @@ func (self *NoiseDemo) Render(first bool, key *Key) {
 	self.img.Blit2x(demoConsole, 0, 0, 0, 0, -1, -1)
 
 	// draw a transparent rectangle
-	demoConsole.SetBackgroundColor(COLOR_GREY)
+	demoConsole.SetDefaultBackground(COLOR_GREY)
 	demoConsole.Rect(2, 2, 23, If(self.fun <= WAVELET, 10, 13).(int), false, BKGND_MULTIPLY)
 	for y = 2; y < 2+(If(self.fun <= WAVELET, 10, 13).(int)); y++ {
 		for x = 2; x < 2+23; x++ {
-			col := demoConsole.GetFore(x, y)
+			col := demoConsole.GetCharForeground(x, y)
 			col = col.Multiply(COLOR_GREY)
-			demoConsole.SetFore(x, y, col)
+			demoConsole.SetCharForeground(x, y, col)
 		}
 	}
 
 	// draw the text
 	for curfun = PERLIN; curfun <= TURBULENCE_WAVELET; curfun++ {
 		if curfun == self.fun {
-			demoConsole.SetForegroundColor(COLOR_WHITE)
-			demoConsole.SetBackgroundColor(COLOR_LIGHT_BLUE)
-			demoConsole.PrintLeft(2, 2+curfun, BKGND_SET, self.funName[curfun])
+			demoConsole.SetDefaultForeground(COLOR_WHITE)
+			demoConsole.SetDefaultBackground(COLOR_LIGHT_BLUE)
+			demoConsole.PrintEx(2, 2+curfun, BKGND_SET, LEFT, self.funName[curfun])
 		} else {
-			demoConsole.SetForegroundColor(COLOR_GREY)
-			demoConsole.PrintLeft(2, 2+curfun, BKGND_NONE, self.funName[curfun])
+			demoConsole.SetDefaultForeground(COLOR_GREY)
+			demoConsole.PrintEx(2, 2+curfun, BKGND_NONE, LEFT, self.funName[curfun])
 		}
 	}
 	// draw parameters
-	demoConsole.SetForegroundColor(COLOR_WHITE)
-	demoConsole.PrintLeft(2, 11, BKGND_NONE, "Y/H : zoom (%2.1f)", self.zoom)
+	demoConsole.SetDefaultForeground(COLOR_WHITE)
+	demoConsole.PrintEx(2, 11, BKGND_NONE, LEFT, "Y/H : zoom (%2.1f)", self.zoom)
 	if self.fun > WAVELET {
-		demoConsole.PrintLeft(2, 12, BKGND_NONE, "E/D : hurst (%2.1f)", self.hurst)
-		demoConsole.PrintLeft(2, 13, BKGND_NONE, "R/F : lacunarity (%2.1f)", self.lacunarity)
-		demoConsole.PrintLeft(2, 14, BKGND_NONE, "T/G : octaves (%2.1f)", self.octaves)
+		demoConsole.PrintEx(2, 12, BKGND_NONE, LEFT, "E/D : hurst (%2.1f)", self.hurst)
+		demoConsole.PrintEx(2, 13, BKGND_NONE, LEFT, "R/F : lacunarity (%2.1f)", self.lacunarity)
+		demoConsole.PrintEx(2, 14, BKGND_NONE, LEFT, "T/G : octaves (%2.1f)", self.octaves)
 	}
 	// handle keypress
 	if key.Vk == K_NONE {
@@ -706,7 +706,7 @@ type FovDemo struct {
 	noise        *Noise
 	algoNum      int
 	algoNames    []string
-	torchx       []float // torch light position in the perlin noise
+	torchx       []float32 // torch light position in the perlin noise
 }
 
 
@@ -724,7 +724,7 @@ func NewFovDemo() *FovDemo {
 		lightGround:  Color{200, 180, 50},
 		noise:        nil,
 		algoNum:      0,
-		torchx:       make([]float, 1)}
+		torchx:       make([]float32, 1)}
 
 	result.torchx[0] = 0.0
 	result.algoNames = []string{
@@ -809,7 +809,7 @@ func (self *FovDemo) Delete() {
 func (self *FovDemo) Render(first bool, key *Key) {
 	var x, y int
 	// torch position & intensity variation
-	var dx, dy, di float = 0, 0, 0
+	var dx, dy, di float32 = 0, 0, 0
 
 	if self.map_ == nil {
 		self.map_ = NewMap(DEMO_SCREEN_WIDTH, DEMO_SCREEN_HEIGHT)
@@ -831,10 +831,10 @@ func (self *FovDemo) Render(first bool, key *Key) {
 		//   the rest impacts only the background color
 		// draw the help text & player @
 		demoConsole.Clear()
-		demoConsole.SetForegroundColor(COLOR_WHITE)
-		demoConsole.PrintLeft(1, 0, BKGND_NONE, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
+		demoConsole.SetDefaultForeground(COLOR_WHITE)
+		demoConsole.PrintEx(1, 0, BKGND_NONE, LEFT, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
 			If(self.torch, "on ", "off").(string), If(self.lightWalls, "on ", "off").(string), self.algoNames[self.algoNum])
-		demoConsole.SetForegroundColor(COLOR_BLACK)
+		demoConsole.SetDefaultForeground(COLOR_BLACK)
 		demoConsole.PutChar(self.px, self.py, '@', BKGND_NONE)
 		// draw windows
 		for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
@@ -850,39 +850,39 @@ func (self *FovDemo) Render(first bool, key *Key) {
 		self.map_.ComputeFov(self.px, self.py, If(self.torch, int(TORCH_RADIUS), 0).(int), self.lightWalls, FovAlgorithm(self.algoNum))
 	}
 	if self.torch {
-		tdx := make([]float, 1)
+		tdx := make([]float32, 1)
 		// slightly change the perlin noise parameter
 		self.torchx[0] += 0.2
 		// randomize the light position between -1.5 and 1.5
 		tdx[0] = self.torchx[0] + 20.0
-		dx = self.noise.Simplex(tdx) * 1.5
+		dx = self.noise.GetEx(tdx, NOISE_SIMPLEX) * 1.5
 		tdx[0] += 30.0
-		dy = self.noise.Simplex(tdx) * 1.5
-		di = 0.2 * self.noise.Simplex(self.torchx)
+		dy = self.noise.GetEx(tdx, NOISE_SIMPLEX) * 1.5
+		di = 0.2 * self.noise.GetEx(self.torchx, NOISE_SIMPLEX)
 	}
 	for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
 		for x = 0; x < DEMO_SCREEN_WIDTH; x++ {
 			visible := self.map_.IsInFov(x, y)
 			wall := self.smap[y][x] == '#'
 			if !visible {
-				demoConsole.SetBack(x, y,
+				demoConsole.SetCharBackground(x, y,
 					If(wall, self.darkWall, self.darkGround).(Color), BKGND_SET)
 
 			} else {
 				if !self.torch {
-					demoConsole.SetBack(x, y,
+					demoConsole.SetCharBackground(x, y,
 						If(wall, self.lightWall, self.lightGround).(Color), BKGND_SET)
 				} else {
 					base := If(wall, self.darkWall, self.darkGround).(Color)
 					light := If(wall, self.lightWall, self.lightGround).(Color)
 					r := (x-self.px+int(dx))*(x-self.px+int(dx)) + (y-self.py+int(dy))*(y-self.py+int(dy)) // cell distance to torch (squared)
 					if r < SQUARED_TORCH_RADIUS {
-						l := float(SQUARED_TORCH_RADIUS-r)/float(SQUARED_TORCH_RADIUS) + di
+						l := float32(SQUARED_TORCH_RADIUS-r)/float32(SQUARED_TORCH_RADIUS) + di
 						l = ClampF(0.0, 1.0, l)
 						base = base.Lerp(light, l)
 					}
 					if x >= 0 && x < DEMO_SCREEN_WIDTH && y >= 0 && y < DEMO_SCREEN_HEIGHT {
-						demoConsole.SetBack(x, y, base, BKGND_SET)
+						demoConsole.SetCharBackground(x, y, base, BKGND_SET)
 					}
 				}
 			}
@@ -918,24 +918,24 @@ func (self *FovDemo) Render(first bool, key *Key) {
 		}
 	} else if key.C == 'T' || key.C == 't' {
 		self.torch = !self.torch
-		demoConsole.SetForegroundColor(COLOR_WHITE)
-		demoConsole.PrintLeft(1, 0, BKGND_NONE, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
+		demoConsole.SetDefaultForeground(COLOR_WHITE)
+		demoConsole.PrintEx(1, 0, BKGND_NONE, LEFT, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
 			If(self.torch, "on ", "off").(string), If(self.lightWalls, "on ", "off").(string), self.algoNames[self.algoNum])
-		demoConsole.SetForegroundColor(COLOR_BLACK)
+		demoConsole.SetDefaultForeground(COLOR_BLACK)
 	} else if key.C == 'W' || key.C == 'w' {
 		self.lightWalls = !self.lightWalls
-		demoConsole.SetForegroundColor(COLOR_WHITE)
-		demoConsole.PrintLeft(1, 0, BKGND_NONE, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
+		demoConsole.SetDefaultForeground(COLOR_WHITE)
+		demoConsole.PrintEx(1, 0, BKGND_NONE, LEFT, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
 			If(self.torch, "on ", "off").(string), If(self.lightWalls, "on ", "off").(string), self.algoNames[self.algoNum])
-		demoConsole.SetForegroundColor(COLOR_BLACK)
+		demoConsole.SetDefaultForeground(COLOR_BLACK)
 		self.recomputeFov = true
 	} else if key.C == '+' || key.C == '-' {
 		self.algoNum += If(key.C == '+', 1, -1).(int)
 		self.algoNum = Clamp(0, NB_FOV_ALGORITHMS-1, self.algoNum)
-		demoConsole.SetForegroundColor(COLOR_WHITE)
-		demoConsole.PrintLeft(1, 0, BKGND_NONE, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
+		demoConsole.SetDefaultForeground(COLOR_WHITE)
+		demoConsole.PrintEx(1, 0, BKGND_NONE, LEFT, "IJKL : move around\nT : torch fx %s\nW : light walls %s\n+-: algo %s",
 			If(self.torch, "on ", "off").(string), If(self.lightWalls, "on ", "off").(string), self.algoNames[self.algoNum])
-		demoConsole.SetForegroundColor(COLOR_BLACK)
+		demoConsole.SetDefaultForeground(COLOR_BLACK)
 		self.recomputeFov = true
 	}
 }
@@ -955,10 +955,10 @@ type PathDemo struct {
 	lightGround     Color
 	path            *Path
 	usingAstar      bool
-	dijkstraDist    float
+	dijkstraDist    float32
 	dijkstra        *Dijkstra
 	recalculatePath bool
-	busy            float
+	busy            float32
 	oldChar         int
 }
 
@@ -1080,11 +1080,11 @@ func (self *PathDemo) Render(first bool, key *Key) {
 		// the rest impacts only the background color
 		// draw the help text & player @
 		demoConsole.Clear()
-		demoConsole.SetForegroundColor(COLOR_WHITE)
+		demoConsole.SetDefaultForeground(COLOR_WHITE)
 		demoConsole.PutChar(self.dx, self.dy, '+', BKGND_NONE)
 		demoConsole.PutChar(self.px, self.py, '@', BKGND_NONE)
-		demoConsole.PrintLeft(1, 1, BKGND_NONE, "IJKL / mouse :\nmove destination\nTAB : Aself.dijkstra")
-		demoConsole.PrintLeft(1, 4, BKGND_NONE, "Using : A*")
+		demoConsole.PrintEx(1, 1, BKGND_NONE, LEFT, "IJKL / mouse :\nmove destination\nTAB : Aself.dijkstra")
+		demoConsole.PrintEx(1, 4, BKGND_NONE, LEFT, "Using : A*")
 		// draw windows
 		for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
 			for x = 0; x < DEMO_SCREEN_WIDTH; x++ {
@@ -1123,14 +1123,14 @@ func (self *PathDemo) Render(first bool, key *Key) {
 	for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
 		for x = 0; x < DEMO_SCREEN_WIDTH; x++ {
 			wall := self.smap[y][x] == '#'
-			demoConsole.SetBack(x, y, If(wall, self.darkWall, self.darkGround).(Color), BKGND_SET)
+			demoConsole.SetCharBackground(x, y, If(wall, self.darkWall, self.darkGround).(Color), BKGND_SET)
 		}
 	}
 	// draw the self.path
 	if self.usingAstar {
 		for i = 0; i < self.path.Size(); i++ {
 			x, y := self.path.Get(i)
-			demoConsole.SetBack(x, y, self.lightGround, BKGND_SET)
+			demoConsole.SetCharBackground(x, y, self.lightGround, BKGND_SET)
 		}
 	} else {
 		var x, y, i int
@@ -1139,13 +1139,13 @@ func (self *PathDemo) Render(first bool, key *Key) {
 				wall := self.smap[y][x] == '#'
 				if !wall {
 					d := self.dijkstra.GetDistance(x, y)
-					demoConsole.SetBack(x, y, self.lightGround.Lerp(self.darkGround, 0.9*d/self.dijkstraDist), BKGND_SET)
+					demoConsole.SetCharBackground(x, y, self.lightGround.Lerp(self.darkGround, 0.9*d/self.dijkstraDist), BKGND_SET)
 				}
 			}
 		}
 		for i = 0; i < self.dijkstra.Size(); i++ {
 			x, y := self.dijkstra.Get(i)
-			demoConsole.SetBack(x, y, self.lightGround, BKGND_SET)
+			demoConsole.SetCharBackground(x, y, self.lightGround, BKGND_SET)
 		}
 	}
 	// move the creature
@@ -1206,9 +1206,9 @@ func (self *PathDemo) Render(first bool, key *Key) {
 	} else if key.Vk == K_TAB {
 		self.usingAstar = !self.usingAstar
 		if self.usingAstar {
-			demoConsole.PrintLeft(1, 4, BKGND_NONE, "Using : A*      ")
+			demoConsole.PrintEx(1, 4, BKGND_NONE, LEFT, "Using : A*      ")
 		} else {
-			demoConsole.PrintLeft(1, 4, BKGND_NONE, "Using : self.dijkstra")
+			demoConsole.PrintEx(1, 4, BKGND_NONE, LEFT, "Using : self.dijkstra")
 		}
 		self.recalculatePath = true
 	}
@@ -1261,6 +1261,7 @@ func (self *SampleMap) Fill(c byte) {
 }
 
 //
+
 // draw a vertical line
 func (self *SampleMap) VLine(x, y1, y2 int) {
 	y := y1
@@ -1475,20 +1476,20 @@ func (self *BspDemo) Render(first bool, key *Key) {
 		self.refresh = false
 	}
 	demoConsole.Clear()
-	demoConsole.SetForegroundColor(COLOR_WHITE)
-	demoConsole.PrintLeft(1, 1, BKGND_NONE,
+	demoConsole.SetDefaultForeground(COLOR_WHITE)
+	demoConsole.PrintEx(1, 1, BKGND_NONE, LEFT,
 		"ENTER : rebuild bsp\nSPACE : rebuild dungeon\n+-: bsp depth %d\n: room size %d\n1 : random room size %s",
 		self.bspDepth, self.minRoomSize,
 		If(self.randomRoom, "ON", "OFF").(string))
 	if self.randomRoom {
-		demoConsole.PrintLeft(1, 6, BKGND_NONE, "2 : room walls %s",
+		demoConsole.PrintEx(1, 6, BKGND_NONE, LEFT, "2 : room walls %s",
 			If(self.roomWalls, "ON", "OFF").(string))
 	}
 	// render the level
 	for y = 0; y < DEMO_SCREEN_HEIGHT; y++ {
 		for x = 0; x < DEMO_SCREEN_WIDTH; x++ {
 			wall := self.sampleMap[x][y] == '#'
-			demoConsole.SetBack(x, y, If(wall, self.darkWall, self.darkGround).(Color), BKGND_SET)
+			demoConsole.SetCharBackground(x, y, If(wall, self.darkWall, self.darkGround).(Color), BKGND_SET)
 		}
 	}
 	if key.Vk == K_ENTER || key.Vk == K_KPENTER {
@@ -1546,7 +1547,7 @@ func (self *ImageDemo) Delete() {
 }
 
 func (self *ImageDemo) Render(first bool, key *Key) {
-	var x, y, scalex, scaley, angle float
+	var x, y, scalex, scaley, angle float32
 	var elapsed int
 	if self.img == nil {
 		self.img = LoadImage("data/img/skull.png")
@@ -1556,26 +1557,26 @@ func (self *ImageDemo) Render(first bool, key *Key) {
 	if first {
 		SysSetFps(30) // limited to 30 fps
 	}
-	demoConsole.SetBackgroundColor(COLOR_BLACK)
+	demoConsole.SetDefaultBackground(COLOR_BLACK)
 	demoConsole.Clear()
-	x = float(float(DEMO_SCREEN_WIDTH)/2 + cos(float(SysElapsedSeconds()))*10.0)
-	y = (float)(float(DEMO_SCREEN_HEIGHT) / 2)
-	scalex = float(0.2 + 1.8*(1.0+cos(float(SysElapsedSeconds())/2))/2.0)
+	x = float32(float32(DEMO_SCREEN_WIDTH)/2 + cos(float32(SysElapsedSeconds()))*10.0)
+	y = (float32)(float32(DEMO_SCREEN_HEIGHT) / 2)
+	scalex = float32(0.2 + 1.8*(1.0+cos(float32(SysElapsedSeconds())/2))/2.0)
 	scaley = scalex
-	angle = float(SysElapsedSeconds())
-	elapsed = int(float(SysElapsedMilliseconds()) / 2000)
+	angle = float32(SysElapsedSeconds())
+	elapsed = int(float32(SysElapsedMilliseconds()) / 2000)
 	if elapsed&1 != 0 {
 		// split the color channels of circle.png
 		// the red channel
-		demoConsole.SetBackgroundColor(COLOR_RED)
+		demoConsole.SetDefaultBackground(COLOR_RED)
 		demoConsole.Rect(0, 3, 15, 15, false, BKGND_SET)
 		self.circle.BlitRect(demoConsole, 0, 3, -1, -1, BKGND_MULTIPLY)
 		// the green channel
-		demoConsole.SetBackgroundColor(self.green)
+		demoConsole.SetDefaultBackground(self.green)
 		demoConsole.Rect(15, 3, 15, 15, false, BKGND_SET)
 		self.circle.BlitRect(demoConsole, 15, 3, -1, -1, BKGND_MULTIPLY)
 		// the blue channel
-		demoConsole.SetBackgroundColor(self.blue)
+		demoConsole.SetDefaultBackground(self.blue)
 		demoConsole.Rect(30, 3, 15, 15, false, BKGND_SET)
 		self.circle.BlitRect(demoConsole, 30, 3, -1, -1, BKGND_MULTIPLY)
 	} else {
@@ -1627,8 +1628,8 @@ func (self *MouseDemo) Render(first bool, key *Key) {
 	}
 
 	if first {
-		demoConsole.SetBackgroundColor(COLOR_BLACK)
-		demoConsole.SetForegroundColor(COLOR_WHITE)
+		demoConsole.SetDefaultBackground(COLOR_BLACK)
+		demoConsole.SetDefaultForeground(COLOR_WHITE)
 		demoConsole.Clear()
 		MouseMove(320, 200)
 		MouseShowCursor(true)
@@ -1649,14 +1650,14 @@ func (self *MouseDemo) Render(first bool, key *Key) {
 			cx := abs(x + DEMO_SCREEN_X - mouse.Cx)
 			cy := abs(y + DEMO_SCREEN_Y - mouse.Cy)
 
-			fore := demoConsole.GetFore(x, y)
+			fore := demoConsole.GetCharForeground(x, y)
 
-			dist := sqrt(float((sqr(cx)) + sqr(cy)))
-			dist = minf(float(DEMO_SCREEN_WIDTH), dist)
+			dist := sqrt(float32((sqr(cx)) + sqr(cy)))
+			dist = minf(float32(DEMO_SCREEN_WIDTH), dist)
 
 			fore = fore.Lighten(0.6 * sqrf((1 - dist/DEMO_SCREEN_WIDTH)))
 
-			demoConsole.SetFore(x, y, fore)
+			demoConsole.SetCharForeground(x, y, fore)
 		}
 	}
 
@@ -1668,8 +1669,8 @@ func (self *MouseDemo) Render(first bool, key *Key) {
 		cx := abs(DEMO_SCREEN_X - mouse.Cx)
 		cy := abs(DEMO_SCREEN_Y - mouse.Cy)
 		char = fmt.Sprintf("%s (%d)", string(demoConsole.GetChar(cx, cy)), demoConsole.GetChar(cx, cy))
-		foreColor = fmt.Sprintf("%d", demoConsole.GetFore(cx, cy))
-		backColor = fmt.Sprintf("%d", demoConsole.GetBack(cx, cy))
+		foreColor = fmt.Sprintf("%d", demoConsole.GetCharForeground(cx, cy))
+		backColor = fmt.Sprintf("%d", demoConsole.GetCharBackground(cx, cy))
 	}
 
 	if mouse.LButtonPressed {
@@ -1681,11 +1682,11 @@ func (self *MouseDemo) Render(first bool, key *Key) {
 	if mouse.MButtonPressed {
 		self.mbut = !self.mbut
 	}
-	self.secondary.SetForegroundColor(COLOR_WHITE)
-	self.secondary.SetBackgroundColor(COLOR_BLACK)
+	self.secondary.SetDefaultForeground(COLOR_WHITE)
+	self.secondary.SetDefaultBackground(COLOR_BLACK)
 	self.secondary.Clear()
 
-	self.secondary.PrintLeft(1, 1, BKGND_NONE,
+	self.secondary.PrintEx(1, 1, BKGND_NONE, LEFT,
 		`Mouse position : %4dx%4d
 Mouse cell     : %4dx%4d
 Mouse movement : %4dx%4d
@@ -1727,7 +1728,7 @@ Char           : %s
 type NameDemo struct {
 	nbSets int
 	curSet int
-	delay  float
+	delay  float32
 	sets   []string
 	names  vector.StringVector
 }
@@ -1761,13 +1762,13 @@ func (self *NameDemo) Render(first bool, key *Key) {
 	}
 
 	demoConsole.Clear()
-	demoConsole.SetBackgroundColor(COLOR_BLACK)
-	demoConsole.SetForegroundColor(COLOR_DARK_GREEN)
-	demoConsole.PrintLeft(1, 1, BKGND_NONE, "%s\n\n+ : next generator\n- : prev generator",
+	demoConsole.SetDefaultBackground(COLOR_BLACK)
+	demoConsole.SetDefaultForeground(COLOR_DARK_GREEN)
+	demoConsole.PrintEx(1, 1, BKGND_NONE, LEFT, "%s\n\n+ : next generator\n- : prev generator",
 		self.sets[self.curSet])
 	for i, name := range self.names {
 		if len(name) < DEMO_SCREEN_WIDTH {
-			demoConsole.PrintRight(DEMO_SCREEN_WIDTH-2, 2+i, BKGND_NONE, name)
+			demoConsole.PrintEx(DEMO_SCREEN_WIDTH-2, 2+i, BKGND_NONE, RIGHT, name)
 		}
 	}
 
@@ -1814,7 +1815,7 @@ func parse(fname string) string {
 	p := NewParser()
 	defer p.Delete()
 	ps := p.RegisterStruct("item_type")
-	ps.AddProperty("cost", TYPE_INT, true)
+	ps.AddProperty("cost", TYPE_BOOL, true)
 	ps.AddProperty("weight", TYPE_FLOAT, true)
 	ps.AddProperty("deal_damage", TYPE_BOOL, true)
 	ps.AddProperty("damages", TYPE_DICE, true)
@@ -1861,11 +1862,11 @@ func (self *ParserDemo) Render(first bool, key *Key) {
 		self.text += "Parsed output:\n\n"
 		self.text += output
 	}
-	demoConsole.SetBackgroundColor(COLOR_BLACK)
-	demoConsole.SetForegroundColor(COLOR_DARK_GREEN)
+	demoConsole.SetDefaultBackground(COLOR_BLACK)
+	demoConsole.SetDefaultForeground(COLOR_DARK_GREEN)
 	demoConsole.Clear()
 
-	demoConsole.PrintLeftRect(1, 1, demoConsole.GetWidth()-1, demoConsole.GetHeight()-1, BKGND_SET, self.text)
+	demoConsole.PrintRectEx(1, 1, demoConsole.GetWidth()-1, demoConsole.GetHeight()-1, BKGND_SET, LEFT, self.text)
 
 }
 
@@ -1927,14 +1928,14 @@ func switchDemoCbk(w IWidget, data interface{}) {
 }
 
 func setColors(w IWidget) {
-	w.SetForegroundColor(COLOR_GREY, COLOR_BLACK)
-	w.SetBackgroundColor(COLOR_BLACK, COLOR_GREY)
+	w.SetDefaultForeground(COLOR_GREY, COLOR_BLACK)
+	w.SetDefaultBackground(COLOR_BLACK, COLOR_GREY)
 }
 
 func setButtonColors(w IWidget) {
 	b := w.(*RadioButton)
-	b.SetForegroundColor(COLOR_GREY, COLOR_GREY.Lighten(0.4))
-	b.SetBackgroundColor(COLOR_BLACK, COLOR_BLACK.Lighten(0.4))
+	b.SetDefaultForeground(COLOR_GREY, COLOR_GREY.Lighten(0.4))
+	b.SetDefaultBackground(COLOR_BLACK, COLOR_BLACK.Lighten(0.4))
 	b.SetUseSelectionColor(true)
 	b.SetSelectionColor(COLOR_WHITE, COLOR_LIGHT_BLUE)
 }
@@ -1961,7 +1962,7 @@ func buildGui() {
 func Run() {
 
 	curSample = SAMPLE_MOUSE_SUPPORT // index of the current sample
-	first = true  // first time we render a sample
+	first = true                     // first time we render a sample
 	//var i int
 	key := Key{Vk: K_NONE, C: 0}
 	font := "data/fonts/prestige10x10_gs_tc.png"
@@ -2038,11 +2039,13 @@ func Run() {
 		fontFlags = fontNewFlags
 	}
 
+
 	if fullscreenWidth > 0 {
 		SysForceFullscreenResolution(fullscreenWidth, fullscreenHeight)
 	}
 
-	rootConsole = NewRootConsoleWithFont(SCREEN_WIDTH, SCREEN_HEIGHT, "Go demo", false, font, fontFlags, nbCharHoriz, nbCharVertic)
+	rootConsole = NewRootConsoleWithFont(SCREEN_WIDTH, SCREEN_HEIGHT, "Go demo", false, font, fontFlags, nbCharHoriz,
+	nbCharVertic, RENDERER_SDL)
 	defer rootConsole.Delete()
 
 	guiConsole = NewConsole(GUI_SCREEN_WIDTH, GUI_SCREEN_HEIGHT)
@@ -2055,9 +2058,10 @@ func Run() {
 
 	for {
 
+
 		rootConsole.Clear() // THIS IS CRITICAL !!
-		guiConsole.SetBackgroundColor(COLOR_BLACK)
-		guiConsole.SetForegroundColor(COLOR_WHITE)
+		guiConsole.SetDefaultBackground(COLOR_BLACK)
+		guiConsole.SetDefaultForeground(COLOR_WHITE)
 		guiConsole.Clear()
 		//		gui.UpdateWidgets(key)
 		gui.RenderWidgets()
@@ -2070,14 +2074,14 @@ func Run() {
 		}
 
 		// print the help message
-		rootConsole.SetForegroundColor(COLOR_GREY)
-		rootConsole.PrintLeft(2, 19, BKGND_NONE, "%c%c: select demo", CHAR_ARROW_N, CHAR_ARROW_S)
-		rootConsole.PrintLeft(2, 20, BKGND_NONE, "alt-enter: %s",
+		rootConsole.SetDefaultForeground(COLOR_GREY)
+		rootConsole.PrintEx(2, 19, BKGND_NONE, LEFT, "%c%c: select demo", CHAR_ARROW_N, CHAR_ARROW_S)
+		rootConsole.PrintEx(2, 20, BKGND_NONE, LEFT, "alt-enter: %s",
 			If(rootConsole.IsFullscreen(), "window ", "fullscreen ").(string))
 
-		rootConsole.PrintLeft(2, 60, BKGND_NONE, "last frame: %4d ms", int(SysGetLastFrameLength()*1000))
-		rootConsole.PrintLeft(2, 61, BKGND_NONE, "fps: %10d fps", SysGetFps())
-		rootConsole.PrintLeft(2, 62, BKGND_NONE, "elapsed: %8dms", SysElapsedMilliseconds())
+		rootConsole.PrintEx(2, 60, BKGND_NONE, LEFT, "last frame: %4d ms", int(SysGetLastFrameLength()*1000))
+		rootConsole.PrintEx(2, 61, BKGND_NONE, LEFT, "fps: %10d fps", SysGetFps())
+		rootConsole.PrintEx(2, 62, BKGND_NONE, LEFT, "elapsed: %8dms", SysElapsedMilliseconds())
 		// render current sample
 		samples[curSample].demo.Render(first, &key)
 		first = false
@@ -2111,6 +2115,7 @@ func Run() {
 			// save screenshot
 			SysSaveScreenshot()
 		}
+
 
 		samples[curSample].button.Select()
 

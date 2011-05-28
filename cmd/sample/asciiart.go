@@ -144,7 +144,7 @@ func (self *AsciiArtGallery) randomAsciiArt() IAsciiArt {
 
 func NewAsciiArtFromFile(fname string) (art IAsciiArt, err os.Error) {
 
-	fin, err := os.Open(fname, os.O_RDONLY, 0664)
+	fin, err := os.Open(fname)
 	if err != nil {
 		return nil, err
 	}
@@ -165,13 +165,13 @@ func (self *AsciiArt) PutChar(console IConsole, x, y int) {
 	color := self.colors[y+self.offsetY][x+self.offsetX]
 	// char := int(self.chars[y+self.offsetY][x+self.offsetX])
 	console.PutChar(x, y, 'x', BKGND_SET)
-	console.SetFore(x, y, color)
-	console.SetBack(x, y, COLOR_BLACK, BKGND_SET)
+	console.SetCharForeground(x, y, color)
+	console.SetCharBackground(x, y, COLOR_BLACK, BKGND_SET)
 
 }
 
 func (self *AsciiArt) Draw(console IConsole) {
-	console.SetBackgroundColor(COLOR_BLACK)
+	console.SetDefaultBackground(COLOR_BLACK)
 	console.Clear()
 	for x := 0; x < min(console.GetWidth(), self.width); x++ {
 		for y := 0; y < min(console.GetHeight(), self.height); y++ {
@@ -197,7 +197,7 @@ func (self *AsciiArt) Render(console IConsole, transition Transition, first bool
 	case RANDOMIZE:
 		{
 			if first {
-				console.SetBackgroundColor(COLOR_BLACK)
+				console.SetDefaultBackground(COLOR_BLACK)
 			}
 			for i := 0; i < 500; i++ {
 				x := random.GetInt(0, console.GetWidth()-1)
@@ -209,8 +209,8 @@ func (self *AsciiArt) Render(console IConsole, transition Transition, first bool
 				} else {
 					// else draw black background
 					console.PutChar(x, y, ' ', BKGND_SET)
-					console.SetFore(x, y, COLOR_BLACK)
-					console.SetBack(x, y, COLOR_BLACK, BKGND_SET)
+					console.SetCharForeground(x, y, COLOR_BLACK)
+					console.SetCharBackground(x, y, COLOR_BLACK, BKGND_SET)
 				}
 			}
 
@@ -224,16 +224,16 @@ func (self *AsciiArt) Render(console IConsole, transition Transition, first bool
 				aas.secondary = NewConsole(console.GetWidth(), console.GetHeight())
 				console.Blit(0, 0, console.GetWidth(), console.GetHeight(), aas.secondary, 0, 0, 1.0, 1.0)
 			}
-			console.SetBackgroundColor(COLOR_BLACK)
+			console.SetDefaultBackground(COLOR_BLACK)
 			console.Clear()
 			// fade out old
 			if elapsed <= TRANSITION_TIME {
-				alpha := 1.0 - float(elapsed)/TRANSITION_TIME
+				alpha := 1.0 - float32(elapsed)/TRANSITION_TIME
 				aas.secondary.Blit(0, 0, console.GetWidth(), console.GetHeight(), console, 0, 0, alpha, alpha)
 				// fade in new
 			} else {
 				self.Draw(aas.secondary)
-				alpha := minf((float(elapsed)-TRANSITION_TIME)/TRANSITION_TIME, 1)
+				alpha := minf((float32(elapsed)-TRANSITION_TIME)/TRANSITION_TIME, 1)
 				aas.secondary.Blit(0, 0, console.GetWidth(), console.GetHeight(), console, 0, 0, alpha, alpha)
 			}
 
@@ -248,8 +248,8 @@ func (self *AsciiArt) Render(console IConsole, transition Transition, first bool
 				aas.moveTransition = MoveTransition(random.GetInt(0, NB_MOVE_TRANSITIONS-1))
 				self.Draw(aas.secondary)
 			}
-			widthPart := max(1, min(console.GetWidth(), int(float(elapsed)/TRANSITION_TIME*float(console.GetWidth()))))
-			heightPart := max(1, min(console.GetHeight(), int(float(elapsed)/TRANSITION_TIME*float(console.GetHeight()))))
+			widthPart := max(1, min(console.GetWidth(), int(float32(elapsed)/TRANSITION_TIME*float32(console.GetWidth()))))
+			heightPart := max(1, min(console.GetHeight(), int(float32(elapsed)/TRANSITION_TIME*float32(console.GetHeight()))))
 
 			switch aas.moveTransition {
 			case MOVE_LEFT:

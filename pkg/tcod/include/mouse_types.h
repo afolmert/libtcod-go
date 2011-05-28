@@ -24,26 +24,24 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-* Mingos' NameGen
-* This file was written by Dominik "Mingos" Marczuk.
-*/
 
-#ifndef _TCOD_NAMEGEN_H
-#define _TCOD_NAMEGEN_H
+#ifndef _TCOD_MOUSE_TYPES_H
+#define _TCOD_MOUSE_TYPES_H
 
-/* the generator typedef */
-typedef void * TCOD_namegen_t;
+/* mouse data */
+typedef struct {
+  int x,y; /* absolute position */
+  int dx,dy; /* movement since last update in pixels */
+  int cx,cy; /* cell coordinates in the root console */
+  int dcx,dcy; /* movement since last update in console cells */
+  bool lbutton ; /* left button status */
+  bool rbutton ; /* right button status */
+  bool mbutton ; /* middle button status */
+  bool lbutton_pressed ; /* left button pressed event */ 
+  bool rbutton_pressed ; /* right button pressed event */ 
+  bool mbutton_pressed ; /* middle button pressed event */ 
+  bool wheel_up ; /* wheel up event */
+  bool wheel_down ; /* wheel down event */
+} TCOD_mouse_t;
 
-/* parse a file with syllable sets */
-TCODLIB_API void TCOD_namegen_parse (const char * filename, TCOD_random_t random);
-/* generate a name */
-TCODLIB_API char * TCOD_namegen_generate (char * name, bool allocate);
-/* generate a name using a custom generation rule */
-TCODLIB_API char * TCOD_namegen_generate_custom (char * name, char * rule, bool allocate);
-/* retrieve the list of all available syllable set names */
-TCODLIB_API TCOD_list_t TCOD_namegen_get_sets (void);
-/* delete a generator */
-TCODLIB_API void TCOD_namegen_destroy (void);
-
-#endif
+#endif /* _TCOD_MOUSE_TYPES_H */

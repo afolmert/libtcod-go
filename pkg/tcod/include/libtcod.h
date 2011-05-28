@@ -1,6 +1,6 @@
 /*
-* libtcod 1.5.0
-* Copyright (c) 2008,2009,2010 Jice
+* libtcod 1.5.1
+* Copyright (c) 2008,2009,2010 Jice & Mingos
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -10,13 +10,13 @@
 *     * Redistributions in binary form must reproduce the above copyright
 *       notice, this list of conditions and the following disclaimer in the
 *       documentation and/or other materials provided with the distribution.
-*     * The name of Jice may not be used to endorse or promote products
+*     * The name of Jice or Mingos may not be used to endorse or promote products
 *       derived from this software without specific prior written permission.
 *
-* THIS SOFTWARE IS PROVIDED BY Jice ``AS IS'' AND ANY
+* THIS SOFTWARE IS PROVIDED BY JICE AND MINGOS ``AS IS'' AND ANY
 * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL Jice BE LIABLE FOR ANY
+* DISCLAIMED. IN NO EVENT SHALL JICE OR MINGOS BE LIABLE FOR ANY
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -28,25 +28,29 @@
 #ifndef _TCODLIB_H
 #define _TCODLIB_H
 
-// uncomment to disable unicode support
-//#define NO_UNICODE
+/* uncomment to disable unicode support */
+/*#define NO_UNICODE */
 
-// os identification
-// TCOD_WINDOWS : OS is windows
-// TCOD_LINUX : OS is Linux
-// TCOD_MACOSX : OS is Mac OS X
+/* uncomment to disable opengl support */
+/*#define NO_OPENGL */
 
-// compiler identification
-// TCOD_VISUAL_STUDIO : compiler is Microsoft Visual Studio
-// TCOD_MINGW32 : compiler is Mingw32
-// TCOD_GCC : compiler is gcc/g++
+/* os identification
+   TCOD_WINDOWS : OS is windows
+   TCOD_LINUX : OS is Linux
+   TCOD_MACOSX : OS is Mac OS X 
+   TCOD_HAIKU : OS is Haiku */
 
-// word size
-// TCOD_64BITS : 64 bits OS
-// TCOD_WIN64 : 64 bits Windows
-// TCOD_WIN32 : 32 bits Windows
-// TCOD_LINUX64 : 64 bits Linux
-// TCOD_LINUX32 : 32 bits Linux
+/* compiler identification
+   TCOD_VISUAL_STUDIO : compiler is Microsoft Visual Studio
+   TCOD_MINGW32 : compiler is Mingw32
+   TCOD_GCC : compiler is gcc/g++ */
+
+/* word size
+   TCOD_64BITS : 64 bits OS
+   TCOD_WIN64 : 64 bits Windows
+   TCOD_WIN32 : 32 bits Windows
+   TCOD_LINUX64 : 64 bits Linux
+   TCOD_LINUX32 : 32 bits Linux */
 
 #if defined( _MSC_VER )
 #  define TCOD_VISUAL_STUDIO
@@ -61,6 +65,12 @@
 #  define TCOD_WINDOWS
 #  define TCOD_MINGW32
 #  define TCOD_WIN32
+#elif defined( __HAIKU__ )
+#  define TCOD_HAIKU
+#  define TCOD_GCC
+#  if __WORDSIZE == 64
+#    define TCOD_64BITS
+#  endif
 #elif defined( __linux )
 #  define TCOD_LINUX
 #  define TCOD_GCC
@@ -75,32 +85,35 @@
 #  define TCOD_GCC
 #endif
 
-// unicode rendering functions support
+/* unicode rendering functions support */
 #ifndef NO_UNICODE
 #include <wchar.h>
 #endif
 
-// SDL_main support for OSX
-#ifdef TCOD_MACOSX
+/* This is a hack. SDL by default want you to rename your main statement, and insert it's own first
+   It does that to handle some init code. However, libtcod handles that for you. If we did this
+   wrappers like libtcod-net would be hosed, since there is no main statement there. */
+#ifdef TCOD_MACOSX 
+#define _SDL_main_h
 #include "SDL/SDL.h"
 #endif
 
-// base types
+/* base types */
 typedef unsigned char uint8;
 typedef char int8;
 typedef unsigned short uint16;
 typedef short int16;
 typedef unsigned int uint32;
 typedef int int32;
-// int with the same size as a pointer (32 or 64 depending on OS)
+/* int with the same size as a pointer (32 or 64 depending on OS) */
 typedef long intptr;
 typedef unsigned long uintptr;
 
-#define TCOD_HEXVERSION 0x010500
-#define TCOD_STRVERSION "1.5.0"
-#define TCOD_TECHVERSION 0x01050003
+#define TCOD_HEXVERSION 0x010501
+#define TCOD_STRVERSION "1.5.1"
+#define TCOD_TECHVERSION 0x01050101
 
-// bool support for C
+/* bool support for C */
 #ifndef __cplusplus
 #ifndef bool
 typedef uint8 bool;
@@ -108,11 +121,11 @@ typedef uint8 bool;
 #define true ((bool)1)
 #endif
 #else
-// in C++ all C functions prototype should use uint8 instead of bool
+/* in C++ all C functions prototypes should use uint8 instead of bool */
 #define bool uint8
 #endif
 
-// DLL export
+/* DLL export */
 #ifdef TCOD_WINDOWS
 #ifdef LIBTCOD_EXPORTS
 #define TCODLIB_API __declspec(dllexport)
@@ -127,15 +140,18 @@ typedef uint8 bool;
 extern "C" {
 #endif
 
-#ifdef TCOD_VISUAL_STUDIO
-#define strdup _strdup
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
-#endif
+/* ansi C lacks support for those functions */
+TCODLIB_API char *TCOD_strdup(const char *s);
+TCODLIB_API int TCOD_strcasecmp(const char *s1, const char *s2);
+TCODLIB_API int TCOD_strncasecmp(const char *s1, const char *s2, size_t n);
+
 #if defined(TCOD_WINDOWS)
 char *strcasestr (const char *haystack, const char *needle);
 #endif
-#ifdef TCOD_LINUX
+#if defined(TCOD_LINUX) || defined(TCOD_HAIKU)
+#define vsnwprintf vswprintf
+#endif
+#ifdef TCOD_MACOSX
 #define vsnwprintf vswprintf
 #endif
 #ifdef TCOD_WINDOWS
