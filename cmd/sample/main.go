@@ -1815,17 +1815,17 @@ func parse(fname string) string {
 	p := NewParser()
 	defer p.Delete()
 	ps := p.RegisterStruct("item_type")
-	ps.AddProperty("cost", TYPE_BOOL, true)
+	ps.AddProperty("cost", TYPE_INT, true)
 	ps.AddProperty("weight", TYPE_FLOAT, true)
 	ps.AddProperty("deal_damage", TYPE_BOOL, true)
 	ps.AddProperty("damages", TYPE_DICE, true)
-	ps.AddProperty("color", TYPE_COLOR, true)
 	ps.AddProperty("damaged_color", TYPE_COLOR, true)
 	ps.AddProperty("damage_type", TYPE_STRING, true)
 	ps.AddListProperty("features", TYPE_STRING, true)
 	ps.AddListProperty("versions", TYPE_INT, true)
 	ps.AddListProperty("advances", TYPE_FLOAT, true)
 	ps.AddFlag("abstract")
+
 
 	ps.AddValueList("states", statesList, true)
 
