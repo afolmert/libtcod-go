@@ -179,12 +179,17 @@ package tcod
 	 TCOD_zip_put_color(zip, *val);
   }
 
+  bool _TCOD_sys_file_exists(const char * filename) {
+	return TCOD_sys_file_exists(filename);
+  }
+
 */
 import "C"
 
 import (
 	"unsafe"
 	"fmt"
+	"runtime"
 	"container/vector"
 )
 
@@ -423,6 +428,15 @@ func toColor(c C.TCOD_color_t) (result Color) {
 }
 
 
+func NewColorRGB(r, g, b uint8) Color {
+	return Color{R: r, G: g, B: b}
+}
+
+func NewColorHSV(h, s, v float32) Color {
+	return toColor(C.TCOD_color_HSV(C.float(h), C.float(s), C.float(v)))
+}
+
+// basic operations 
 func (self Color) Equals(c2 Color) bool {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
@@ -458,6 +472,9 @@ func (self Color) Lerp(c2 Color, coef float32) Color {
 	return toColor(C._TCOD_color_lerp((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2), C.float(coef)))
 }
 
+// HSV transformations
+
+
 func (self Color) Lighten(ratio float32) Color {
 	return self.Lerp(COLOR_WHITE, ratio)
 }
@@ -471,6 +488,53 @@ func (self Color) SetHSV(h float32, s float32, v float32) Color {
 	C.TCOD_color_set_HSV(&c, C.float(h), C.float(s), C.float(v))
 	return toColor(c)
 }
+
+
+func (self Color) GetHue() float32 {
+	return float32(C.TCOD_color_get_hue(fromColor(self)))
+}
+
+func (self Color) SetHue(h float32) Color {
+	c := C.TCOD_color_t{}
+	C.TCOD_color_set_hue(&c, C.float(h))
+	return toColor(c)
+}
+
+
+func (self Color) GetSaturation() float32 {
+	return float32(C.TCOD_color_get_saturation(fromColor(self)))
+}
+
+func (self Color) SetSaturation(h float32) Color {
+	c := C.TCOD_color_t{}
+	C.TCOD_color_set_saturation(&c, C.float(h))
+	return toColor(c)
+}
+
+
+func (self Color) GetValue() float32 {
+	return float32(C.TCOD_color_get_value(fromColor(self)))
+}
+
+func (self Color) SetValue(h float32) Color {
+	c := C.TCOD_color_t{}
+	C.TCOD_color_set_value(&c, C.float(h))
+	return toColor(c)
+}
+
+
+func (self Color) ShiftHue(hshift float32) Color {
+	c := C.TCOD_color_t{}
+	C.TCOD_color_shift_hue(&c, C.float(hshift))
+	return toColor(c)
+}
+
+func (self Color) ScaleHSV(scoef, vcoef float32) Color {
+	c := C.TCOD_color_t{}
+	C.TCOD_color_scale_HSV(&c, C.float(scoef), C.float(vcoef))
+	return toColor(c)
+}
+
 
 func (self Color) GetHSV() (h, s, v float32) {
 	var ch, cs, sv C.float
@@ -597,6 +661,10 @@ type IConsole interface {
 	PrintRect(x, y, w, h int, fmts string, v ...interface{}) int
 	PrintRectEx(x, y, w, h int, flag BkgndFlag, alignment Alignment, fmts string, v ...interface{}) int
 	HeightRect(x, y, w, h int, fmts string, v ...interface{}) int
+	SetBackgroundFlag(flag BkgndFlag)
+	GetBackgroundFlag() BkgndFlag
+	SetAlignment(alignment Alignment)
+	GetAlignment() Alignment
 	Rect(x, y, w, h int, clear bool, flag BkgndFlag)
 	Hline(x, y, l int, flag BkgndFlag)
 	Vline(x, y, l int, flag BkgndFlag)
@@ -606,96 +674,30 @@ type IConsole interface {
 	GetHeight() int
 	SetKeyColor(color Color)
 	Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32)
-	Delete()
 }
+
+
+// Console 
 
 type Console struct {
 	Data C.TCOD_console_t
 }
 
-type RootConsole struct {
-	Console
+
+func deleteConsole(c *Console) {
+	C.TCOD_console_delete(c.Data)
 }
 
 
-func (self *RootConsole) Data() C.TCOD_console_t {
-	return nil
+func NewConsole(w, h int) *Console {
+	result := &Console{C.TCOD_console_new(C.int(w), C.int(h))}
+	runtime.SetFinalizer(result, deleteConsole)
+	return result
 }
 
 func (self *Console) GetData() C.TCOD_console_t {
 	return self.Data
 }
-
-
-func NewRootConsole(w, h int, title string, fullscreen bool) *RootConsole {
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
-	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen), C.TCOD_renderer_t(RENDERER_SDL))
-	// in root console, Data field is nil
-	return &RootConsole{}
-}
-
-func NewRootConsoleWithFont(w, h int, title string, fullscreen bool, fontFile string, fontFlags, nbCharHoriz,
-nbCharVertic int, renderer Renderer) *RootConsole {
-	cfontFile := C.CString(fontFile)
-	defer C.free(unsafe.Pointer(cfontFile))
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
-	C.TCOD_console_set_custom_font(cfontFile, C.int(fontFlags), C.int(nbCharHoriz), C.int(nbCharVertic))
-	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen), C.TCOD_renderer_t(renderer))
-	// in root console, Data field is nil
-	return &RootConsole{}
-}
-
-
-func (self *RootConsole) SetWindowTitle(title string) {
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
-	C.TCOD_console_set_window_title(ctitle)
-
-}
-
-func (self *RootConsole) SetFullscreen(fullscreen bool) {
-	C.TCOD_console_set_fullscreen(fromBool(fullscreen))
-}
-
-func (self *RootConsole) IsFullscreen() bool {
-	return toBool(C.TCOD_console_is_fullscreen())
-}
-
-
-func (self *RootConsole) IsWindowClosed() bool {
-	return toBool(C.TCOD_console_is_window_closed())
-}
-
-
-func (self *RootConsole) SetCustomFont(fontFile string, flags int, nbCharHoriz int, nbCharVertic int) {
-	cfontFile := C.CString(fontFile)
-	defer C.free(unsafe.Pointer(cfontFile))
-	C.TCOD_console_set_custom_font(cfontFile, C.int(flags), C.int(nbCharHoriz), C.int(nbCharVertic))
-}
-
-
-func (self *RootConsole) MapAsciiCodeToFont(asciiCode, fontCharX, fontCharY int) {
-	C.TCOD_console_map_ascii_code_to_font(C.int(asciiCode), C.int(fontCharX), C.int(fontCharY))
-}
-
-
-func (self *RootConsole) MapAsciiCodesToFont(asciiCode, fontCharX, fontCharY int) {
-	C.TCOD_console_map_ascii_code_to_font(C.int(asciiCode), C.int(fontCharX), C.int(fontCharY))
-}
-
-
-func (self *RootConsole) MapStringToFont(s string, fontCharX, fontCharY int) {
-	cs := C.CString(s)
-	defer C.free(unsafe.Pointer(cs))
-	C.TCOD_console_map_string_to_font(cs, C.int(fontCharX), C.int(fontCharY))
-}
-
-func (self *RootConsole) SetDirty(x, y, w, h int) {
-	C.TCOD_console_set_dirty(C.int(x), C.int(y), C.int(w), C.int(h))
-}
-
 
 func (self *Console) SetDefaultBackground(color Color) {
 	C.TCOD_console_set_default_background(self.Data, fromColor(color))
@@ -769,6 +771,22 @@ func (self *Console) PrintRectEx(x, y, w, h int, flag BkgndFlag, alignment Align
 }
 
 
+func (self *Console) SetBackgroundFlag(flag BkgndFlag) {
+	C.TCOD_console_set_background_flag(self.Data, C.TCOD_bkgnd_flag_t(flag))
+}
+
+func (self *Console) GetBackgroundFlag() BkgndFlag {
+	return BkgndFlag(C.TCOD_console_get_background_flag(self.Data))
+}
+
+func (self *Console) SetAlignment(alignment Alignment) {
+	C.TCOD_console_set_alignment(self.Data, C.TCOD_alignment_t(alignment))
+}
+
+func (self *Console) GetAlignment() Alignment {
+	return Alignment(C.TCOD_console_get_alignment(self.Data))
+}
+
 
 func (self *Console) HeightRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v...)
@@ -836,6 +854,103 @@ func (self *Console) GetChar(x, y int) int {
 	return int(C.TCOD_console_get_char(self.Data, C.int(x), C.int(y)))
 }
 
+
+func (self *Console) GetWidth() int {
+	return int(C.TCOD_console_get_width(self.Data))
+}
+
+func (self *Console) GetHeight() int {
+	return int(C.TCOD_console_get_height(self.Data))
+}
+
+func (self *Console) SetKeyColor(color Color) {
+	ccolor := fromColor(color)
+	C._TCOD_console_set_key_color(self.Data, (*C.TCOD_color_t)(&ccolor))
+}
+
+func (self *Console) Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32) {
+	C.TCOD_console_blit(self.Data, C.int(xSrc), C.int(ySrc), C.int(wSrc), C.int(hSrc),
+		dst.GetData(), C.int(xDst), C.int(yDst), C.float(foregroundAlpha), C.float(backgroundAlpha))
+}
+
+
+// RootConsole
+
+type RootConsole struct {
+	Console
+}
+
+
+func NewRootConsole(w, h int, title string, fullscreen bool) *RootConsole {
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen), C.TCOD_renderer_t(RENDERER_SDL))
+	// in root console, Data field is nil
+	return &RootConsole{}
+}
+
+
+func NewRootConsoleWithFont(w, h int, title string, fullscreen bool, fontFile string, fontFlags, nbCharHoriz,
+nbCharVertic int, renderer Renderer) *RootConsole {
+	cfontFile := C.CString(fontFile)
+	defer C.free(unsafe.Pointer(cfontFile))
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+	C.TCOD_console_set_custom_font(cfontFile, C.int(fontFlags), C.int(nbCharHoriz), C.int(nbCharVertic))
+	C.TCOD_console_init_root(C.int(w), C.int(h), ctitle, fromBool(fullscreen), C.TCOD_renderer_t(renderer))
+	// in root console, Data field is nil
+	return &RootConsole{}
+}
+
+
+func (self *RootConsole) SetWindowTitle(title string) {
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+	C.TCOD_console_set_window_title(ctitle)
+
+}
+
+func (self *RootConsole) SetFullscreen(fullscreen bool) {
+	C.TCOD_console_set_fullscreen(fromBool(fullscreen))
+}
+
+func (self *RootConsole) IsFullscreen() bool {
+	return toBool(C.TCOD_console_is_fullscreen())
+}
+
+
+func (self *RootConsole) IsWindowClosed() bool {
+	return toBool(C.TCOD_console_is_window_closed())
+}
+
+
+func (self *RootConsole) SetCustomFont(fontFile string, flags int, nbCharHoriz int, nbCharVertic int) {
+	cfontFile := C.CString(fontFile)
+	defer C.free(unsafe.Pointer(cfontFile))
+	C.TCOD_console_set_custom_font(cfontFile, C.int(flags), C.int(nbCharHoriz), C.int(nbCharVertic))
+}
+
+
+func (self *RootConsole) MapAsciiCodeToFont(asciiCode, fontCharX, fontCharY int) {
+	C.TCOD_console_map_ascii_code_to_font(C.int(asciiCode), C.int(fontCharX), C.int(fontCharY))
+}
+
+
+func (self *RootConsole) MapAsciiCodesToFont(asciiCode, fontCharX, fontCharY int) {
+	C.TCOD_console_map_ascii_code_to_font(C.int(asciiCode), C.int(fontCharX), C.int(fontCharY))
+}
+
+
+func (self *RootConsole) MapStringToFont(s string, fontCharX, fontCharY int) {
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	C.TCOD_console_map_string_to_font(cs, C.int(fontCharX), C.int(fontCharY))
+}
+
+func (self *RootConsole) SetDirty(x, y, w, h int) {
+	C.TCOD_console_set_dirty(C.int(x), C.int(y), C.int(w), C.int(h))
+}
+
 func (self *RootConsole) SetFade(val uint8, fade Color) {
 	ccolor := fromColor(fade)
 	C._TCOD_console_set_fade(C.uint8(val), (*C.TCOD_color_t)(&ccolor))
@@ -883,36 +998,6 @@ func (self *RootConsole) IsKeyPressed(keyCode KeyCode) bool {
 	return toBool(C.TCOD_console_is_key_pressed(C.TCOD_keycode_t(keyCode)))
 }
 
-func NewConsole(w, h int) *Console {
-	return &Console{C.TCOD_console_new(C.int(w), C.int(h))}
-}
-
-
-func (self *Console) GetWidth() int {
-	return int(C.TCOD_console_get_width(self.Data))
-}
-
-func (self *Console) GetHeight() int {
-	return int(C.TCOD_console_get_height(self.Data))
-}
-
-func (self *Console) SetKeyColor(color Color) {
-	ccolor := fromColor(color)
-	C._TCOD_console_set_key_color(self.Data, (*C.TCOD_color_t)(&ccolor))
-}
-
-func (self *Console) Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32) {
-	C.TCOD_console_blit(self.Data, C.int(xSrc), C.int(ySrc), C.int(wSrc), C.int(hSrc),
-		dst.GetData(), C.int(xDst), C.int(yDst), C.float(foregroundAlpha), C.float(backgroundAlpha))
-}
-
-func (self *Console) Delete() {
-	C.TCOD_console_delete(self.Data)
-}
-
-func (self *RootConsole) Delete() {
-	// it point to null does not delete
-}
 
 func (self *RootConsole) Credits() {
 	C.TCOD_console_credits()
@@ -1105,8 +1190,15 @@ type Text struct {
 	Data C.TCOD_text_t
 }
 
+func deleteText(t *Text) {
+	C.TCOD_text_delete(t.Data)
+}
+
+
 func NewText(x, y, w, h, maxChars int) *Text {
-	return &Text{C.TCOD_text_init(C.int(x), C.int(y), C.int(w), C.int(h), C.int(maxChars))}
+	result := &Text{C.TCOD_text_init(C.int(x), C.int(y), C.int(w), C.int(h), C.int(maxChars))}
+	runtime.SetFinalizer(result, deleteText)
+	return result
 }
 
 
@@ -1148,10 +1240,6 @@ func (self *Text) Get() string {
 
 func (self *Text) Reset() {
 	C.TCOD_text_reset(self.Data)
-}
-
-func (self *Text) Delete() {
-	C.TCOD_text_delete(self.Data)
 }
 
 
@@ -1204,6 +1292,13 @@ func SysGetCurrentResolution() (w, h int) {
 	return
 }
 
+func SysGetFullscreenOffsets() (offx, offy int) {
+	var coffx, coffy C.int
+	C.TCOD_sys_get_fullscreen_offsets(&coffx, &coffy)
+	offx, offy = int(coffx), int(coffy)
+	return
+}
+
 func SysUpdateChar(asciiCode, fontx, fonty int, img Image, x, y int) {
 	C.TCOD_sys_update_char(C.int(asciiCode), C.int(fontx), C.int(fonty), img.Data, C.int(x), C.int(y))
 }
@@ -1250,8 +1345,27 @@ func SysGetDirectoryContent(path, pattern string) []string {
 		true)
 }
 
+func SysFileExists(filename string) bool {
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	return toBool(C._TCOD_sys_file_exists(cfilename))
+}
+
 func SysGetNumCores() int {
 	return int(C.TCOD_sys_get_num_cores())
+}
+
+
+// Clipboard 
+
+func SysClipboardSet(value string) {
+	cvalue := C.CString(value)
+	defer C.free(unsafe.Pointer(cvalue))
+	C.TCOD_sys_clipboard_set(cvalue)
+}
+
+func SysClipboardGet() string {
+	return C.GoString(C.TCOD_sys_clipboard_get())
 }
 
 
@@ -1265,8 +1379,16 @@ type Map struct {
 
 type FovAlgorithm C.TCOD_fov_algorithm_t
 
+
+// destroy a map
+func deleteMap(m *Map) {
+	C.TCOD_map_delete(m.Data)
+}
+
 func NewMap(width, height int) *Map {
-	return &Map{C.TCOD_map_new(C.int(width), C.int(height))}
+	result := &Map{C.TCOD_map_new(C.int(width), C.int(height))}
+	runtime.SetFinalizer(result, deleteMap)
+	return result
 }
 
 
@@ -1285,10 +1407,6 @@ func (self *Map) SetProperties(x, y int, isTransparent bool, isWalkable bool) {
 	C.TCOD_map_set_properties(self.Data, C.int(x), C.int(y), fromBool(isTransparent), fromBool(isWalkable))
 }
 
-// destroy a map
-func (self *Map) Delete() {
-	C.TCOD_map_delete(self.Data)
-}
 
 // calculate the field of view (potentially visible cells from player_x,player_y)
 func (self *Map) ComputeFov(playerX, playerY, maxRadius int, lightWalls bool, algo FovAlgorithm) {
@@ -1358,10 +1476,6 @@ func (self *Bsp) AddSon(son *Bsp) {
 	}
 }
 
-func (self *Bsp) Delete() {
-	// provided for consistency
-	// it does not to do anything as every object is managed by Go
-}
 
 func NewBspWithSize(x, y, w, h int) (result *Bsp) {
 	result = new(Bsp)
@@ -1601,12 +1715,14 @@ type HeightMap struct {
 	Data *C.TCOD_heightmap_t
 }
 
-func NewHeightMap(w, h int) *HeightMap {
-	return &HeightMap{C.TCOD_heightmap_new(C.int(w), C.int(h))}
+func deleteHeightmap(h *HeightMap) {
+	C.TCOD_heightmap_delete(h.Data)
 }
 
-func (self *HeightMap) Delete() {
-	C.TCOD_heightmap_delete(self.Data)
+func NewHeightMap(w, h int) *HeightMap {
+	result := &HeightMap{C.TCOD_heightmap_new(C.int(w), C.int(h))}
+	runtime.SetFinalizer(result, deleteHeightmap)
+	return result
 }
 
 func (self *HeightMap) GetValue(x, y int) float32 {
@@ -1763,12 +1879,22 @@ type Image struct {
 	Data C.TCOD_image_t
 }
 
+func deleteImage(img *Image) {
+	C.TCOD_image_delete(img.Data)
+}
+
+func newImage(data C.TCOD_image_t) *Image {
+	result := &Image{data}
+	runtime.SetFinalizer(result, deleteImage)
+	return result
+}
+
 func NewImage(width, height int) *Image {
-	return &Image{C.TCOD_image_new(C.int(width), C.int(height))}
+	return newImage(C.TCOD_image_new(C.int(width), C.int(height)))
 }
 
 func NewImageFromConsole(console *Console) *Image {
-	return &Image{C.TCOD_image_from_console(console.Data)}
+	return newImage(C.TCOD_image_from_console(console.Data))
 }
 
 
@@ -1778,7 +1904,7 @@ func (self *Image) RefreshConsole(console *Console) {
 
 
 func LoadImage(filename string) *Image {
-	return &Image{C.TCOD_image_load(C.CString(filename))}
+	return newImage(C.TCOD_image_load(C.CString(filename)))
 }
 
 
@@ -1795,6 +1921,11 @@ func (self *Image) Invert() {
 func (self *Image) Hflip() {
 	C.TCOD_image_hflip(self.Data)
 }
+
+func (self *Image) Rotate90(numRotations int) {
+	C.TCOD_image_rotate90(self.Data, C.int(numRotations))
+}
+
 
 func (self *Image) Vflip() {
 	C.TCOD_image_vflip(self.Data)
@@ -1846,9 +1977,6 @@ func (self *Image) Blit2x(dest *Console, dx, dy, sx, sy, w, h int) {
 	C.TCOD_image_blit_2x(self.Data, dest.Data, C.int(dx), C.int(dy), C.int(sx), C.int(sy), C.int(w), C.int(h))
 }
 
-func (self *Image) Delete() {
-	C.TCOD_image_delete(self.Data)
-}
 
 func (self *Image) SetKeyColor(keyColor Color) {
 	ckeyColor := fromColor(keyColor)
@@ -1868,8 +1996,14 @@ type Path struct {
 	Data C.TCOD_path_t
 }
 
+func deletePath(path *Path) {
+	C.TCOD_path_delete(path.Data)
+}
+
 func NewPathUsingMap(m *Map, diagonalCost float32) *Path {
-	return &Path{C.TCOD_path_new_using_map(m.Data, C.float(diagonalCost))}
+	result := &Path{C.TCOD_path_new_using_map(m.Data, C.float(diagonalCost))}
+	runtime.SetFinalizer(result, deletePath)
+	return result
 }
 
 // Not implemented - go not supporting callbacks
@@ -1918,10 +2052,6 @@ func (self *Path) GetDestination() (x, y int) {
 	return
 }
 
-func (self *Path) Delete() {
-	C.TCOD_path_delete(self.Data)
-}
-
 
 //
 // Dijkstra path
@@ -1931,9 +2061,14 @@ type Dijkstra struct {
 	Data C.TCOD_dijkstra_t
 }
 
+func deleteDijkstra(d *Dijkstra) {
+	C.TCOD_dijkstra_delete(d.Data)
+}
 
 func NewDijkstraUsingMap(m *Map, diagonalCost float32) *Dijkstra {
-	return &Dijkstra{C.TCOD_dijkstra_new(m.Data, C.float(diagonalCost))}
+	result := &Dijkstra{C.TCOD_dijkstra_new(m.Data, C.float(diagonalCost))}
+	runtime.SetFinalizer(result, deleteDijkstra)
+	return result
 }
 
 // Not implemented - go not supporting callbacks
@@ -1979,52 +2114,83 @@ func (self *Dijkstra) PathWalk() (x, y int) {
 }
 
 
-func (self *Dijkstra) Delete() {
-	C.TCOD_dijkstra_delete(self.Data)
-}
-
-
 //
 // Mersenne Random generator
 //
 
+
 type RandomAlgo C.TCOD_random_algo_t
+
+type Distribution C.TCOD_distribution_t
 
 type Random struct {
 	Data C.TCOD_random_t
 }
 
+type Dice struct {
+	Data C.TCOD_dice_t
+}
+
+
+func fromDice(d Dice) C.TCOD_dice_t {
+	return d.Data
+}
+
+func toDice(d C.TCOD_dice_t) Dice {
+	return Dice{d}
+}
+
+
+func deleteRandom(r *Random) {
+	C.TCOD_random_delete(r.Data)
+}
+
+func newRandom(data C.TCOD_random_t) *Random {
+	result := &Random{data}
+	runtime.SetFinalizer(result, deleteRandom)
+	return result
+}
+
 func GetRandomInstance() *Random {
-	return &Random{C.TCOD_random_get_instance()}
+	return newRandom(C.TCOD_random_get_instance())
 }
 
 
 func NewRandom() *Random {
-	return &Random{
-		C.TCOD_random_new(C.TCOD_random_algo_t(RNG_MT))}
+	return newRandom(C.TCOD_random_new(C.TCOD_random_algo_t(RNG_MT)))
 }
+
 
 func NewRandomWithAlgo(algo RandomAlgo) *Random {
-	return &Random{C.TCOD_random_new(C.TCOD_random_algo_t(algo))}
+	return newRandom(C.TCOD_random_new(C.TCOD_random_algo_t(algo)))
 }
 
-func NewRandomFromSeed(seed uint32) *Random {
-	return &Random{
-		C.TCOD_random_new_from_seed(
-			C.TCOD_random_algo_t(RNG_MT),
-			C.uint32(seed))}
-}
 
 func NewRandomFromSeedWithAlgo(seed uint32, algo RandomAlgo) *Random {
-	return &Random{C.TCOD_random_new_from_seed(C.TCOD_random_algo_t(algo), C.uint32(seed))}
+	return newRandom(C.TCOD_random_new_from_seed(C.TCOD_random_algo_t(algo), C.uint32(seed)))
 }
 
+
+func NewRandomFromSeed(seed uint32) *Random {
+	return newRandom(
+		C.TCOD_random_new_from_seed(
+			C.TCOD_random_algo_t(RNG_MT),
+			C.uint32(seed)))
+}
+
+
 func (self *Random) Save() *Random {
-	return &Random{C.TCOD_random_save(self.Data)}
+	result := newRandom(C.TCOD_random_save(self.Data))
+	return result
 }
 
 func (self *Random) Restore(backup *Random) {
 	C.TCOD_random_restore(self.Data, backup.Data)
+}
+
+
+func (self *Random) SetDistribution(distribution Distribution) {
+	C.TCOD_random_set_distribution(self.Data, C.TCOD_distribution_t(distribution))
 }
 
 
@@ -2036,8 +2202,41 @@ func (self *Random) GetFloat(min, max float32) float32 {
 	return float32(C.TCOD_random_get_float(self.Data, C.float(min), C.float(max)))
 }
 
-func (self *Random) Delete() {
-	C.TCOD_random_delete(self.Data)
+func (self *Random) GetDouble(min, max float64) float64 {
+	return float64(C.TCOD_random_get_double(self.Data, C.double(min), C.double(max)))
+}
+
+
+func (self *Random) GetIntMean(min, max, mean int) int {
+	return int(C.TCOD_random_get_int_mean(self.Data, C.int(min), C.int(max), C.int(mean)))
+}
+
+
+func (self *Random) GetFloatMean(min, max, mean float32) float32 {
+	return float32(C.TCOD_random_get_float_mean(self.Data, C.float(min), C.float(max), C.float(mean)))
+}
+
+func (self *Random) GetDoubleMean(min, max, mean float64) float64 {
+	return float64(C.TCOD_random_get_double_mean(self.Data, C.double(min), C.double(max), C.double(mean)))
+}
+
+
+func NewDice(s string) *Dice {
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	result := &Dice{Data: C.TCOD_random_dice_new(cs)}
+	return result
+}
+
+
+func (self *Dice) Roll(random *Random) int {
+	return int(C.TCOD_random_dice_roll(random.Data, self.Data))
+}
+
+func RollDice(random *Random, s string) int {
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return int(C.TCOD_random_dice_roll_s(random.Data, cs))
 }
 
 
@@ -2060,30 +2259,6 @@ type ParserProperty struct {
 	Name      string
 	ValueType ParserValueType
 	Value     interface{}
-}
-
-type Dice struct {
-	NbRolls    int
-	NbFaces    int
-	Multiplier float32
-	AddSub     float32
-}
-
-
-func fromDice(d Dice) C.TCOD_dice_t {
-	return C.TCOD_dice_t{
-		nb_rolls:   C.int(d.NbRolls),
-		nb_faces:   C.int(d.NbFaces),
-		multiplier: C.float(d.Multiplier),
-		addsub:     C.float(d.AddSub)}
-}
-
-func toDice(d C.TCOD_dice_t) Dice {
-	return Dice{
-		NbRolls:    int(d.nb_rolls),
-		NbFaces:    int(d.nb_faces),
-		Multiplier: float32(d.multiplier),
-		AddSub:     float32(d.addsub)}
 }
 
 
@@ -2149,12 +2324,14 @@ func (self *ParserStruct) GetType(propname string) ParserValueType {
 }
 
 
-func NewParser() *Parser {
-	return &Parser{C.TCOD_parser_new()}
+func deleteParser(p *Parser) {
+	C.TCOD_parser_delete(p.Data)
 }
 
-func (self *Parser) Delete() {
-	C.TCOD_parser_delete(self.Data)
+func NewParser() *Parser {
+	result := &Parser{C.TCOD_parser_new()}
+	runtime.SetFinalizer(result, deleteParser)
+	return result
 }
 
 
@@ -2262,7 +2439,7 @@ const NOISE_MAX_DIMENSIONS = 4
 const NOISE_DEFAULT_HURST = 0.5
 const NOISE_DEFAULT_LACUNARITY = 2.0
 
-type NoiseType  C.TCOD_noise_type_t;
+type NoiseType C.TCOD_noise_type_t
 
 
 type Noise struct {
@@ -2271,12 +2448,24 @@ type Noise struct {
 
 type FloatArray []float32
 
+func deleteNoise(noise *Noise) {
+	C.TCOD_noise_delete(noise.Data)
+}
+
+func newNoise(d C.TCOD_noise_t) *Noise {
+	result := &Noise{d}
+	runtime.SetFinalizer(result, deleteNoise)
+	return result
+}
+
+
 func NewNoise(dimensions int, random *Random) *Noise {
-	return &Noise{C.TCOD_noise_new(C.int(dimensions), C.float(NOISE_DEFAULT_HURST), C.float(NOISE_DEFAULT_LACUNARITY), random.Data)}
+	return newNoise(C.TCOD_noise_new(C.int(dimensions), C.float(NOISE_DEFAULT_HURST),
+		C.float(NOISE_DEFAULT_LACUNARITY), random.Data))
 }
 
 func NewNoiseWithOptions(dimensions int, hurst float32, lacunarity float32, random *Random) *Noise {
-	return &Noise{C.TCOD_noise_new(C.int(dimensions), C.float(hurst), C.float(lacunarity), random.Data)}
+	return newNoise(C.TCOD_noise_new(C.int(dimensions), C.float(hurst), C.float(lacunarity), random.Data))
 }
 
 
@@ -2290,12 +2479,12 @@ func (self *Noise) SetType(noiseType NoiseType) {
 
 func (self *Noise) GetFbmEx(f FloatArray, octaves float32, noiseType NoiseType) float32 {
 	return float32(C.TCOD_noise_get_fbm_ex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves),
-	C.TCOD_noise_type_t(noiseType)))
+		C.TCOD_noise_type_t(noiseType)))
 }
 
 func (self *Noise) GetTurbulenceEx(f FloatArray, octaves float32, noiseType NoiseType) float32 {
 	return float32(C.TCOD_noise_get_turbulence_ex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves),
-	C.TCOD_noise_type_t(noiseType)))
+		C.TCOD_noise_type_t(noiseType)))
 }
 
 
@@ -2311,11 +2500,6 @@ func (self *Noise) GetTurbulence(f FloatArray, octaves float32) float32 {
 	return float32(C.TCOD_noise_get_turbulence(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
 }
 
-func (self *Noise) Delete() {
-	C.TCOD_noise_delete(self.Data)
-}
-
-
 
 //
 // Zip
@@ -2325,15 +2509,20 @@ type Zip struct {
 	Data C.TCOD_zip_t
 }
 
-func NewZip() *Zip {
-	return &Zip{C.TCOD_zip_new()}
+
+func deleteZip(zip *Zip) {
+	C.TCOD_zip_delete(zip.Data)
 }
 
-func (self *Zip) Delete() {
-	C.TCOD_zip_delete(self.Data)
+func NewZip() *Zip {
+	result := &Zip{C.TCOD_zip_new()}
+	runtime.SetFinalizer(result, deleteZip)
+	return result
 }
+
 
 // output interface
+
 func (self *Zip) PutChar(val byte) {
 	C.TCOD_zip_put_char(self.Data, C.char(val))
 }
@@ -2376,6 +2565,9 @@ func (self *Zip) PutData(nbBytes int, data unsafe.Pointer) {
 	C.TCOD_zip_put_data(self.Data, C.int(nbBytes), data)
 }
 
+func (self *Zip) GetCurrentBytes() uint32 {
+	return uint32(C.TCOD_zip_get_current_bytes(self.Data))
+}
 
 func (self *Zip) SaveToFile(filename string) {
 	cfilename := C.CString(filename)
@@ -2425,4 +2617,12 @@ func (self *Zip) GetConsole() *Console {
 
 func (self *Zip) GetData(nbBytes int, data unsafe.Pointer) int {
 	return int(C.TCOD_zip_get_data(self.Data, C.int(nbBytes), data))
+}
+
+func (self *Zip) GetRemainingBytes() uint32 {
+	return uint32(C.TCOD_zip_get_remaining_bytes(self.Data))
+}
+
+func (self *Zip) SkipBytes(nbBytes uint32) {
+	C.TCOD_zip_skip_bytes(self.Data, C.uint32(nbBytes))
 }

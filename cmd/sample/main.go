@@ -118,7 +118,6 @@ func absf(i float32) float32 {
 
 type Demo interface {
 	Render(first bool, key *Key)
-	Delete()
 }
 
 //
@@ -180,8 +179,6 @@ func NewAsciiArtDemo() *AsciiArtDemo {
 	return &AsciiArtDemo{}
 }
 
-func (self *AsciiArtDemo) Delete() {
-}
 
 
 func (self *AsciiArtDemo) Render(first bool, key *Key) {
@@ -228,8 +225,6 @@ func NewColorsDemo() *ColorsDemo {
 	return result
 }
 
-func (self *ColorsDemo) Delete() {
-}
 
 func (self *ColorsDemo) Render(first bool, key *Key) {
 	var c, x, y int
@@ -332,15 +327,6 @@ func NewOffscreenDemo() *OffscreenDemo {
 		ydir:    1}
 }
 
-func (self *OffscreenDemo) Delete() {
-	if self.secondary != nil {
-		self.secondary.Delete()
-	}
-	if self.screenshot != nil {
-		self.screenshot.Delete()
-	}
-}
-
 
 func (self *OffscreenDemo) Render(first bool, key *Key) {
 	if !self.init {
@@ -415,11 +401,6 @@ func NewLinesDemo() *LinesDemo {
 	return result
 }
 
-func (self *LinesDemo) Delete() {
-	if self.bk != nil {
-		self.bk.Delete()
-	}
-}
 
 func lineListener(x, y int, demo interface{}) bool {
 	if x >= 0 && y >= 0 && x < DEMO_SCREEN_WIDTH && y < DEMO_SCREEN_HEIGHT {
@@ -552,11 +533,6 @@ func NewNoiseDemo() *NoiseDemo {
 	return result
 }
 
-func (self *NoiseDemo) Delete() {
-	if self.noise != nil {
-		self.noise.Delete()
-	}
-}
 
 func (self *NoiseDemo) Render(first bool, key *Key) {
 	var x, y, curfun int
@@ -652,22 +628,18 @@ func (self *NoiseDemo) Render(first bool, key *Key) {
 	} else if key.C == 'E' || key.C == 'e' {
 		// increase hurst
 		self.hurst += 0.1
-		self.noise.Delete()
 		self.noise = NewNoiseWithOptions(2, self.hurst, self.lacunarity, random)
 	} else if key.C == 'D' || key.C == 'd' {
 		// decrease hurst
 		self.hurst -= 0.1
-		self.noise.Delete()
 		self.noise = NewNoiseWithOptions(2, self.hurst, self.lacunarity, random)
 	} else if key.C == 'R' || key.C == 'r' {
 		// increase lacunarity
 		self.lacunarity += 0.5
-		self.noise.Delete()
 		self.noise = NewNoiseWithOptions(2, self.hurst, self.lacunarity, random)
 	} else if key.C == 'F' || key.C == 'f' {
 		// decrease lacunarity
 		self.lacunarity -= 0.5
-		self.noise.Delete()
 		self.noise = NewNoiseWithOptions(2, self.hurst, self.lacunarity, random)
 	} else if key.C == 'T' || key.C == 't' {
 		// increase octaves
@@ -797,14 +769,6 @@ func NewFovDemo() *FovDemo {
 	return result
 }
 
-func (self *FovDemo) Delete() {
-	if self.map_ != nil {
-		self.map_.Delete()
-	}
-	if self.noise != nil {
-		self.noise.Delete()
-	}
-}
 
 func (self *FovDemo) Render(first bool, key *Key) {
 	var x, y int
@@ -1046,14 +1010,6 @@ func NewPathDemo() *PathDemo {
 	return result
 }
 
-func (self *PathDemo) Delete() {
-	if self.map_ != nil {
-		self.map_.Delete()
-	}
-	if self.dijkstra != nil {
-		self.dijkstra.Delete()
-	}
-}
 
 func (self *PathDemo) Render(first bool, key *Key) {
 	var mouse Mouse
@@ -1447,8 +1403,6 @@ func NewBspDemo() *BspDemo {
 }
 
 
-func (self *BspDemo) Delete() {
-}
 
 func (self *BspDemo) Render(first bool, key *Key) {
 	var x, y int
@@ -1537,14 +1491,6 @@ func NewImageDemo() *ImageDemo {
 	return result
 }
 
-func (self *ImageDemo) Delete() {
-	if self.img != nil {
-		self.img.Delete()
-	}
-	if self.circle != nil {
-		self.circle.Delete()
-	}
-}
 
 func (self *ImageDemo) Render(first bool, key *Key) {
 	var x, y, scalex, scaley, angle float32
@@ -1615,11 +1561,6 @@ func NewMouseDemo() *MouseDemo {
 	return result
 }
 
-func (self *MouseDemo) Delete() {
-	if self.secondary != nil {
-		self.secondary.Delete()
-	}
-}
 
 func (self *MouseDemo) Render(first bool, key *Key) {
 	var mouse Mouse
@@ -1738,8 +1679,6 @@ func NewNameDemo() *NameDemo {
 		names: vector.StringVector{}}
 }
 
-func (self *NameDemo) Delete() {
-}
 
 func (self *NameDemo) Render(first bool, key *Key) {
 	if len(self.sets) == 0 {
@@ -1806,14 +1745,11 @@ func NewParserDemo() *ParserDemo {
 	return &ParserDemo{}
 }
 
-func (self *ParserDemo) Delete() {
-}
 
 func parse(fname string) string {
 	statesList := []string{"hungry", "very hunger", "starving"}
 
 	p := NewParser()
-	defer p.Delete()
 	ps := p.RegisterStruct("item_type")
 	ps.AddProperty("cost", TYPE_INT, true)
 	ps.AddProperty("weight", TYPE_FLOAT, true)
@@ -1913,13 +1849,6 @@ func Initialize() {
 		Sample{name: "Ascii slideshow   ", demo: NewAsciiArtDemo()}}
 }
 
-
-func Finalize() {
-	random.Delete()
-	for _, s := range samples {
-		s.demo.Delete()
-	}
-}
 
 
 func switchDemoCbk(w IWidget, data interface{}) {
@@ -2046,13 +1975,11 @@ func Run() {
 
 	rootConsole = NewRootConsoleWithFont(SCREEN_WIDTH, SCREEN_HEIGHT, "Go demo", false, font, fontFlags, nbCharHoriz,
 	nbCharVertic, RENDERER_SDL)
-	defer rootConsole.Delete()
 
 	guiConsole = NewConsole(GUI_SCREEN_WIDTH, GUI_SCREEN_HEIGHT)
 
 	// initialize the offscreen console for the samples
 	demoConsole = NewConsole(DEMO_SCREEN_WIDTH, DEMO_SCREEN_HEIGHT)
-	defer demoConsole.Delete()
 
 	buildGui()
 
@@ -2129,5 +2056,4 @@ func Run() {
 func main() {
 	Initialize()
 	Run()
-	Finalize()
 }

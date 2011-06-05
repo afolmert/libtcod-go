@@ -500,9 +500,7 @@ func (self *OperationStatic) cancel() {
 }
 
 func (self *OperationStatic) reseed() {
-	rnd.Delete()
 	rnd = tcod.NewRandomFromSeed(seed)
-	noise.Delete()
 	noise = tcod.NewNoise(2, rnd)
 	addFbmDelta = 0
 	scaleFbmDelta = 0
@@ -1121,7 +1119,7 @@ func (self *AddHillOperation) createParamUi() {
 	params.AddWidget(slider)
 	slider.SetValue(self.radiusVar)
 
-	slider = gui.NewSlider(0, 0, 8, 0.0, tcod.If(mapmax == mapmin, 1.0, (mapmax-mapmin)*0.5).(float32), "height   ", "Height of the hills")
+	slider = gui.NewSlider(0, 0, 8, 0.0, tcod.If(mapmax == mapmin, float32(1.0), float32((mapmax-mapmin)*0.5)).(float32), "height   ", "Height of the hills")
 	slider.SetCallback(addHillHeightValueCbk, self)
 	params.AddWidget(slider)
 	slider.SetValue(self.height)
@@ -1546,8 +1544,7 @@ func (self *NoiseLerpOperation) getCode(codeType CodeType) string {
 		return fmt.Sprintf(
 			"    tmp:=tcod.NewHeightMap(HM_WIDTH,HM_HEIGHT)\n"+
 				"    tmp.AddFbm(noise,%g,%g,%g,%g,%g,%g,%g)\n"+
-				"    hm.Lerp(hm,tmp,%g)\n"+
-				"    tmp.Delete(tmp)\n",
+				"    hm.Lerp(hm,tmp,%g)\n",
 			self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale, self.coef)
 	default:
 	}
@@ -1557,7 +1554,6 @@ func (self *NoiseLerpOperation) getCode(codeType CodeType) string {
 
 func (self *NoiseLerpOperation) runInternal() {
 	tmp := tcod.NewHeightMap(HM_WIDTH, HM_HEIGHT)
-	defer tmp.Delete()
 	tmp.AddFbm(noise, self.zoom, self.zoom, self.offsetx, self.offsety, self.octaves, self.offset, self.scale)
 	hm.Lerp(hm, tmp, self.coef)
 }
@@ -1668,8 +1664,7 @@ func (self *VoronoiOperation) getCode(codeType CodeType) string {
 				"    tmp := tcod.NewHeightMap(HM_WIDTH,HM_HEIGHT)\n"+
 				"    tmp.AddVoronoi(%d,%d,coef,rnd)\n"+
 				"    tmp.Normalize()\n"+
-				"    hm.AddHm(hm,tmp)\n"+
-				"    tmp.Delete()\n",
+				"    hm.AddHm(hm,tmp)\n",
 			coefstr, self.nbPoints, self.nbCoef)
 	default:
 	}
@@ -1678,7 +1673,6 @@ func (self *VoronoiOperation) getCode(codeType CodeType) string {
 
 func (self *VoronoiOperation) runInternal() {
 	tmp := tcod.NewHeightMap(HM_WIDTH, HM_HEIGHT)
-	defer tmp.Delete()
 	tmp.AddVoronoi(self.nbPoints, self.nbCoef, self.coef, rnd)
 	tmp.Normalize()
 	hm.AddHm(hm, tmp)
@@ -1864,9 +1858,7 @@ func backup() {
 			hmold.SetValue(x, y, hm.GetValue(x, y))
 		}
 	}
-	if backupRnd != nil {
-		backupRnd.Delete()
-	}
+	fmt.Printf("Saving to backupRNG!\n")
 	backupRnd = rnd.Save()
 	oldNormalized = isNormalized
 	oldmapmax = mapmax
@@ -1880,7 +1872,10 @@ func restore() {
 			hm.SetValue(x, y, hmold.GetValue(x, y))
 		}
 	}
-	rnd.Restore(backupRnd)
+	fmt.Printf("Restoring from backupRnd \n")
+	if backupRnd != nil {
+		rnd.Restore(backupRnd)
+	}
 	isNormalized = oldNormalized
 	mapmax = oldmapmax
 	mapmin = oldmapmin
@@ -1943,7 +1938,7 @@ func scaleFbmCbk(w tcod.IWidget, data interface{}) {
 }
 
 func addHillCbk(w tcod.IWidget, data interface{}) {
-	operations.add(NewAddHillOperation(25, 10.0, 0.5, tcod.If(mapmax == mapmin, 0.5, (mapmax-mapmin)*0.1).(float32)))
+	operations.add(NewAddHillOperation(25, 10.0, 0.5, tcod.If(mapmax == mapmin, float32(0.5), float32((mapmax-mapmin)*0.1)).(float32)))
 }
 
 func rainErosionCbk(w tcod.IWidget, data interface{}) {
@@ -1998,7 +1993,6 @@ func exportCppCbk(w tcod.IWidget, data interface{}) {
 
 func exportBmpCbk(w tcod.IWidget, data interface{}) {
 	img := tcod.NewImage(HM_WIDTH, HM_HEIGHT)
-	defer img.Delete()
 	for x := 0; x < HM_WIDTH; x++ {
 		for y := 0; y < HM_HEIGHT; y++ {
 			z := hm.GetValue(x, y)

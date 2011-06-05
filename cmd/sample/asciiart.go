@@ -3,7 +3,6 @@ package main
 import (
 	"container/vector"
 	"compress/zlib"
-	//	"fmt"
 	"gob"
 	"io/ioutil"
 	"os"
@@ -50,6 +49,11 @@ type AsciiArtGallery struct {
 	loadedArtsChan chan bool
 	loadedArts     bool
 }
+
+// TODO switch to go version  from May 2010 
+// TODO decode ascii arts ,
+// TODO store as binary file 
+// CODE LenName Name  WIDTH, HEIGHT  OFFSETX OFFSETY  and stream of colors 
 
 type AsciiArt struct {
 	name             string
@@ -218,9 +222,6 @@ func (self *AsciiArt) Render(console IConsole, transition Transition, first bool
 	case FADE_IN:
 		{
 			if first {
-				if aas.secondary != nil {
-					aas.secondary.Delete()
-				}
 				aas.secondary = NewConsole(console.GetWidth(), console.GetHeight())
 				console.Blit(0, 0, console.GetWidth(), console.GetHeight(), aas.secondary, 0, 0, 1.0, 1.0)
 			}
@@ -241,9 +242,6 @@ func (self *AsciiArt) Render(console IConsole, transition Transition, first bool
 	case MOVE_IN:
 		{
 			if first {
-				if aas.secondary != nil {
-					aas.secondary.Delete()
-				}
 				aas.secondary = NewConsole(console.GetWidth(), console.GetHeight())
 				aas.moveTransition = MoveTransition(random.GetInt(0, NB_MOVE_TRANSITIONS-1))
 				self.Draw(aas.secondary)
