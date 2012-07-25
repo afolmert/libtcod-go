@@ -1,4 +1,5 @@
 package tcod
+
 //
 // This is go-bindings package for libtcod-go
 // Most API is wrapped except:
@@ -6,7 +7,6 @@ package tcod
 // - threads, mutexes and semaphores - they are replaced by goroutines and channels
 // - SDL renderer - currently Go has very cumbersome C callback mechanism
 //
-
 
 /*
  #include <stdio.h>
@@ -187,22 +187,19 @@ package tcod
 import "C"
 
 import (
-	"unsafe"
+	"container/vector"
 	"fmt"
 	"runtime"
-	"container/vector"
+	"unsafe"
 )
 
-
 type void unsafe.Pointer
-
 
 //
 // Misc functions
 //
 
 type BkgndFlag C.TCOD_bkgnd_flag_t
-
 
 func BkgndAlpha(alpha float32) BkgndFlag {
 	return BkgndFlag(BKGND_ALPH | (((uint8)(alpha * 255)) << 8))
@@ -248,7 +245,6 @@ func toStringSlice(l C.TCOD_list_t, free bool) (result []string) {
 	return
 }
 
-
 func vectorShift(v *vector.Vector) (result interface{}) {
 	result = v.At(0)
 	v.Delete(0)
@@ -265,13 +261,11 @@ func vectorRemove(v *vector.Vector, el interface{}) {
 	}
 }
 
-
 //
 //
 // Key handling
 //
 type KeyCode C.TCOD_keycode_t
-
 
 type Key struct {
 	Vk      KeyCode
@@ -329,7 +323,6 @@ func fromBool(b bool) C.bool {
 	}
 	return C.bool(0)
 }
-
 
 //
 // Color handling
@@ -404,7 +397,6 @@ var COLOR_DESATURATED_PINK Color = Color{127, 63, 95}
 var COLOR_SILVER Color = Color{203, 203, 203}
 var COLOR_GOLD Color = Color{255, 255, 102}
 
-
 type Color struct {
 	R uint8
 	G uint8
@@ -426,7 +418,6 @@ func toColor(c C.TCOD_color_t) (result Color) {
 	result.B = uint8(c.b)
 	return
 }
-
 
 func NewColorRGB(r, g, b uint8) Color {
 	return Color{R: r, G: g, B: b}
@@ -474,7 +465,6 @@ func (self Color) Lerp(c2 Color, coef float32) Color {
 
 // HSV transformations
 
-
 func (self Color) Lighten(ratio float32) Color {
 	return self.Lerp(COLOR_WHITE, ratio)
 }
@@ -489,7 +479,6 @@ func (self Color) SetHSV(h float32, s float32, v float32) Color {
 	return toColor(c)
 }
 
-
 func (self Color) GetHue() float32 {
 	return float32(C.TCOD_color_get_hue(fromColor(self)))
 }
@@ -499,7 +488,6 @@ func (self Color) SetHue(h float32) Color {
 	C.TCOD_color_set_hue(&c, C.float(h))
 	return toColor(c)
 }
-
 
 func (self Color) GetSaturation() float32 {
 	return float32(C.TCOD_color_get_saturation(fromColor(self)))
@@ -511,7 +499,6 @@ func (self Color) SetSaturation(h float32) Color {
 	return toColor(c)
 }
 
-
 func (self Color) GetValue() float32 {
 	return float32(C.TCOD_color_get_value(fromColor(self)))
 }
@@ -521,7 +508,6 @@ func (self Color) SetValue(h float32) Color {
 	C.TCOD_color_set_value(&c, C.float(h))
 	return toColor(c)
 }
-
 
 func (self Color) ShiftHue(hshift float32) Color {
 	c := C.TCOD_color_t{}
@@ -534,7 +520,6 @@ func (self Color) ScaleHSV(scoef, vcoef float32) Color {
 	C.TCOD_color_scale_HSV(&c, C.float(scoef), C.float(vcoef))
 	return toColor(c)
 }
-
 
 func (self Color) GetHSV() (h, s, v float32) {
 	var ch, cs, sv C.float
@@ -554,7 +539,6 @@ func ColorGenMap(cmap []Color, nbKey int, keyColor []Color, keyIndex []int) {
 		}
 	}
 }
-
 
 //
 // Mouse
@@ -623,7 +607,6 @@ func MouseShowCursor(visible bool) {
 	C.TCOD_mouse_show_cursor(fromBool(visible))
 }
 
-
 func MouseIsCursorVisible() bool {
 	return toBool(C.TCOD_mouse_is_cursor_visible())
 }
@@ -632,7 +615,6 @@ func MouseMove(x, y int) {
 	C.TCOD_mouse_move(C.int(x), C.int(y))
 }
 
-
 //
 //
 // Console
@@ -640,7 +622,6 @@ func MouseMove(x, y int) {
 //
 type Alignment C.TCOD_alignment_t
 type Renderer C.TCOD_renderer_t
-
 
 type IConsole interface {
 	GetData() C.TCOD_console_t
@@ -676,18 +657,15 @@ type IConsole interface {
 	Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32)
 }
 
-
 // Console 
 
 type Console struct {
 	Data C.TCOD_console_t
 }
 
-
 func deleteConsole(c *Console) {
 	C.TCOD_console_delete(c.Data)
 }
-
 
 func NewConsole(w, h int) *Console {
 	result := &Console{C.TCOD_console_new(C.int(w), C.int(h))}
@@ -707,11 +685,9 @@ func (self *Console) SetDefaultForeground(color Color) {
 	C.TCOD_console_set_default_foreground(self.Data, fromColor(color))
 }
 
-
 func (self *Console) Clear() {
 	C.TCOD_console_clear(self.Data)
 }
-
 
 func (self *Console) SetCharBackground(x, y int, color Color, flag BkgndFlag) {
 	ccolor := fromColor(color)
@@ -723,11 +699,9 @@ func (self *Console) SetCharForeground(x, y int, color Color) {
 	C._TCOD_console_set_char_foreground(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
 }
 
-
 func (self *Console) SetChar(x, y int, c int) {
 	C.TCOD_console_set_char(self.Data, C.int(x), C.int(y), C.int(c))
 }
-
 
 func (self *Console) PutChar(x, y, c int, flag BkgndFlag) {
 	C.TCOD_console_put_char(self.Data, C.int(x), C.int(y), C.int(c), C.TCOD_bkgnd_flag_t(flag))
@@ -754,7 +728,6 @@ func (self *Console) PrintEx(x, y int, flag BkgndFlag, alignment Alignment, fmts
 	C._TCOD_console_print_ex(self.Data, C.int(x), C.int(y), C.TCOD_bkgnd_flag_t(flag), C.TCOD_alignment_t(alignment), cs)
 }
 
-
 func (self *Console) PrintRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
@@ -769,7 +742,6 @@ func (self *Console) PrintRectEx(x, y, w, h int, flag BkgndFlag, alignment Align
 	return int(C._TCOD_console_print_rect_ex(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), C.TCOD_bkgnd_flag_t(flag),
 		C.TCOD_alignment_t(alignment), cs))
 }
-
 
 func (self *Console) SetBackgroundFlag(flag BkgndFlag) {
 	C.TCOD_console_set_background_flag(self.Data, C.TCOD_bkgnd_flag_t(flag))
@@ -787,7 +759,6 @@ func (self *Console) GetAlignment() Alignment {
 	return Alignment(C.TCOD_console_get_alignment(self.Data))
 }
 
-
 func (self *Console) HeightRect(x, y, w, h int, fmts string, v ...interface{}) int {
 	s := fmt.Sprintf(fmts, v...)
 	cs := C.CString(s)
@@ -795,11 +766,9 @@ func (self *Console) HeightRect(x, y, w, h int, fmts string, v ...interface{}) i
 	return int(C._TCOD_console_height_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), cs))
 }
 
-
 func (self *Console) Rect(x, y, w, h int, clear bool, flag BkgndFlag) {
 	C.TCOD_console_rect(self.Data, C.int(x), C.int(y), C.int(w), C.int(h), fromBool(clear), C.TCOD_bkgnd_flag_t(flag))
 }
-
 
 func (self *Console) Hline(x, y, l int, flag BkgndFlag) {
 	C.TCOD_console_hline(self.Data, C.int(x), C.int(y), C.int(l), C.TCOD_bkgnd_flag_t(flag))
@@ -818,7 +787,6 @@ func (self *Console) PrintFrame(x, y, w, h int, empty bool, flag BkgndFlag, fmts
 
 }
 
-
 // TODO check unicode support
 //TCODLIB_API void TCOD_console_map_string_to_font_utf(const wchar_t *s, int fontCharX, int fontCharY);
 //TCODLIB_API void TCOD_console_print_left_utf(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, const wchar_t *fmt, ...);
@@ -831,7 +799,6 @@ func (self *Console) PrintFrame(x, y, w, h int, empty bool, flag BkgndFlag, fmts
 //TCODLIB_API int TCOD_console_height_right_rect_utf(TCOD_console_t con,int x, int y, int w, int h, const wchar_t *fmt, ...);
 //TCODLIB_API int TCOD_console_height_center_rect_utf(TCOD_console_t con,int x, int y, int w, int h, const wchar_t *fmt, ...);
 //#endif
-
 
 func (self *Console) GetDefaultBackground() Color {
 	return toColor(C.TCOD_console_get_default_background(self.Data))
@@ -849,11 +816,9 @@ func (self *Console) GetCharForeground(x, y int) Color {
 	return toColor(C.TCOD_console_get_char_foreground(self.Data, C.int(x), C.int(y)))
 }
 
-
 func (self *Console) GetChar(x, y int) int {
 	return int(C.TCOD_console_get_char(self.Data, C.int(x), C.int(y)))
 }
-
 
 func (self *Console) GetWidth() int {
 	return int(C.TCOD_console_get_width(self.Data))
@@ -873,13 +838,11 @@ func (self *Console) Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst i
 		dst.GetData(), C.int(xDst), C.int(yDst), C.float(foregroundAlpha), C.float(backgroundAlpha))
 }
 
-
 // RootConsole
 
 type RootConsole struct {
 	Console
 }
-
 
 func NewRootConsole(w, h int, title string, fullscreen bool) *RootConsole {
 	ctitle := C.CString(title)
@@ -889,9 +852,8 @@ func NewRootConsole(w, h int, title string, fullscreen bool) *RootConsole {
 	return &RootConsole{}
 }
 
-
 func NewRootConsoleWithFont(w, h int, title string, fullscreen bool, fontFile string, fontFlags, nbCharHoriz,
-nbCharVertic int, renderer Renderer) *RootConsole {
+	nbCharVertic int, renderer Renderer) *RootConsole {
 	cfontFile := C.CString(fontFile)
 	defer C.free(unsafe.Pointer(cfontFile))
 	ctitle := C.CString(title)
@@ -901,7 +863,6 @@ nbCharVertic int, renderer Renderer) *RootConsole {
 	// in root console, Data field is nil
 	return &RootConsole{}
 }
-
 
 func (self *RootConsole) SetWindowTitle(title string) {
 	ctitle := C.CString(title)
@@ -918,11 +879,9 @@ func (self *RootConsole) IsFullscreen() bool {
 	return toBool(C.TCOD_console_is_fullscreen())
 }
 
-
 func (self *RootConsole) IsWindowClosed() bool {
 	return toBool(C.TCOD_console_is_window_closed())
 }
-
 
 func (self *RootConsole) SetCustomFont(fontFile string, flags int, nbCharHoriz int, nbCharVertic int) {
 	cfontFile := C.CString(fontFile)
@@ -930,16 +889,13 @@ func (self *RootConsole) SetCustomFont(fontFile string, flags int, nbCharHoriz i
 	C.TCOD_console_set_custom_font(cfontFile, C.int(flags), C.int(nbCharHoriz), C.int(nbCharVertic))
 }
 
-
 func (self *RootConsole) MapAsciiCodeToFont(asciiCode, fontCharX, fontCharY int) {
 	C.TCOD_console_map_ascii_code_to_font(C.int(asciiCode), C.int(fontCharX), C.int(fontCharY))
 }
 
-
 func (self *RootConsole) MapAsciiCodesToFont(asciiCode, fontCharX, fontCharY int) {
 	C.TCOD_console_map_ascii_code_to_font(C.int(asciiCode), C.int(fontCharX), C.int(fontCharY))
 }
-
 
 func (self *RootConsole) MapStringToFont(s string, fontCharX, fontCharY int) {
 	cs := C.CString(s)
@@ -964,7 +920,6 @@ func (self *RootConsole) GetFadingColor() Color {
 	return toColor(C.TCOD_console_get_fading_color())
 }
 
-
 func (self *RootConsole) Flush() {
 	C.TCOD_console_flush()
 }
@@ -976,7 +931,6 @@ func (self *RootConsole) SetColorControl(ctrl ColCtrl, fore, back Color) {
 		(*C.TCOD_color_t)(&forec), (*C.TCOD_color_t)(&backc))
 }
 
-
 func (self *RootConsole) CheckForKeypress(flags int) Key {
 	return toKey(C.TCOD_console_check_for_keypress(C.int(flags)))
 }
@@ -984,7 +938,6 @@ func (self *RootConsole) CheckForKeypress(flags int) Key {
 func (self *RootConsole) WaitForKeypress(flush bool) Key {
 	return toKey(C.TCOD_console_wait_for_keypress(fromBool(flush)))
 }
-
 
 func (self *RootConsole) SetKeyboardRepeat(initialDelay, interval int) {
 	C.TCOD_console_set_keyboard_repeat(C.int(initialDelay), C.int(interval))
@@ -998,7 +951,6 @@ func (self *RootConsole) IsKeyPressed(keyCode KeyCode) bool {
 	return toBool(C.TCOD_console_is_key_pressed(C.TCOD_keycode_t(keyCode)))
 }
 
-
 func (self *RootConsole) Credits() {
 	C.TCOD_console_credits()
 }
@@ -1007,18 +959,15 @@ func (self *RootConsole) ResetCredits() {
 	C.TCOD_console_credits_reset()
 }
 
-
 func (self *RootConsole) RenderCredits(x, y int, alpha bool) bool {
 	return toBool(C.TCOD_console_credits_render(C.int(x), C.int(y), fromBool(alpha)))
 }
-
 
 //
 // Bresenham line algorithm
 // Fully ported to Go for easier callbacks
 //
 //
-
 
 type LineListener func(x, y int, userData interface{}) bool
 
@@ -1100,7 +1049,6 @@ func lineStepMt(xCur, yCur *int, data *BresenhamData) bool {
 	return false
 }
 
-
 func lineInit(xFrom, yFrom, xTo, yTo int) {
 	lineInitMt(xFrom, yFrom, xTo, yTo, &bresenhamData)
 }
@@ -1135,7 +1083,6 @@ func LinePoints(xo, yo, xd, yd int) vector.Vector {
 	})
 	return result
 }
-
 
 //
 //
@@ -1179,7 +1126,6 @@ func NamegenDestroy() {
 	C.TCOD_namegen_destroy()
 }
 
-
 //
 //
 // Text field
@@ -1194,20 +1140,17 @@ func deleteText(t *Text) {
 	C.TCOD_text_delete(t.Data)
 }
 
-
 func NewText(x, y, w, h, maxChars int) *Text {
 	result := &Text{C.TCOD_text_init(C.int(x), C.int(y), C.int(w), C.int(h), C.int(maxChars))}
 	runtime.SetFinalizer(result, deleteText)
 	return result
 }
 
-
 func (self *Text) SetProperties(cursorChar int, blinkInterval int, prompt string, tabSize int) {
 	cprompt := C.CString(prompt)
 	defer C.free(unsafe.Pointer(cprompt))
 	C.TCOD_text_set_properties(self.Data, C.int(cursorChar), C.int(blinkInterval), cprompt, C.int(tabSize))
 }
-
 
 func (self *Text) SetColors(fore, back Color, backTransparency float32) {
 	forec := fromColor(fore)
@@ -1222,7 +1165,6 @@ func (self *Text) Update(key Key) {
 	C.TCOD_text_update(self.Data, fromKey(key))
 }
 
-
 func (self *Text) Render(console IConsole) {
 	C.TCOD_text_render(self.Data, console.GetData())
 }
@@ -1230,7 +1172,6 @@ func (self *Text) Render(console IConsole) {
 func (self *Console) RenderText(text *Text) {
 	C.TCOD_text_render(text.Data, self.Data)
 }
-
 
 func (self *Text) Get() string {
 	t := C.TCOD_text_get(self.Data)
@@ -1241,7 +1182,6 @@ func (self *Text) Get() string {
 func (self *Text) Reset() {
 	C.TCOD_text_reset(self.Data)
 }
-
 
 func SysElapsedMilliseconds() uint32 {
 	return uint32(C.TCOD_sys_elapsed_milli())
@@ -1310,7 +1250,6 @@ func SysGetCharSize() (w, h int) {
 	return
 }
 
-
 // filesystem stuff
 func SysCreateDirectory(path string) bool {
 	cpath := C.CString(path)
@@ -1355,7 +1294,6 @@ func SysGetNumCores() int {
 	return int(C.TCOD_sys_get_num_cores())
 }
 
-
 // Clipboard 
 
 func SysClipboardSet(value string) {
@@ -1368,7 +1306,6 @@ func SysClipboardGet() string {
 	return C.GoString(C.TCOD_sys_clipboard_get())
 }
 
-
 //
 // Field Of View Map
 //
@@ -1378,7 +1315,6 @@ type Map struct {
 }
 
 type FovAlgorithm C.TCOD_fov_algorithm_t
-
 
 // destroy a map
 func deleteMap(m *Map) {
@@ -1390,7 +1326,6 @@ func NewMap(width, height int) *Map {
 	runtime.SetFinalizer(result, deleteMap)
 	return result
 }
-
 
 // set all cells as solid rock (cannot see through nor walk)
 func (self *Map) Clear(isTransparent bool, isWalkable bool) {
@@ -1407,7 +1342,6 @@ func (self *Map) SetProperties(x, y int, isTransparent bool, isWalkable bool) {
 	C.TCOD_map_set_properties(self.Data, C.int(x), C.int(y), fromBool(isTransparent), fromBool(isWalkable))
 }
 
-
 // calculate the field of view (potentially visible cells from player_x,player_y)
 func (self *Map) ComputeFov(playerX, playerY, maxRadius int, lightWalls bool, algo FovAlgorithm) {
 	C.TCOD_map_compute_fov(self.Data, C.int(playerX), C.int(playerY),
@@ -1419,7 +1353,6 @@ func (self *Map) ComputeFov(playerX, playerY, maxRadius int, lightWalls bool, al
 func (self *Map) IsInFov(x, y int) bool {
 	return toBool(C.TCOD_map_is_in_fov(self.Data, C.int(x), C.int(y)))
 }
-
 
 func (self *Map) SetInFov(x, y int, fov bool) {
 	C.TCOD_map_set_in_fov(self.Data, C.int(x), C.int(y), fromBool(fov))
@@ -1447,7 +1380,6 @@ func (self *Map) GetNbCells() int {
 	return int(C.TCOD_map_get_nb_cells(self.Data))
 }
 
-
 //
 // BSP Dungeon generation
 //
@@ -1462,7 +1394,6 @@ type Bsp struct {
 
 type BspListener func(node *Bsp, userData interface{}) bool
 
-
 func (self *Bsp) AddSon(son *Bsp) {
 	lastson := self.sons
 	son.father = self
@@ -1475,7 +1406,6 @@ func (self *Bsp) AddSon(son *Bsp) {
 		self.sons = son
 	}
 }
-
 
 func NewBspWithSize(x, y, w, h int) (result *Bsp) {
 	result = new(Bsp)
@@ -1503,7 +1433,6 @@ func (self *Bsp) Father() *Bsp {
 func (self *Bsp) IsLeaf() bool {
 	return self.sons == nil
 }
-
 
 func NewBspIntern(father *Bsp, left bool) *Bsp {
 	bsp := new(Bsp)
@@ -1706,7 +1635,6 @@ func (self *Bsp) FindNode(x, y int) *Bsp {
 	return self
 }
 
-
 //
 // HeightMap
 //
@@ -1728,7 +1656,6 @@ func NewHeightMap(w, h int) *HeightMap {
 func (self *HeightMap) GetValue(x, y int) float32 {
 	return float32(C.TCOD_heightmap_get_value(self.Data, C.int(x), C.int(y)))
 }
-
 
 func (self *HeightMap) GetWidth() int {
 	return int(self.Data.w)
@@ -1795,7 +1722,6 @@ func (self *HeightMap) Clamp(min, max float32) {
 	C.TCOD_heightmap_clamp(self.Data, C.float(min), C.float(max))
 }
 
-
 func (self *HeightMap) Normalize() {
 	self.NormalizeRange(0, 1)
 }
@@ -1812,11 +1738,9 @@ func (self *HeightMap) Lerp(hm1 *HeightMap, hm2 *HeightMap, coef float32) {
 	C.TCOD_heightmap_lerp_hm(hm1.Data, hm2.Data, self.Data, C.float(coef))
 }
 
-
 func (self *HeightMap) AddHm(hm1 *HeightMap, hm2 *HeightMap) {
 	C.TCOD_heightmap_add_hm(hm1.Data, hm2.Data, self.Data)
 }
-
 
 func (self *HeightMap) Multiply(hm1 *HeightMap, hm2 *HeightMap) {
 	C.TCOD_heightmap_multiply_hm(hm1.Data, hm2.Data, self.Data)
@@ -1825,7 +1749,6 @@ func (self *HeightMap) Multiply(hm1 *HeightMap, hm2 *HeightMap) {
 func (self *HeightMap) AddHill(hx, hy, hradius, hheight float32) {
 	C.TCOD_heightmap_add_hill(self.Data, C.float(hx), C.float(hy), C.float(hradius), C.float(hheight))
 }
-
 
 func (self *HeightMap) DigHill(hx, hy, hradius, hheight float32) {
 	C.TCOD_heightmap_dig_hill(self.Data, C.float(hx), C.float(hy), C.float(hradius), C.float(hheight))
@@ -1851,7 +1774,6 @@ func (self *HeightMap) KernelTransform(kernelsize int, dx, dy []int, weight []fl
 		C.float(maxLevel))
 }
 
-
 func (self *HeightMap) AddVoronoi(nbPoints, nbCoef int, coef []float32, rnd *Random) {
 	C.TCOD_heightmap_add_voronoi(self.Data, C.int(nbPoints), C.int(nbCoef), (*C.float)(unsafe.Pointer(&coef[0])), rnd.Data)
 }
@@ -1869,7 +1791,6 @@ func (self *HeightMap) ScaleFbm(noise *Noise, mulx, muly, addx, addy, octaves, d
 func (self *HeightMap) Islandify(seaLevel float32, random *Random) {
 	C.TCOD_heightmap_islandify(self.Data, C.float(seaLevel), random.Data)
 }
-
 
 //
 // Image
@@ -1897,16 +1818,13 @@ func NewImageFromConsole(console *Console) *Image {
 	return newImage(C.TCOD_image_from_console(console.Data))
 }
 
-
 func (self *Image) RefreshConsole(console *Console) {
 	C.TCOD_image_refresh_console(self.Data, console.Data)
 }
 
-
 func LoadImage(filename string) *Image {
 	return newImage(C.TCOD_image_load(C.CString(filename)))
 }
-
 
 func (self *Image) Clear(color Color) {
 	ccolor := fromColor(color)
@@ -1917,7 +1835,6 @@ func (self *Image) Invert() {
 	C.TCOD_image_invert(self.Data)
 }
 
-
 func (self *Image) Hflip() {
 	C.TCOD_image_hflip(self.Data)
 }
@@ -1925,7 +1842,6 @@ func (self *Image) Hflip() {
 func (self *Image) Rotate90(numRotations int) {
 	C.TCOD_image_rotate90(self.Data, C.int(numRotations))
 }
-
 
 func (self *Image) Vflip() {
 	C.TCOD_image_vflip(self.Data)
@@ -1977,7 +1893,6 @@ func (self *Image) Blit2x(dest *Console, dx, dy, sx, sy, w, h int) {
 	C.TCOD_image_blit_2x(self.Data, dest.Data, C.int(dx), C.int(dy), C.int(sx), C.int(sy), C.int(w), C.int(h))
 }
 
-
 func (self *Image) SetKeyColor(keyColor Color) {
 	ckeyColor := fromColor(keyColor)
 	C._TCOD_image_set_key_color(self.Data, (*C.TCOD_color_t)(&ckeyColor))
@@ -1986,7 +1901,6 @@ func (self *Image) SetKeyColor(keyColor Color) {
 func (self *Image) IsPixelTransparent(x, y int) bool {
 	return toBool(C.TCOD_image_is_pixel_transparent(self.Data, C.int(x), C.int(y)))
 }
-
 
 //
 // Path
@@ -2052,7 +1966,6 @@ func (self *Path) GetDestination() (x, y int) {
 	return
 }
 
-
 //
 // Dijkstra path
 //
@@ -2077,7 +1990,6 @@ func NewDijkstraUsingMap(m *Map, diagonalCost float32) *Dijkstra {
 //   TCOD_Dijkstra_new_using_function(int map_width, int map_height, TCOD_Dijkstra_func_t func, void *user_Data, float diagonalCost);
 //}
 
-
 func (self *Dijkstra) Compute(rootX, rootY int) {
 	C.TCOD_dijkstra_compute(self.Data, C.int(rootX), C.int(rootY))
 }
@@ -2085,7 +1997,6 @@ func (self *Dijkstra) Compute(rootX, rootY int) {
 func (self *Dijkstra) GetDistance(x, y int) float32 {
 	return float32(C.TCOD_dijkstra_get_distance(self.Data, C.int(x), C.int(y)))
 }
-
 
 func (self *Dijkstra) PathSet(x, y int) bool {
 	return toBool(C.TCOD_dijkstra_path_set(self.Data, C.int(x), C.int(y)))
@@ -2113,11 +2024,9 @@ func (self *Dijkstra) PathWalk() (x, y int) {
 	return
 }
 
-
 //
 // Mersenne Random generator
 //
-
 
 type RandomAlgo C.TCOD_random_algo_t
 
@@ -2131,7 +2040,6 @@ type Dice struct {
 	Data C.TCOD_dice_t
 }
 
-
 func fromDice(d Dice) C.TCOD_dice_t {
 	return d.Data
 }
@@ -2139,7 +2047,6 @@ func fromDice(d Dice) C.TCOD_dice_t {
 func toDice(d C.TCOD_dice_t) Dice {
 	return Dice{d}
 }
-
 
 func deleteRandom(r *Random) {
 	C.TCOD_random_delete(r.Data)
@@ -2155,21 +2062,17 @@ func GetRandomInstance() *Random {
 	return newRandom(C.TCOD_random_get_instance())
 }
 
-
 func NewRandom() *Random {
 	return newRandom(C.TCOD_random_new(C.TCOD_random_algo_t(RNG_MT)))
 }
-
 
 func NewRandomWithAlgo(algo RandomAlgo) *Random {
 	return newRandom(C.TCOD_random_new(C.TCOD_random_algo_t(algo)))
 }
 
-
 func NewRandomFromSeedWithAlgo(seed uint32, algo RandomAlgo) *Random {
 	return newRandom(C.TCOD_random_new_from_seed(C.TCOD_random_algo_t(algo), C.uint32(seed)))
 }
-
 
 func NewRandomFromSeed(seed uint32) *Random {
 	return newRandom(
@@ -2177,7 +2080,6 @@ func NewRandomFromSeed(seed uint32) *Random {
 			C.TCOD_random_algo_t(RNG_MT),
 			C.uint32(seed)))
 }
-
 
 func (self *Random) Save() *Random {
 	result := newRandom(C.TCOD_random_save(self.Data))
@@ -2188,11 +2090,9 @@ func (self *Random) Restore(backup *Random) {
 	C.TCOD_random_restore(self.Data, backup.Data)
 }
 
-
 func (self *Random) SetDistribution(distribution Distribution) {
 	C.TCOD_random_set_distribution(self.Data, C.TCOD_distribution_t(distribution))
 }
-
 
 func (self *Random) GetInt(min, max int) int {
 	return int(C.TCOD_random_get_int(self.Data, C.int(min), C.int(max)))
@@ -2206,11 +2106,9 @@ func (self *Random) GetDouble(min, max float64) float64 {
 	return float64(C.TCOD_random_get_double(self.Data, C.double(min), C.double(max)))
 }
 
-
 func (self *Random) GetIntMean(min, max, mean int) int {
 	return int(C.TCOD_random_get_int_mean(self.Data, C.int(min), C.int(max), C.int(mean)))
 }
-
 
 func (self *Random) GetFloatMean(min, max, mean float32) float32 {
 	return float32(C.TCOD_random_get_float_mean(self.Data, C.float(min), C.float(max), C.float(mean)))
@@ -2220,14 +2118,12 @@ func (self *Random) GetDoubleMean(min, max, mean float64) float64 {
 	return float64(C.TCOD_random_get_double_mean(self.Data, C.double(min), C.double(max), C.double(mean)))
 }
 
-
 func NewDice(s string) *Dice {
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
 	result := &Dice{Data: C.TCOD_random_dice_new(cs)}
 	return result
 }
-
 
 func (self *Dice) Roll(random *Random) int {
 	return int(C.TCOD_random_dice_roll(random.Data, self.Data))
@@ -2238,7 +2134,6 @@ func RollDice(random *Random, s string) int {
 	defer C.free(unsafe.Pointer(cs))
 	return int(C.TCOD_random_dice_roll_s(random.Data, cs))
 }
-
 
 //
 // Parser library
@@ -2254,18 +2149,15 @@ type Parser struct {
 	Data C.TCOD_parser_t
 }
 
-
 type ParserProperty struct {
 	Name      string
 	ValueType ParserValueType
 	Value     interface{}
 }
 
-
 func (self ParserStruct) GetName() string {
 	return C.GoString(C.TCOD_struct_get_name(self.Data))
 }
-
 
 func (self ParserStruct) AddProperty(name string, valueType ParserValueType, mandatory bool) {
 	cname := C.CString(name)
@@ -2279,7 +2171,6 @@ func (self ParserStruct) AddListProperty(name string, valueType ParserValueType,
 	defer C.free(unsafe.Pointer(cname))
 	C.TCOD_struct_add_list_property(self.Data, cname, C.TCOD_value_type_t(valueType), fromBool(mandatory))
 }
-
 
 func (self ParserStruct) AddValueList(name string, valueList []string, mandatory bool) {
 	cvalueList := make([]*C.char, len(valueList))
@@ -2301,7 +2192,6 @@ func (self ParserStruct) AddFlag(propname string) {
 	C.TCOD_struct_add_flag(self.Data, cpropname)
 }
 
-
 func (self ParserStruct) AddStructure(substruct ParserStruct) {
 	// TODO is this necessary ??
 	//	struct1 := self.Data
@@ -2309,20 +2199,17 @@ func (self ParserStruct) AddStructure(substruct ParserStruct) {
 	C._TCOD_struct_add_structure(&self.Data, &substruct.Data)
 }
 
-
 func (self *ParserStruct) IsMandatory(propname string) bool {
 	cpropname := C.CString(propname)
 	defer C.free(unsafe.Pointer(cpropname))
 	return toBool(C.TCOD_struct_is_mandatory(self.Data, cpropname))
 }
 
-
 func (self *ParserStruct) GetType(propname string) ParserValueType {
 	cpropname := C.CString(propname)
 	defer C.free(unsafe.Pointer(cpropname))
 	return ParserValueType(C.TCOD_struct_get_type(self.Data, cpropname))
 }
-
 
 func deleteParser(p *Parser) {
 	C.TCOD_parser_delete(p.Data)
@@ -2334,17 +2221,14 @@ func NewParser() *Parser {
 	return result
 }
 
-
 func (self *Parser) RegisterStruct(name string) ParserStruct {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	return ParserStruct{C.TCOD_parser_new_struct(self.Data, cname)}
 }
 
-
 // TODO custom parsers are not supported
 // TCODLIB_API TCOD_value_type_t TCOD_parser_new_custom_type(TCOD_parser_t parser,TCOD_parser_custom_t custom_type_parser);
-
 
 // TODO listeners are not supported
 // Running parser return list of parsed properties
@@ -2426,13 +2310,11 @@ func (self *Parser) Run(filename string) []ParserProperty {
 	return result
 }
 
-
 //
 // Perlin noise
 //
 
 // Noise NEW 
-
 
 const NOISE_MAX_OCTAVES = 128
 const NOISE_MAX_DIMENSIONS = 4
@@ -2440,7 +2322,6 @@ const NOISE_DEFAULT_HURST = 0.5
 const NOISE_DEFAULT_LACUNARITY = 2.0
 
 type NoiseType C.TCOD_noise_type_t
-
 
 type Noise struct {
 	Data C.TCOD_noise_t
@@ -2458,7 +2339,6 @@ func newNoise(d C.TCOD_noise_t) *Noise {
 	return result
 }
 
-
 func NewNoise(dimensions int, random *Random) *Noise {
 	return newNoise(C.TCOD_noise_new(C.int(dimensions), C.float(NOISE_DEFAULT_HURST),
 		C.float(NOISE_DEFAULT_LACUNARITY), random.Data))
@@ -2467,7 +2347,6 @@ func NewNoise(dimensions int, random *Random) *Noise {
 func NewNoiseWithOptions(dimensions int, hurst float32, lacunarity float32, random *Random) *Noise {
 	return newNoise(C.TCOD_noise_new(C.int(dimensions), C.float(hurst), C.float(lacunarity), random.Data))
 }
-
 
 func (self *Noise) GetEx(f FloatArray, noiseType NoiseType) float32 {
 	return float32(C.TCOD_noise_get_ex(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.TCOD_noise_type_t(noiseType)))
@@ -2487,7 +2366,6 @@ func (self *Noise) GetTurbulenceEx(f FloatArray, octaves float32, noiseType Nois
 		C.TCOD_noise_type_t(noiseType)))
 }
 
-
 func (self *Noise) Get(f FloatArray) float32 {
 	return float32(C.TCOD_noise_get(self.Data, (*C.float)(unsafe.Pointer(&f[0]))))
 }
@@ -2500,7 +2378,6 @@ func (self *Noise) GetTurbulence(f FloatArray, octaves float32) float32 {
 	return float32(C.TCOD_noise_get_turbulence(self.Data, (*C.float)(unsafe.Pointer(&f[0])), C.float(octaves)))
 }
 
-
 //
 // Zip
 //
@@ -2508,7 +2385,6 @@ func (self *Noise) GetTurbulence(f FloatArray, octaves float32) float32 {
 type Zip struct {
 	Data C.TCOD_zip_t
 }
-
 
 func deleteZip(zip *Zip) {
 	C.TCOD_zip_delete(zip.Data)
@@ -2520,23 +2396,19 @@ func NewZip() *Zip {
 	return result
 }
 
-
 // output interface
 
 func (self *Zip) PutChar(val byte) {
 	C.TCOD_zip_put_char(self.Data, C.char(val))
 }
 
-
 func (self *Zip) PutInt(val int) {
 	C.TCOD_zip_put_int(self.Data, C.int(val))
 }
 
-
 func (self *Zip) PutFloat(val float32) {
 	C.TCOD_zip_put_float(self.Data, C.float(val))
 }
-
 
 func (self *Zip) PutString(val string) {
 	cval := C.CString(val)
@@ -2544,22 +2416,18 @@ func (self *Zip) PutString(val string) {
 	C.TCOD_zip_put_string(self.Data, cval)
 }
 
-
 func (self *Zip) PutColor(val Color) {
 	cval := fromColor(val)
 	C._TCOD_zip_put_color(self.Data, (*C.TCOD_color_t)(&cval))
 }
 
-
 func (self *Zip) PutImage(val *Image) {
 	C.TCOD_zip_put_image(self.Data, val.Data)
 }
 
-
 func (self *Zip) PutConsole(val *Console) {
 	C.TCOD_zip_put_console(self.Data, val.Data)
 }
-
 
 func (self *Zip) PutData(nbBytes int, data unsafe.Pointer) {
 	C.TCOD_zip_put_data(self.Data, C.int(nbBytes), data)
@@ -2575,7 +2443,6 @@ func (self *Zip) SaveToFile(filename string) {
 	C.TCOD_zip_save_to_file(self.Data, cfilename)
 }
 
-
 // input interface
 
 func (self *Zip) LoadFromFile(filename string) {
@@ -2583,7 +2450,6 @@ func (self *Zip) LoadFromFile(filename string) {
 	defer C.free(unsafe.Pointer(cfilename))
 	C.TCOD_zip_load_from_file(self.Data, cfilename)
 }
-
 
 func (self *Zip) GetChar() byte {
 	return byte(C.TCOD_zip_get_char(self.Data))
@@ -2593,7 +2459,6 @@ func (self *Zip) GetInt() int {
 	return int(C.TCOD_zip_get_int(self.Data))
 }
 
-
 func (self *Zip) GetFloat() float32 {
 	return float32(C.TCOD_zip_get_float(self.Data))
 }
@@ -2601,7 +2466,6 @@ func (self *Zip) GetFloat() float32 {
 func (self *Zip) GetString() string {
 	return C.GoString(C.TCOD_zip_get_string(self.Data))
 }
-
 
 func (self *Zip) GetColor() Color {
 	return toColor(C.TCOD_zip_get_color(self.Data))

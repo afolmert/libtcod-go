@@ -1,9 +1,9 @@
 package main
 
 import (
-	"container/vector"
 	"compress/zlib"
-	"gob"
+	"container/vector"
+	"encoding/gob"
 	"io/ioutil"
 	"os"
 	"path"
@@ -63,7 +63,6 @@ type AsciiArt struct {
 	offsetX, offsetY int
 }
 
-
 var asciiArts []IAsciiArt
 
 var aas *AsciiArtGallery
@@ -96,8 +95,8 @@ func (self *AsciiArtGallery) goLoadAsciiArts() {
 			panic("Cannot read files from data/ascii")
 		}
 		for _, f := range entries {
-			if strings.HasSuffix(f.Name, ".dat") {
-				files.Push(path.Join("data/ascii", f.Name))
+			if strings.HasSuffix(f.Name(), ".dat") {
+				files.Push(path.Join("data/ascii", f.Name()))
 			}
 		}
 
@@ -145,8 +144,7 @@ func (self *AsciiArtGallery) randomAsciiArt() IAsciiArt {
 	return nil
 }
 
-
-func NewAsciiArtFromFile(fname string) (art IAsciiArt, err os.Error) {
+func NewAsciiArtFromFile(fname string) (art IAsciiArt, err error) {
 
 	fin, err := os.Open(fname)
 	if err != nil {
@@ -163,7 +161,6 @@ func NewAsciiArtFromFile(fname string) (art IAsciiArt, err os.Error) {
 	return &a, nil
 
 }
-
 
 func (self *AsciiArt) PutChar(console IConsole, x, y int) {
 	color := self.colors[y+self.offsetY][x+self.offsetX]
@@ -183,7 +180,6 @@ func (self *AsciiArt) Draw(console IConsole) {
 		}
 	}
 }
-
 
 func (self *AsciiArt) Render(console IConsole, transition Transition, first bool) {
 	if first {
