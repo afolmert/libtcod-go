@@ -1,12 +1,12 @@
-package tcod
+/*
+libtcod-go is a go library providing bindings for libtcod
 
-//
-// This is go-bindings package for libtcod-go
-// Most API is wrapped except:
-// - custom containers - Go has it's own containers
-// - threads, mutexes and semaphores - they are replaced by goroutines and channels
-// - SDL renderer - currently Go has very cumbersome C callback mechanism
-//
+Most of the API is wrapped except:
+- custom containers - Go has it's own containers
+- threads, mutexes and semaphores - they are replaced by goroutines and channels
+- SDL renderer - currently Go has very cumbersome C callback mechanism
+*/
+package tcod
 
 /*
  #cgo LDFLAGS:-ltcod
@@ -393,7 +393,7 @@ func NewColorHSV(h, s, v float32) Color {
 	return toColor(C.TCOD_color_HSV(C.float(h), C.float(s), C.float(v)))
 }
 
-// basic operations 
+// basic operations
 func (self Color) Equals(c2 Color) bool {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
@@ -623,7 +623,7 @@ type IConsole interface {
 	Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32)
 }
 
-// Console 
+// Console
 
 type Console struct {
 	Data C.TCOD_console_t
@@ -1260,7 +1260,7 @@ func SysGetNumCores() int {
 	return int(C.TCOD_sys_get_num_cores())
 }
 
-// Clipboard 
+// Clipboard
 
 func SysClipboardSet(value string) {
 	cvalue := C.CString(value)
@@ -2279,7 +2279,7 @@ func (self *Parser) Run(filename string) []ParserProperty {
 // Perlin noise
 //
 
-// Noise NEW 
+// Noise NEW
 
 const NOISE_MAX_OCTAVES = 128
 const NOISE_MAX_DIMENSIONS = 4

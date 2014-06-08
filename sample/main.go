@@ -1,17 +1,16 @@
 package main
 
-//
 import (
 	"crypto/rand"
 	"flag"
 	"fmt"
+	. "github.com/ogier/libtcod-go/tcod"
 	"io/ioutil"
 	"math"
 	"os"
 	"path"
 	"strconv"
 	"strings"
-	. "github.com/ogier/libtcod-go/tcod"
 )
 
 //
@@ -1793,7 +1792,7 @@ const (
 
 func Initialize() {
 
-	// change dir to program dir 
+	// change dir to program dir
 	program := os.Args[0]
 	dir, _ := path.Split(program)
 	os.Chdir(dir)

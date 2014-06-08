@@ -1,22 +1,22 @@
-package main
+/*
+libtcod height map tool
 
-//
-// libtcod height map tool
-//
-// Actually self is currently more a curiosity than a real useful tool.
-// It allows you to tweak a heightmap by hand and generate the corresponding C,C++ or python code.
-//
-// The heightmap tool source code is public domain. Do whatever you want with it.
+Actually self is currently more a curiosity than a real useful tool.
+It allows you to tweak a heightmap by hand and generate the corresponding C,C++ or python code.
+
+The heightmap tool source code is public domain. Do whatever you want with it.
+*/
+package main
 
 import (
 	"container/list"
 	"fmt"
+	"github.com/ogier/libtcod-go/tcod"
 	"io/ioutil"
 	"math"
 	"os"
 	"path"
 	"strconv"
-	"github.com/ogier/libtcod-go/tcod"
 )
 
 //
@@ -2164,7 +2164,7 @@ func buildGui() {
 }
 
 func main() {
-	// change dir to program dir 
+	// change dir to program dir
 	program := os.Args[0]
 	dir, _ := path.Split(program)
 	os.Chdir(dir)

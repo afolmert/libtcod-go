@@ -3,11 +3,11 @@ package main
 import (
 	"compress/zlib"
 	"encoding/gob"
+	. "github.com/ogier/libtcod-go/tcod"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
-	. "github.com/ogier/libtcod-go/tcod"
 )
 
 type Transition uint8
@@ -49,10 +49,10 @@ type AsciiArtGallery struct {
 	loadedArts     bool
 }
 
-// TODO switch to go version  from May 2010 
+// TODO switch to go version  from May 2010
 // TODO decode ascii arts ,
-// TODO store as binary file 
-// CODE LenName Name  WIDTH, HEIGHT  OFFSETX OFFSETY  and stream of colors 
+// TODO store as binary file
+// CODE LenName Name  WIDTH, HEIGHT  OFFSETX OFFSETY  and stream of colors
 
 type AsciiArt struct {
 	name             string
