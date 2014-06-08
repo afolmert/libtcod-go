@@ -9,34 +9,23 @@ package tcod
 //
 
 /*
+ #cgo LDFLAGS:-ltcod
  #include <stdio.h>
  #include <stdlib.h>
  #include <string.h>
- #include "libtcod.h"
- #include "libtcod_int.h"
+ #include "include/libtcod.h"
+ #include "include/libtcod_int.h"
 
  // This is a workaround for cgo disability to process varargs
  // These functions are copied verbatim from console_c and replaced ... with simple string
  // Formatting will be done in Go functions
 
  void _TCOD_console_print(TCOD_console_t con,int x, int y, char *s) {
- 	TCOD_console_data_t *dat;
- 	if (! con ) con=TCOD_ctx.root;
- 	dat=(TCOD_console_data_t *)con;
-	char *t = strdup(s);
- 	TCOD_console_print(con,x,y,"%s",t);
-	free(t);
+ 	TCOD_console_print(con,x,y,"%s",s);
  }
 
-
- void  _TCOD_console_print_ex(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, TCOD_alignment_t alignment, const
- char *s) {
- 	TCOD_console_data_t *dat;
- 	if (! con ) con=TCOD_ctx.root;
- 	dat=(TCOD_console_data_t *)con;
-	char *t = strdup(s);
- 	TCOD_console_print_ex(con,x,y,flag,alignment,"%s",t);
-	free(t);
+ void  _TCOD_console_print_ex(TCOD_console_t con,int x, int y, TCOD_bkgnd_flag_t flag, TCOD_alignment_t alignment, const char *s) {
+ 	TCOD_console_print_ex(con,x,y,flag,alignment,"%s",s);
  }
 
  int _TCOD_console_print_rect(TCOD_console_t con,int x, int y, int w, int h, char *s) {
@@ -49,11 +38,8 @@ package tcod
  }
 
  int _TCOD_console_height_rect(TCOD_console_t con,int x, int y, int w, int h, char *s) {
- 	int ret;
- 	ret = TCOD_console_get_height_rect(con,x,y,w,h, "%s", s);
- 	return ret;
+ 	return TCOD_console_get_height_rect(con,x,y,w,h, "%s", s);
  }
-
 
  void _TCOD_console_print_frame(TCOD_console_t con,int x,int y,int w,int h, bool empty, TCOD_bkgnd_flag_t flag, char *s) {
  	TCOD_console_data_t *dat;
@@ -187,7 +173,6 @@ package tcod
 import "C"
 
 import (
-	"container/vector"
 	"fmt"
 	"runtime"
 	"unsafe"
@@ -215,7 +200,6 @@ func If(condition bool, tv, fv interface{}) interface{} {
 	} else {
 		return fv
 	}
-	return nil
 }
 
 func Clamp(a, b, x int) int {
@@ -243,22 +227,6 @@ func toStringSlice(l C.TCOD_list_t, free bool) (result []string) {
 		C.TCOD_list_delete(l)
 	}
 	return
-}
-
-func vectorShift(v *vector.Vector) (result interface{}) {
-	result = v.At(0)
-	v.Delete(0)
-	return
-
-}
-
-func vectorRemove(v *vector.Vector, el interface{}) {
-	for i := 0; i < v.Len(); i++ {
-		if el == v.At(i) {
-			v.Delete(i)
-			break
-		}
-	}
 }
 
 //
@@ -312,7 +280,6 @@ func toBool(b C.bool) bool {
 	} else {
 		return false
 	}
-	return false
 }
 
 func fromBool(b bool) C.bool {
@@ -321,7 +288,6 @@ func fromBool(b bool) C.bool {
 	} else {
 		return C.bool(0)
 	}
-	return C.bool(0)
 }
 
 //
@@ -1074,11 +1040,11 @@ func Line(xo, yo, xd, yd int, userData interface{}, listener LineListener) bool 
 	return LineMt(xo, yo, xd, yd, listener, userData, &bresenhamData)
 }
 
-// returns vector with Points where the line was drawn
-func LinePoints(xo, yo, xd, yd int) vector.Vector {
-	result := vector.Vector{}
+// returns slice of Points where the line was drawn
+func LinePoints(xo, yo, xd, yd int) []Point {
+	result := []Point{}
 	Line(xo, yo, xd, yd, nil, func(x, y int, data interface{}) bool {
-		result.Push(Point{x, y})
+		result = append(result, Point{x, y})
 		return true
 	})
 	return result
@@ -1423,7 +1389,6 @@ func (self *Bsp) Right() *Bsp {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 func (self *Bsp) Father() *Bsp {
@@ -1507,15 +1472,15 @@ func (self *Bsp) TraversePostOrder(listener BspListener, userData interface{}) b
 }
 
 func (self *Bsp) TraverseLevelOrder(listener BspListener, userData interface{}) bool {
-	stack := vector.Vector{}
-	stack.Push(self)
+	stack := []*Bsp{self}
 	for len(stack) > 0 {
-		node := vectorShift(&stack).(*Bsp)
+		node := stack[0]
+		stack = stack[1:]
 		if node.Left() != nil {
-			stack.Push(node.Left())
+			stack = append(stack, node.Left())
 		}
 		if node.Right() != nil {
-			stack.Push(node.Right())
+			stack = append(stack, node.Right())
 		}
 		if !listener(node, userData) {
 			return false
@@ -1527,22 +1492,22 @@ func (self *Bsp) TraverseLevelOrder(listener BspListener, userData interface{}) 
 // TODO can it store Go values in list structure??
 // maybe replace it with record
 func (self *Bsp) TraverseInvertedLevelOrder(listener BspListener, userData interface{}) bool {
-
-	stack1 := vector.Vector{}
-	stack2 := vector.Vector{}
-	stack1.Push(self)
-	for stack1.Len() > 0 {
-		node := vectorShift(&stack1).(*Bsp)
-		stack2.Push(node)
+	stack1 := []*Bsp{self}
+	stack2 := []*Bsp{}
+	for len(stack1) > 0 {
+		node := stack1[0]
+		stack1 = stack1[1:]
+		stack2 = append(stack2, node)
 		if node.Left() != nil {
-			stack1.Push(node.Left())
+			stack1 = append(stack1, node.Left())
 		}
 		if node.Right() != nil {
-			stack1.Push(node.Right())
+			stack1 = append(stack1, node.Right())
 		}
 	}
-	for stack2.Len() > 0 {
-		node := stack2.Pop().(*Bsp)
+	for len(stack2) > 0 {
+		node := stack2[len(stack2)-1]
+		stack2 = stack2[:len(stack2)-1]
 		if !listener(node, userData) {
 			return false
 		}

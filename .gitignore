@@ -6,4 +6,5 @@ _cgo_.so
 _obj/
 *.sw*
 tcod.cgo1.go
-tcod_defs.go
+sample/sample
+hmtool/hmtool

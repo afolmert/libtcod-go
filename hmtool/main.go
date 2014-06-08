@@ -9,14 +9,14 @@ package main
 // The heightmap tool source code is public domain. Do whatever you want with it.
 
 import (
-	"container/vector"
+	"container/list"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"os"
 	"path"
 	"strconv"
-	"tcod"
+	"github.com/ogier/libtcod-go/tcod"
 )
 
 //
@@ -342,29 +342,30 @@ func cos(f float32) float32 {
 	return float32(math.Cos(float64(f)))
 }
 
-func vectorRemove(v vector.Vector, el interface{}) {
-	for i := 0; i < v.Len(); i++ {
-		if el == v.At(i) {
-			v.Delete(i)
+func listRemove(l list.List, val interface{}) {
+	for e := l.Front(); e != nil; e = e.Next() {
+		if e.Value == val {
+			l.Remove(e)
 			break
 		}
 	}
 }
 
-func stringVectorContains(v vector.StringVector, data string) bool {
-	for _, e := range v {
-		if e == data {
+func stringSliceContains(s []string, val string) bool {
+	for _, e := range s {
+		if e == val {
 			return true
 		}
 
 	}
 	return false
 }
-func peekOperation(v vector.Vector) IOperation {
-	if v.Len() == 0 {
-		return nil
+
+func peekOperation(l list.List) IOperation {
+	if l.Back() != nil {
+		return l.Back().Value.(IOperation)
 	}
-	return v.At(v.Len() - 1).(IOperation)
+	return nil
 }
 
 //
@@ -375,21 +376,21 @@ func peekOperation(v vector.Vector) IOperation {
 type OperationStatic struct {
 	names       []string
 	tips        []string
-	list        vector.Vector // the list of operation applied since the last clear
-	needsRandom bool          // we need a random number generator
-	needsNoise  bool          // we need a 2D noise
+	list        list.List // the list of operation applied since the last clear
+	needsRandom bool      // we need a random number generator
+	needsNoise  bool      // we need a 2D noise
 	currentOp   IOperation
-	codebuf     string                       // generated code buffer
-	initCode    [NB_CODE]vector.StringVector // list of global vars/functions to add to the generated code
+	codebuf     string            // generated code buffer
+	initCode    [NB_CODE][]string // list of global vars/functions to add to the generated code
 }
 
 func newOperationStatic() *OperationStatic {
 	result := &OperationStatic{}
-	result.list = vector.Vector{}
-	result.initCode = [NB_CODE]vector.StringVector{
-		vector.StringVector{},
-		vector.StringVector{},
-		vector.StringVector{}}
+	result.list = list.List{}
+	result.initCode = [NB_CODE][]string{
+		[]string{},
+		[]string{},
+		[]string{}}
 	// must match OpType enum
 	result.names = []string{
 		"norm",
@@ -450,11 +451,11 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 		self.addCode(s)
 	}
 	self.addCode(HEADER2[codeType])
-	self.list.Do(func(e interface{}) {
-		op := e.(IOperation)
+	for e := self.list.Front(); e != nil; e = e.Next() {
+		op := e.Value.(IOperation)
 		code := op.getCode(codeType)
 		self.addCode(code)
-	})
+	}
 	self.addCode(FOOTER1[codeType])
 	if (self.needsRandom || self.needsNoise) && codeType == C {
 		self.addCode(fmt.Sprintf("\trnd=tcod.TCOD_random_new_from_seed(%uU);\n", seed))
@@ -468,13 +469,13 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 
 // remove all operation, clear the heightmap
 func (self *OperationStatic) clear() {
-	self.list = vector.Vector{}
+	self.list = list.List{}
 }
 
 // cancel the last operation
 func (self *OperationStatic) cancel() {
 	if self.currentOp != nil {
-		vectorRemove(self.list, self.currentOp)
+		listRemove(self.list, self.currentOp)
 		history.RemoveWidget(self.currentOp.getButton())
 		self.currentOp.getButton().UnSelect()
 		//delete self.currentOp
@@ -496,8 +497,8 @@ func (self *OperationStatic) reseed() {
 	addFbmDelta = 0
 	scaleFbmDelta = 0
 	hm.Clear()
-	for _, e := range self.list {
-		op := e.(IOperation)
+	for e := self.list.Front(); e != nil; e = e.Next() {
+		op := e.Value.(IOperation)
 		op.runInternal()
 	}
 
@@ -509,8 +510,8 @@ func (self *OperationStatic) run(op IOperation) {
 
 // add a global variable or a function to the generated code
 func (self *OperationStatic) addInitCode(codeType CodeType, code string) {
-	if !stringVectorContains(self.initCode[codeType], code) {
-		self.initCode[codeType].Push(code)
+	if !stringSliceContains(self.initCode[codeType], code) {
+		self.initCode[codeType] = append(self.initCode[codeType], code)
 	}
 }
 
@@ -524,7 +525,7 @@ func (self *OperationStatic) add(op IOperation) {
 	backup()
 	op.runInternal()
 	if op.addInternal() {
-		operations.list.Push(op)
+		operations.list.PushBack(op)
 		op.createParamUi()
 		op.setButton(gui.NewRadioButton(operations.names[op.getOpType()], operations.tips[op.getOpType()], historyCbk, op))
 		op.getButton().SetGroup(0)
@@ -661,8 +662,8 @@ func normalizeMinValueCbk(w tcod.IWidget, val string, data interface{}) {
 	f, err := strconv.ParseFloat(val, 32)
 	if err != nil {
 		op := data.(*NormalizeOperation)
-		if f < op.max {
-			op.min = f
+		if float32(f) < op.max {
+			op.min = float32(f)
 			if peekOperation(operations.list) == IOperation(op) {
 				op.runInternal()
 			} else {
@@ -676,8 +677,8 @@ func normalizeMaxValueCbk(w tcod.IWidget, val string, data interface{}) {
 	f, err := strconv.ParseFloat(val, 32)
 	if err != nil {
 		op := data.(*NormalizeOperation)
-		if f > op.min {
-			op.max = f
+		if float32(f) > op.min {
+			op.max = float32(f)
 			if peekOperation(operations.list) == IOperation(op) {
 				op.runInternal()
 			} else {

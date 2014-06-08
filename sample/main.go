@@ -11,7 +11,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	. "tcod"
+	. "github.com/ogier/libtcod-go/tcod"
 )
 
 //
@@ -1665,7 +1665,7 @@ func (self *NameDemo) Render(first bool, key *Key) {
 	}
 
 	for len(self.names) >= DEMO_SCREEN_HEIGHT-10 {
-		self.names = append(self.names[:0], self.names[1:])
+		self.names = append(self.names[:0], self.names[1:]...)
 	}
 
 	demoConsole.Clear()

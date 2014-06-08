@@ -1,7 +1,6 @@
 package tcod
 
 import (
-	"container/vector"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,7 +15,6 @@ func min(a, b int) int {
 	} else {
 		return b
 	}
-	return a
 }
 
 func max(a, b int) int {
@@ -25,7 +23,6 @@ func max(a, b int) int {
 	} else {
 		return a
 	}
-	return a
 }
 
 func absf(v float32) float32 {
@@ -117,57 +114,6 @@ type IWidget interface {
 }
 
 //
-// WidgetVector collection
-//
-type WidgetVector struct {
-	d vector.Vector
-}
-
-func NewWidgetVector() *WidgetVector {
-	return &WidgetVector{vector.Vector{}}
-}
-
-func (self *WidgetVector) Push(w IWidget) {
-	self.d.Push(w)
-}
-
-func (self *WidgetVector) Clear() {
-	self.d = vector.Vector{}
-}
-
-func (self *WidgetVector) At(index int) IWidget {
-	return self.d.At(index).(IWidget)
-}
-
-func (self *WidgetVector) Len() int {
-	return self.d.Len()
-}
-
-func (self *WidgetVector) Remove(w IWidget) {
-	for i, x := range self.d {
-		if x.(IWidget) == w {
-			self.d.Delete(i)
-			break
-		}
-	}
-}
-
-// Iterate over all elements; driver for range
-func (self *WidgetVector) iterate(c chan<- IWidget) {
-	for _, v := range self.d {
-		c <- v.(IWidget)
-	}
-	close(c)
-}
-
-// Channel iterator for range.
-func (self *WidgetVector) Iter() <-chan IWidget {
-	c := make(chan IWidget)
-	go self.iterate(c)
-	return c
-}
-
-//
 // GUI info
 //
 
@@ -177,7 +123,7 @@ type Gui struct {
 	mouse         Mouse
 	elapsed       float32
 	con           IConsole
-	widgetVector  *WidgetVector
+	widgetVector  []IWidget
 	rbs           *RadioButtonStatic
 	tbs           *TextBoxStatic
 }
@@ -185,14 +131,14 @@ type Gui struct {
 func NewGui(console IConsole) *Gui {
 	return &Gui{
 		con:          console,
-		widgetVector: NewWidgetVector(),
+		widgetVector: []IWidget{},
 		tbs:          NewTextBoxStatic(),
 		rbs:          NewRadioButtonStatic()}
 }
 
 func (self *Gui) Register(w IWidget) {
 	w.SetGui(self)
-	self.widgetVector.Push(w)
+	self.widgetVector = append(self.widgetVector, w)
 }
 
 func (self *Gui) Unregister(w IWidget) {
@@ -202,13 +148,16 @@ func (self *Gui) Unregister(w IWidget) {
 	if self.keyboardFocus == w {
 		self.keyboardFocus = nil
 	}
-	self.widgetVector.Remove(w)
+	for i, e := range self.widgetVector {
+		if e == w {
+			self.widgetVector = append(self.widgetVector[0:i], self.widgetVector[i+1:]...)
+		}
+	}
 }
 
 func (self *Gui) updateWidgetsIntern(k Key) {
 	self.elapsed = SysGetLastFrameLength()
-	for e := range self.widgetVector.Iter() {
-		w := e.(IWidget)
+	for _, w := range self.widgetVector {
 		if w.IsVisible() {
 			w.ComputeSize()
 			w.Update(w, k)
@@ -226,8 +175,7 @@ func (self *Gui) UpdateWidgets(k Key) {
 }
 
 func (self *Gui) RenderWidgets() {
-	for e := range self.widgetVector.Iter() {
-		w := e.(IWidget)
+	for _, w := range self.widgetVector {
 		if w.IsVisible() {
 			fore, back := self.con.GetDefaultForeground(), self.con.GetDefaultBackground()
 			w.Render(w)
@@ -718,7 +666,7 @@ func (self *ImageWidget) expand(width, height int) {
 
 type Container struct {
 	Widget
-	content *WidgetVector
+	content []IWidget
 }
 
 func (self *Gui) newContainer() *Container {
@@ -735,20 +683,24 @@ func (self *Gui) NewContainer(x, y, w, h int) *Container {
 
 func (self *Container) initializeContainer(x, y, w, h int) {
 	self.Widget.initializeWidget(x, y, w, h)
-	self.content = &WidgetVector{}
+	self.content = []IWidget{}
 }
 
 func (self *Container) AddWidget(w IWidget) {
-	self.content.Push(w)
+	self.content = append(self.content, w)
 	self.gui.Unregister(w)
 }
 
 func (self *Container) RemoveWidget(w IWidget) {
-	self.content.Remove(w)
+	for i, e := range self.content {
+		if e == w {
+			self.content = append(self.content[:i], self.content[i+1:]...)
+		}
+	}
 }
 
 func (self *Container) Render(iself IWidget) {
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.Render(w)
 		}
@@ -756,13 +708,13 @@ func (self *Container) Render(iself IWidget) {
 }
 
 func (self *Container) Clear() {
-	self.content.Clear()
+	self.content = []IWidget{}
 }
 
 func (self *Container) Update(iself IWidget, k Key) {
 	self.Widget.Update(iself, k)
 
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.Update(w, k)
 		}
@@ -799,7 +751,7 @@ func (self *VBox) initializeVBox(x, y, padding int) {
 func (self *VBox) ComputeSize() {
 	cury := self.y
 	self.w = 0
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.SetX(self.x)
 			w.SetY(cury)
@@ -812,7 +764,7 @@ func (self *VBox) ComputeSize() {
 	}
 	self.h = cury - self.y
 
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.expand(self.w, w.GetHeight())
 		}
@@ -847,7 +799,7 @@ func (self *HBox) initializeHBox(x, y, padding int) {
 func (self *HBox) ComputeSize() {
 	curx := self.x
 	self.h = 0
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.SetY(self.y)
 			w.SetX(curx)
@@ -860,7 +812,7 @@ func (self *HBox) ComputeSize() {
 	}
 
 	self.w = curx - self.x
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.expand(w.GetWidth(), self.h)
 		}
@@ -1006,7 +958,7 @@ func (self *ToolBar) AddSeparatorWithTip(txt string, tip string) {
 func (self *ToolBar) ComputeSize() {
 	cury := self.y + 1
 	self.w = If(self.name != "", len(self.name)+4, 2).(int)
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.SetX(self.x + 1)
 			w.SetY(cury)
@@ -1021,7 +973,7 @@ func (self *ToolBar) ComputeSize() {
 		self.w = self.fixedWidth
 	}
 	self.h = cury - self.y + 1
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.expand(self.w-2, w.GetHeight())
 		}

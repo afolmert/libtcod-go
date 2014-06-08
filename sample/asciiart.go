@@ -2,13 +2,12 @@ package main
 
 import (
 	"compress/zlib"
-	"container/vector"
 	"encoding/gob"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
-	. "tcod"
+	. "github.com/ogier/libtcod-go/tcod"
 )
 
 type Transition uint8
@@ -44,7 +43,7 @@ type AsciiArtGallery struct {
 	firstTime      int // time in milliseconds when first render occurred
 	moveTransition MoveTransition
 	arts           []IAsciiArt
-	artfiles       vector.StringVector
+	artfiles       []string
 	last           int
 	loadedArtsChan chan bool
 	loadedArts     bool
@@ -89,18 +88,18 @@ func (self *AsciiArtGallery) isArtsLoaded() bool {
 func (self *AsciiArtGallery) goLoadAsciiArts() {
 	self.loadedArts = false
 	go func() {
-		files := vector.StringVector{}
+		files := []string{}
 		entries, err := ioutil.ReadDir("data/ascii")
 		if err != nil {
 			panic("Cannot read files from data/ascii")
 		}
 		for _, f := range entries {
 			if strings.HasSuffix(f.Name(), ".dat") {
-				files.Push(path.Join("data/ascii", f.Name()))
+				files = append(files, path.Join("data/ascii", f.Name()))
 			}
 		}
 
-		self.arts = make([]IAsciiArt, files.Len())
+		self.arts = make([]IAsciiArt, len(files))
 		self.artfiles = files
 		self.loadedArtsChan <- true
 	}()
