@@ -1,42 +1,41 @@
-CMDS=sample hmtool
+all: deps install
+
+DIRS=\
+	tcod\
+
+NOTEST=\
+	tcod\
+
+TEST=$(filter-out $(NOTEST),$(DIRS))
 
 GOMAKE=gomake
 
-TARG=libtcod-go
-
-SUB=$(LIBS:%=pkg/%) $(CMDS:%=cmd/%)
-
-all: deps build.cmds
-
-run: $(TARG).run
-
-build.cmds: $(addsuffix .build, $(CMDS))
-clean.cmds: $(addsuffix .clean, $(CMDS))
-
-build.libs:
-	$(GOMAKE) -C pkg all
-
-test: deps build.libs
-	$(GOMAKE) -C pkg test
-
-# XXX: Hardwired to clean the command before build to hack around problems
-# specifying library dependencies to the command.
-%.run: build.libs
-	$(GOMAKE) -C cmd/$* clean
-	$(GOMAKE) -C cmd/$* all
-	(cd ./cmd/$*; ./$* ${ARGS})
-
-%.build: build.libs
-	$(GOMAKE) -C cmd/$*
+clean.dirs: $(addsuffix .clean, $(DIRS))
+install.dirs: $(addsuffix .install, $(DIRS))
+nuke.dirs: $(addsuffix .nuke, $(DIRS))
+test.dirs: $(addsuffix .test, $(TEST))
 
 %.clean:
-	$(GOMAKE) -C cmd/$* clean
+	$(GOMAKE) -C $* clean
 
-clean: clean.cmds
-	$(GOMAKE) -C pkg clean
+%.install:
+	$(GOMAKE) -C $* install
 
-nuke: clean.cmds
-	$(GOMAKE) -C pkg nuke
+%.nuke:
+	$(GOMAKE) -C $* nuke
+
+%.test:
+	$(GOMAKE) -C $* test
+
+clean: clean.dirs
+
+install: install.dirs
+
+test: test.dirs
+
+nuke: nuke.dirs
 
 deps:
-	$(GOMAKE) -C pkg deps
+	$(GOROOT)/src/pkg/deps.bash
+
+-include Make.deps
