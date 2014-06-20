@@ -70,3 +70,4 @@ Go Authors for the Go language
 Jice, Mingos and others for the libtcod library
 Chris Hamons for API design ideas in the libtcod-net bindings
 Felipe Bichued for comments and ideas
+Alex Ogier for patches updating to Go 1.2
