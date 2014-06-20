@@ -1,18 +1,16 @@
 package main
 
-//
 import (
-	"container/vector"
 	"crypto/rand"
 	"flag"
 	"fmt"
+	. "github.com/ogier/libtcod-go/tcod"
 	"io/ioutil"
 	"math"
 	"os"
 	"path"
 	"strconv"
 	"strings"
-	. "tcod"
 )
 
 //
@@ -37,7 +35,6 @@ func atoi(s string) int {
 	}
 	return 0
 }
-
 
 func randByte() byte {
 	b := make([]byte, 1)
@@ -84,7 +81,6 @@ func maxf(a, b float32) float32 {
 func randColor() Color {
 	return Color{randByte(), randByte(), randByte()}
 }
-
 
 func sqr(i int) int {
 	return i * i
@@ -153,7 +149,6 @@ type Sample struct {
 
 var samples []Sample
 
-
 ///
 /// Ascii Art sample
 ///
@@ -165,7 +160,6 @@ const (
 	BOTTOMRIGHT
 )
 
-
 const ASCII_ART_SLIDE_DELAY = 3 // every 3 seconds new slide shows
 
 type AsciiArtDemo struct {
@@ -174,12 +168,9 @@ type AsciiArtDemo struct {
 	transition    Transition
 }
 
-
 func NewAsciiArtDemo() *AsciiArtDemo {
 	return &AsciiArtDemo{}
 }
-
-
 
 func (self *AsciiArtDemo) Render(first bool, key *Key) {
 	if aas == nil {
@@ -205,7 +196,6 @@ func (self *AsciiArtDemo) Render(first bool, key *Key) {
 	}
 }
 
-
 // Old Colors demo
 type ColorsDemo struct {
 	cols             [4]Color // random corner colors
@@ -224,7 +214,6 @@ func NewColorsDemo() *ColorsDemo {
 	result.dirb = [4]int{1, 1, 1, -1}
 	return result
 }
-
 
 func (self *ColorsDemo) Render(first bool, key *Key) {
 	var c, x, y int
@@ -301,8 +290,8 @@ func (self *ColorsDemo) Render(first bool, key *Key) {
 	demoConsole.PrintRectEx(DEMO_SCREEN_WIDTH/2, 5, DEMO_SCREEN_WIDTH-2, DEMO_SCREEN_HEIGHT-1, BKGND_MULTIPLY, CENTER,
 		"The Doryen library uses 24 bits colors, for both background and foreground.")
 }
-//
 
+//
 
 // Offscreen demo
 ///
@@ -326,7 +315,6 @@ func NewOffscreenDemo() *OffscreenDemo {
 		xdir:    1,
 		ydir:    1}
 }
-
 
 func (self *OffscreenDemo) Render(first bool, key *Key) {
 	if !self.init {
@@ -368,7 +356,6 @@ func (self *OffscreenDemo) Render(first bool, key *Key) {
 
 }
 
-
 ///
 /// Lines demo
 ///
@@ -378,7 +365,6 @@ type LinesDemo struct {
 	init      bool
 	flagNames []string
 }
-
 
 func NewLinesDemo() *LinesDemo {
 	result := &LinesDemo{
@@ -401,14 +387,12 @@ func NewLinesDemo() *LinesDemo {
 	return result
 }
 
-
 func lineListener(x, y int, demo interface{}) bool {
 	if x >= 0 && y >= 0 && x < DEMO_SCREEN_WIDTH && y < DEMO_SCREEN_HEIGHT {
 		demoConsole.SetCharBackground(x, y, COLOR_LIGHT_BLUE, BkgndFlag(demo.(*LinesDemo).bkFlag))
 	}
 	return true
 }
-
 
 func (self *LinesDemo) Render(first bool, key *Key) {
 	var xo, yo, xd, yd, x, y int            // segment starting, ending, current position
@@ -476,7 +460,6 @@ func (self *LinesDemo) Render(first bool, key *Key) {
 	demoConsole.PrintEx(2, 2, BKGND_NONE, LEFT, "%s (ENTER to change)", self.flagNames[self.bkFlag&0xff])
 }
 
-
 ///
 /// NoiseDemo
 ///
@@ -492,7 +475,6 @@ const (
 	FBM_WAVELET
 	TURBULENCE_WAVELET
 )
-
 
 type NoiseDemo struct {
 	funName    []string
@@ -532,7 +514,6 @@ func NewNoiseDemo() *NoiseDemo {
 
 	return result
 }
-
 
 func (self *NoiseDemo) Render(first bool, key *Key) {
 	var x, y, curfun int
@@ -656,7 +637,6 @@ func (self *NoiseDemo) Render(first bool, key *Key) {
 	}
 }
 
-
 ///
 /// Fov demo
 ///
@@ -680,7 +660,6 @@ type FovDemo struct {
 	algoNames    []string
 	torchx       []float32 // torch light position in the perlin noise
 }
-
 
 func NewFovDemo() *FovDemo {
 	result := &FovDemo{
@@ -768,7 +747,6 @@ func NewFovDemo() *FovDemo {
 		"########       #     #### #####          ####################################"}
 	return result
 }
-
 
 func (self *FovDemo) Render(first bool, key *Key) {
 	var x, y int
@@ -904,7 +882,6 @@ func (self *FovDemo) Render(first bool, key *Key) {
 	}
 }
 
-
 ///
 ///
 ///
@@ -1009,7 +986,6 @@ func NewPathDemo() *PathDemo {
 		"########       #     #### #####          ##################################"}
 	return result
 }
-
 
 func (self *PathDemo) Render(first bool, key *Key) {
 	var mouse Mouse
@@ -1183,7 +1159,6 @@ func (self *PathDemo) Render(first bool, key *Key) {
 	}
 }
 
-
 ///
 ///
 ///
@@ -1239,6 +1214,7 @@ func (self *SampleMap) VLine(x, y1, y2 int) {
 		}
 	}
 }
+
 //
 // draw a vertical line up until we reach an empty space
 func (self *SampleMap) VLineUp(x, y int) {
@@ -1387,7 +1363,6 @@ func TraverseNode(node *Bsp, userData interface{}) bool {
 	return true
 }
 
-
 func NewBspDemo() *BspDemo {
 	return &BspDemo{
 		randomRoom:  false,
@@ -1401,8 +1376,6 @@ func NewBspDemo() *BspDemo {
 		darkWall:    Color{0, 0, 100},
 		darkGround:  Color{50, 50, 150}}
 }
-
-
 
 func (self *BspDemo) Render(first bool, key *Key) {
 	var x, y int
@@ -1474,7 +1447,6 @@ func (self *BspDemo) Render(first bool, key *Key) {
 	}
 }
 
-
 ///
 ///
 ///
@@ -1490,7 +1462,6 @@ func NewImageDemo() *ImageDemo {
 	result.green = Color{0, 255, 0}
 	return result
 }
-
 
 func (self *ImageDemo) Render(first bool, key *Key) {
 	var x, y, scalex, scaley, angle float32
@@ -1534,12 +1505,10 @@ func (self *ImageDemo) Render(first bool, key *Key) {
 	self.img.Blit(demoConsole, x, y, BKGND_SET, scalex, scaley, angle)
 }
 
-
 ///
 ///
 /// Mouse demo
 //
-
 
 type MouseDemo struct {
 	lbut, rbut, mbut bool
@@ -1560,7 +1529,6 @@ func NewMouseDemo() *MouseDemo {
 	}
 	return result
 }
-
 
 func (self *MouseDemo) Render(first bool, key *Key) {
 	var mouse Mouse
@@ -1660,8 +1628,8 @@ Char           : %s
 		demoConsole, 4, 4, 0.8, 0.8)
 
 }
-//
 
+//
 
 ///
 /// Name
@@ -1671,14 +1639,13 @@ type NameDemo struct {
 	curSet int
 	delay  float32
 	sets   []string
-	names  vector.StringVector
+	names  []string
 }
 
 func NewNameDemo() *NameDemo {
 	return &NameDemo{
-		names: vector.StringVector{}}
+		names: []string{}}
 }
-
 
 func (self *NameDemo) Render(first bool, key *Key) {
 	if len(self.sets) == 0 {
@@ -1696,8 +1663,8 @@ func (self *NameDemo) Render(first bool, key *Key) {
 		SysSetFps(30) // limited to 30 fps
 	}
 
-	for self.names.Len() >= DEMO_SCREEN_HEIGHT-10 {
-		self.names.Delete(0)
+	for len(self.names) >= DEMO_SCREEN_HEIGHT-10 {
+		self.names = append(self.names[:0], self.names[1:]...)
 	}
 
 	demoConsole.Clear()
@@ -1715,20 +1682,20 @@ func (self *NameDemo) Render(first bool, key *Key) {
 	if self.delay >= 0.5 {
 		self.delay -= 0.5
 		// add a new name to the list
-		self.names.Push(NamegenGenerate(self.sets[self.curSet]))
+		self.names = append(self.names, NamegenGenerate(self.sets[self.curSet]))
 	}
 	if key.C == '+' {
 		self.curSet++
 		if self.curSet == self.nbSets {
 			self.curSet = 0
 		}
-		self.names.Push("======")
+		self.names = append(self.names, "======")
 	} else if key.C == '-' {
 		self.curSet--
 		if self.curSet < 0 {
 			self.curSet = self.nbSets - 1
 		}
-		self.names.Push("======")
+		self.names = append(self.names, "======")
 	}
 }
 
@@ -1745,7 +1712,6 @@ func NewParserDemo() *ParserDemo {
 	return &ParserDemo{}
 }
 
-
 func parse(fname string) string {
 	statesList := []string{"hungry", "very hunger", "starving"}
 
@@ -1761,7 +1727,6 @@ func parse(fname string) string {
 	ps.AddListProperty("versions", TYPE_INT, true)
 	ps.AddListProperty("advances", TYPE_FLOAT, true)
 	ps.AddFlag("abstract")
-
 
 	ps.AddValueList("states", statesList, true)
 
@@ -1806,7 +1771,6 @@ func (self *ParserDemo) Render(first bool, key *Key) {
 
 }
 
-
 //
 //
 //
@@ -1828,7 +1792,7 @@ const (
 
 func Initialize() {
 
-	// change dir to program dir 
+	// change dir to program dir
 	program := os.Args[0]
 	dir, _ := path.Split(program)
 	os.Chdir(dir)
@@ -1848,8 +1812,6 @@ func Initialize() {
 		Sample{name: "Parser demo       ", demo: NewParserDemo()},
 		Sample{name: "Ascii slideshow   ", demo: NewAsciiArtDemo()}}
 }
-
-
 
 func switchDemoCbk(w IWidget, data interface{}) {
 	curSample = data.(int)
@@ -1968,13 +1930,12 @@ func Run() {
 		fontFlags = fontNewFlags
 	}
 
-
 	if fullscreenWidth > 0 {
 		SysForceFullscreenResolution(fullscreenWidth, fullscreenHeight)
 	}
 
 	rootConsole = NewRootConsoleWithFont(SCREEN_WIDTH, SCREEN_HEIGHT, "Go demo", false, font, fontFlags, nbCharHoriz,
-	nbCharVertic, RENDERER_SDL)
+		nbCharVertic, RENDERER_SDL)
 
 	guiConsole = NewConsole(GUI_SCREEN_WIDTH, GUI_SCREEN_HEIGHT)
 
@@ -1984,7 +1945,6 @@ func Run() {
 	buildGui()
 
 	for {
-
 
 		rootConsole.Clear() // THIS IS CRITICAL !!
 		guiConsole.SetDefaultBackground(COLOR_BLACK)
@@ -2043,7 +2003,6 @@ func Run() {
 			SysSaveScreenshot()
 		}
 
-
 		samples[curSample].button.Select()
 
 		if rootConsole.IsWindowClosed() {
@@ -2051,7 +2010,6 @@ func Run() {
 		}
 	}
 }
-
 
 func main() {
 	Initialize()

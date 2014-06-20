@@ -2,9 +2,8 @@ package tcod
 
 import (
 	"fmt"
-	"container/vector"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 //
@@ -16,7 +15,6 @@ func min(a, b int) int {
 	} else {
 		return b
 	}
-	return a
 }
 
 func max(a, b int) int {
@@ -25,7 +23,6 @@ func max(a, b int) int {
 	} else {
 		return a
 	}
-	return a
 }
 
 func absf(v float32) float32 {
@@ -57,7 +54,6 @@ func replace(s string, c int, pos int) string {
 	}
 	return s[0:pos] + string(c) + s[(pos+1):len(s)]
 }
-
 
 // deletes string char at given position
 // and returns new string
@@ -117,60 +113,6 @@ type IWidget interface {
 	expand(x, y int)
 }
 
-
-//
-// WidgetVector collection
-//
-type WidgetVector struct {
-	d vector.Vector
-}
-
-func NewWidgetVector() *WidgetVector {
-	return &WidgetVector{vector.Vector{}}
-}
-
-func (self *WidgetVector) Push(w IWidget) {
-	self.d.Push(w)
-}
-
-func (self *WidgetVector) Clear() {
-	self.d = vector.Vector{}
-}
-
-func (self *WidgetVector) At(index int) IWidget {
-	return self.d.At(index).(IWidget)
-}
-
-func (self *WidgetVector) Len() int {
-	return self.d.Len()
-}
-
-func (self *WidgetVector) Remove(w IWidget) {
-	for i, x := range self.d {
-		if x.(IWidget) == w {
-			self.d.Delete(i)
-			break
-		}
-	}
-}
-
-// Iterate over all elements; driver for range
-func (self *WidgetVector) iterate(c chan<- IWidget) {
-	for _, v := range self.d {
-		c <- v.(IWidget)
-	}
-	close(c)
-}
-
-
-// Channel iterator for range.
-func (self *WidgetVector) Iter() <-chan IWidget {
-	c := make(chan IWidget)
-	go self.iterate(c)
-	return c
-}
-
-
 //
 // GUI info
 //
@@ -181,23 +123,22 @@ type Gui struct {
 	mouse         Mouse
 	elapsed       float32
 	con           IConsole
-	widgetVector  *WidgetVector
+	widgetVector  []IWidget
 	rbs           *RadioButtonStatic
 	tbs           *TextBoxStatic
 }
 
-
 func NewGui(console IConsole) *Gui {
 	return &Gui{
 		con:          console,
-		widgetVector: NewWidgetVector(),
+		widgetVector: []IWidget{},
 		tbs:          NewTextBoxStatic(),
 		rbs:          NewRadioButtonStatic()}
 }
 
 func (self *Gui) Register(w IWidget) {
 	w.SetGui(self)
-	self.widgetVector.Push(w)
+	self.widgetVector = append(self.widgetVector, w)
 }
 
 func (self *Gui) Unregister(w IWidget) {
@@ -207,13 +148,16 @@ func (self *Gui) Unregister(w IWidget) {
 	if self.keyboardFocus == w {
 		self.keyboardFocus = nil
 	}
-	self.widgetVector.Remove(w)
+	for i, e := range self.widgetVector {
+		if e == w {
+			self.widgetVector = append(self.widgetVector[0:i], self.widgetVector[i+1:]...)
+		}
+	}
 }
 
 func (self *Gui) updateWidgetsIntern(k Key) {
 	self.elapsed = SysGetLastFrameLength()
-	for e := range self.widgetVector.Iter() {
-		w := e.(IWidget)
+	for _, w := range self.widgetVector {
 		if w.IsVisible() {
 			w.ComputeSize()
 			w.Update(w, k)
@@ -231,8 +175,7 @@ func (self *Gui) UpdateWidgets(k Key) {
 }
 
 func (self *Gui) RenderWidgets() {
-	for e := range self.widgetVector.Iter() {
-		w := e.(IWidget)
+	for _, w := range self.widgetVector {
 		if w.IsVisible() {
 			fore, back := self.con.GetDefaultForeground(), self.con.GetDefaultBackground()
 			w.Render(w)
@@ -258,11 +201,9 @@ func (self *Gui) GetFocusedKeyboardWidget() IWidget {
 	return self.keyboardFocus
 }
 
-
 func (self *Gui) UnSelectRadioGroup(group int) {
 	self.rbs.UnSelectGroup(group)
 }
-
 
 func (self *Gui) SetDefaultRadioGroup(group int) {
 	self.rbs.SetDefaultGroup(group)
@@ -286,7 +227,6 @@ type Widget struct {
 	gui        *Gui
 }
 
-
 type WidgetCallback func(w IWidget, userData interface{})
 
 func (self *Gui) newWidget() *Widget {
@@ -300,6 +240,7 @@ func (self *Gui) NewWidget() *Widget {
 	result.initializeWidget(0, 0, 0, 0)
 	return result
 }
+
 //
 
 func (self *Gui) NewWidgetAt(x, y int) *Widget {
@@ -313,7 +254,6 @@ func (self *Gui) NewWidgetDim(x, y, w, h int) *Widget {
 	result.initializeWidget(x, y, w, h)
 	return result
 }
-
 
 // Multiple dispatch: self
 func (self *Widget) initializeWidget(x, y, w, h int) {
@@ -331,7 +271,6 @@ func (self *Widget) initializeWidget(x, y, w, h int) {
 	self.backFocus = Color{70, 70, 130}
 	self.foreFocus = Color{255, 255, 255}
 }
-
 
 func (self *Widget) Delete() {
 	self.gui.Unregister(self)
@@ -486,7 +425,6 @@ func (self *Widget) Update(iself IWidget, k Key) {
 	}
 }
 
-
 func (self *Widget) Move(x, y int) {
 	self.x = x
 	self.y = y
@@ -499,7 +437,6 @@ func (self *Widget) ComputeSize() {
 func (self *Widget) Render(iself IWidget) {
 	// abstract
 }
-
 
 func (self *Widget) IsVisible() bool {
 	return self.visible
@@ -529,7 +466,6 @@ func (self *Widget) expand(x, y int) {
 	// abstract
 }
 
-
 //
 // Button
 //
@@ -540,7 +476,6 @@ type Button struct {
 	label    string
 	callback WidgetCallback
 }
-
 
 func (self *Gui) newButton() *Button {
 	result := &Button{}
@@ -571,7 +506,6 @@ func (self *Button) initializeButton(x, y, width, height int, label string, tip 
 	self.w = width
 	self.h = height
 }
-
 
 func (self *Button) SetLabel(newLabel string) {
 	self.label = newLabel
@@ -627,7 +561,6 @@ func (self *Button) expand(width, height int) {
 	}
 }
 
-
 //
 // Status bar
 //
@@ -670,7 +603,6 @@ func (self *StatusBar) Render(iself IWidget) {
 	}
 }
 
-
 //
 //
 //
@@ -682,7 +614,6 @@ type ImageWidget struct {
 	Widget
 	back Color
 }
-
 
 func (self *Gui) newImageWidget() *ImageWidget {
 	result := &ImageWidget{}
@@ -708,7 +639,6 @@ func (self *ImageWidget) initializeImageWidget(x, y, w, h int, tip string) {
 	self.back = COLOR_BLACK
 }
 
-
 func (self *ImageWidget) Render(iself IWidget) {
 	con := self.gui.con
 	fore, back := self.GetCurrentColors()
@@ -717,7 +647,6 @@ func (self *ImageWidget) Render(iself IWidget) {
 	con.Rect(self.x, self.y, self.w, self.h, true, BKGND_SET)
 
 }
-
 
 func (self *ImageWidget) expand(width, height int) {
 	if width > self.w {
@@ -728,7 +657,6 @@ func (self *ImageWidget) expand(width, height int) {
 	}
 }
 
-
 //
 //
 // Container
@@ -738,9 +666,8 @@ func (self *ImageWidget) expand(width, height int) {
 
 type Container struct {
 	Widget
-	content *WidgetVector
+	content []IWidget
 }
-
 
 func (self *Gui) newContainer() *Container {
 	result := &Container{}
@@ -754,24 +681,26 @@ func (self *Gui) NewContainer(x, y, w, h int) *Container {
 	return result
 }
 
-
 func (self *Container) initializeContainer(x, y, w, h int) {
 	self.Widget.initializeWidget(x, y, w, h)
-	self.content = &WidgetVector{}
+	self.content = []IWidget{}
 }
 
-
 func (self *Container) AddWidget(w IWidget) {
-	self.content.Push(w)
+	self.content = append(self.content, w)
 	self.gui.Unregister(w)
 }
 
 func (self *Container) RemoveWidget(w IWidget) {
-	self.content.Remove(w)
+	for i, e := range self.content {
+		if e == w {
+			self.content = append(self.content[:i], self.content[i+1:]...)
+		}
+	}
 }
 
 func (self *Container) Render(iself IWidget) {
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.Render(w)
 		}
@@ -779,19 +708,18 @@ func (self *Container) Render(iself IWidget) {
 }
 
 func (self *Container) Clear() {
-	self.content.Clear()
+	self.content = []IWidget{}
 }
 
 func (self *Container) Update(iself IWidget, k Key) {
 	self.Widget.Update(iself, k)
 
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.Update(w, k)
 		}
 	}
 }
-
 
 //
 //
@@ -802,13 +730,11 @@ type VBox struct {
 	padding int
 }
 
-
 func (self *Gui) newVBox() *VBox {
 	result := &VBox{}
 	self.Register(result)
 	return result
 }
-
 
 func (self *Gui) NewVBox(x, y, padding int) *VBox {
 	result := self.newVBox()
@@ -822,11 +748,10 @@ func (self *VBox) initializeVBox(x, y, padding int) {
 	self.padding = padding
 }
 
-
 func (self *VBox) ComputeSize() {
 	cury := self.y
 	self.w = 0
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.SetX(self.x)
 			w.SetY(cury)
@@ -839,13 +764,12 @@ func (self *VBox) ComputeSize() {
 	}
 	self.h = cury - self.y
 
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.expand(self.w, w.GetHeight())
 		}
 	}
 }
-
 
 //
 //
@@ -855,7 +779,6 @@ func (self *VBox) ComputeSize() {
 type HBox struct {
 	VBox
 }
-
 
 func (self *Gui) newHBox() *HBox {
 	result := &HBox{}
@@ -873,11 +796,10 @@ func (self *HBox) initializeHBox(x, y, padding int) {
 	self.VBox.initializeVBox(x, y, padding)
 }
 
-
 func (self *HBox) ComputeSize() {
 	curx := self.x
 	self.h = 0
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.SetY(self.y)
 			w.SetX(curx)
@@ -890,13 +812,12 @@ func (self *HBox) ComputeSize() {
 	}
 
 	self.w = curx - self.x
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.expand(w.GetWidth(), self.h)
 		}
 	}
 }
-
 
 //
 //
@@ -937,7 +858,6 @@ func (self *Separator) initializeSeparator(txt, tip string) {
 
 }
 
-
 func (self *Separator) ComputeSize() {
 	self.w = If(self.txt != "", len(self.txt)+2, 0).(int)
 }
@@ -960,7 +880,6 @@ func (self *Separator) Render(iself IWidget) {
 	con.PrintEx(self.x+self.w/2, self.y, BKGND_SET, CENTER, " %s ", self.txt)
 }
 
-
 type ToolBar struct {
 	Container
 	name             string
@@ -968,13 +887,11 @@ type ToolBar struct {
 	shouldPrintFrame bool
 }
 
-
 func (self *Gui) newToolBar() *ToolBar {
 	result := &ToolBar{}
 	self.Register(result)
 	return result
 }
-
 
 func (self *Gui) NewToolBarWithWidth(x, y, w int, name, tip string) *ToolBar {
 	result := self.newToolBar()
@@ -989,7 +906,6 @@ func (self *Gui) NewToolBar(x, y int, name, tip string) *ToolBar {
 	return result
 
 }
-
 
 func (self *ToolBar) initializeToolBar(x, y, w int, name, tip string) {
 	self.Container.initializeContainer(x, y, w, 2)
@@ -1013,7 +929,6 @@ func (self *ToolBar) SetShouldPrintFrame(value bool) {
 func (self *ToolBar) GetShouldPrintFrame() bool {
 	return self.shouldPrintFrame
 }
-
 
 func (self *ToolBar) Render(iself IWidget) {
 	con := self.gui.con
@@ -1043,7 +958,7 @@ func (self *ToolBar) AddSeparatorWithTip(txt string, tip string) {
 func (self *ToolBar) ComputeSize() {
 	cury := self.y + 1
 	self.w = If(self.name != "", len(self.name)+4, 2).(int)
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.SetX(self.x + 1)
 			w.SetY(cury)
@@ -1058,18 +973,16 @@ func (self *ToolBar) ComputeSize() {
 		self.w = self.fixedWidth
 	}
 	self.h = cury - self.y + 1
-	for w := range self.content.Iter() {
+	for _, w := range self.content {
 		if w.IsVisible() {
 			w.expand(self.w-2, w.GetHeight())
 		}
 	}
 }
 
-
 //
 // ToggleButton
 //
-
 
 type ToggleButton struct {
 	Button
@@ -1106,7 +1019,6 @@ func (self *ToggleButton) SetPressed(val bool) {
 	self.pressed = val
 }
 
-
 func (self *ToggleButton) onButtonClick() {
 	self.pressed = !self.pressed
 	if self.callback != nil {
@@ -1130,7 +1042,6 @@ func (self *ToggleButton) Render(iself IWidget) {
 	}
 }
 
-
 //
 //
 // Label
@@ -1141,13 +1052,11 @@ type Label struct {
 	label string
 }
 
-
 func (self *Gui) newLabel() *Label {
 	result := &Label{}
 	self.Register(result)
 	return result
 }
-
 
 func (self *Gui) NewLabel(x, y int, label string) *Label {
 	result := self.newLabel()
@@ -1161,7 +1070,6 @@ func (self *Gui) NewLabelWithTip(x, y int, label string, tip string) *Label {
 	return result
 }
 
-
 func (self *Label) initializeLabel(x, y int, label string, tip string) {
 	self.Widget.initializeWidget(x, y, 0, 1)
 	self.x = x
@@ -1169,7 +1077,6 @@ func (self *Label) initializeLabel(x, y int, label string, tip string) {
 	self.label = label
 	self.tip = tip
 }
-
 
 func (self *Label) Render(iself IWidget) {
 	con := self.gui.con
@@ -1192,7 +1099,6 @@ func (self *Label) expand(width, height int) {
 	}
 }
 
-
 //
 //
 // TextBox
@@ -1204,12 +1110,10 @@ type TextBoxStatic struct {
 	blinkingDelay float32
 }
 
-
 func NewTextBoxStatic() *TextBoxStatic {
 	return &TextBoxStatic{
 		blinkingDelay: 0.5}
 }
-
 
 type TextBox struct {
 	Widget
@@ -1222,7 +1126,6 @@ type TextBox struct {
 	callback         TextBoxCallback
 	data             interface{}
 }
-
 
 func (self *Gui) newTextBox() *TextBox {
 	result := &TextBox{}
@@ -1263,7 +1166,6 @@ func (self *TextBox) initializeTextBox(x, y, w, maxw int, label, value, tip stri
 	}
 }
 
-
 func (self *TextBox) Render(iself IWidget) {
 	// save colors
 	con := self.gui.con
@@ -1297,7 +1199,6 @@ func (self *TextBox) Render(iself IWidget) {
 		}
 	}
 }
-
 
 func (self *TextBox) Update(iself IWidget, k Key) {
 	g := self.gui
@@ -1380,7 +1281,6 @@ func (self *TextBox) Update(iself IWidget, k Key) {
 	self.Widget.Update(iself, k)
 }
 
-
 func (self *TextBox) SetBlinkingDelay(delay float32) {
 	self.gui.tbs.blinkingDelay = delay
 }
@@ -1406,14 +1306,12 @@ func (self *TextBox) SetCallback(callback TextBoxCallback, data interface{}) {
 	self.data = data
 }
 
-
 func (self *TextBox) onButtonClick() {
 	g := self.gui
 	if g.mouse.Cx >= self.x+self.boxx && g.mouse.Cx < self.x+self.boxx+self.boxw {
 		g.keyboardFocus = self
 	}
 }
-
 
 //
 // RadioButton
@@ -1433,16 +1331,13 @@ func NewRadioButtonStatic() *RadioButtonStatic {
 		groupSelect:  [512]*RadioButton{}}
 }
 
-
 func (self *RadioButtonStatic) UnSelectGroup(group int) {
 	self.groupSelect[group] = nil
 }
 
-
 func (self *RadioButtonStatic) SetDefaultGroup(group int) {
 	self.defaultGroup = group
 }
-
 
 type RadioButton struct {
 	Button
@@ -1451,13 +1346,11 @@ type RadioButton struct {
 	group                        int
 }
 
-
 func (self *Gui) newRadioButton() *RadioButton {
 	result := &RadioButton{}
 	self.Register(result)
 	return result
 }
-
 
 func (self *Gui) NewRadioButton(label string, tip string, callback WidgetCallback, userData interface{}) *RadioButton {
 	result := self.newRadioButton()
@@ -1471,7 +1364,6 @@ func (self *Gui) NewRadioButtonWithTip(x, y, width, height int, label string, ti
 	return result
 }
 
-
 func (self *RadioButton) initializeRadioButton(x, y, width, height int, label string, tip string, callback WidgetCallback, userData interface{}) {
 	self.Button.initializeButton(x, y, width, height, label, tip, callback, userData)
 }
@@ -1479,7 +1371,6 @@ func (self *RadioButton) initializeRadioButton(x, y, width, height int, label st
 func (self *RadioButton) SetGroup(group int) {
 	self.group = group
 }
-
 
 func (self *RadioButton) SetUseSelectionColor(use bool) {
 	self.useSelectionColor = use
@@ -1531,12 +1422,10 @@ func (self *RadioButton) UnSelect() {
 	rbs.groupSelect[self.group] = nil
 }
 
-
 func (self *RadioButton) onButtonClick() {
 	self.Select()
 	self.Button.onButtonClick()
 }
-
 
 //
 //
@@ -1559,7 +1448,6 @@ type Slider struct {
 	data         interface{}
 }
 
-
 func (self *Gui) newSlider() *Slider {
 	result := &Slider{}
 	self.Register(result)
@@ -1571,7 +1459,6 @@ func (self *Gui) NewSlider(x, y, w int, min, max float32, label string, tip stri
 	result.initializeSlider(x, y, w, min, max, label, tip)
 	return result
 }
-
 
 func (self *Slider) initializeSlider(x, y, w int, min, max float32, label string, tip string) {
 	self.TextBox.initializeTextBox(x, y, w, 10, label, "", tip)
@@ -1645,7 +1532,6 @@ func (self *Slider) Update(iself IWidget, k Key) {
 	}
 }
 
-
 func (self *Slider) SetMinMax(min, max float32) {
 	self.min = min
 	self.max = max
@@ -1669,14 +1555,12 @@ func (self *Slider) SetSensitivity(sensitivity float32) {
 	self.sensitivity = sensitivity
 }
 
-
 func (self *Slider) valueToText() {
 	self.txt = fmt.Sprintf(If(self.fmt != "", self.fmt, "%.2f").(string), self.value)
 }
 
-
 func (self *Slider) textToValue() {
-	f, err := strconv.Atof32(self.txt)
+	f, err := strconv.ParseFloat(self.txt, 32)
 	if err != nil {
 		self.value = 0
 	} else {

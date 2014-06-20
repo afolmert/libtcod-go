@@ -1,23 +1,24 @@
+/*
+libtcod height map tool
+
+Actually self is currently more a curiosity than a real useful tool.
+It allows you to tweak a heightmap by hand and generate the corresponding C,C++ or python code.
+
+The heightmap tool source code is public domain. Do whatever you want with it.
+*/
 package main
 
-//
-// libtcod height map tool
-//
-// Actually self is currently more a curiosity than a real useful tool.
-// It allows you to tweak a heightmap by hand and generate the corresponding C,C++ or python code.
-//
-// The heightmap tool source code is public domain. Do whatever you want with it.
-
 import (
-	"tcod"
+	"container/list"
 	"fmt"
-	"math"
-	"strconv"
-	"container/vector"
+	"github.com/ogier/libtcod-go/tcod"
 	"io/ioutil"
-	"path"
+	"math"
 	"os"
+	"path"
+	"strconv"
 )
+
 //
 //
 // Operations
@@ -25,7 +26,6 @@ import (
 //
 const HM_WIDTH = 100
 const HM_HEIGHT = 80
-
 
 // Operations
 //
@@ -45,7 +45,6 @@ const (
 	VORONOI
 )
 
-
 type CodeType int
 
 // CodeType
@@ -56,7 +55,6 @@ const (
 	GO
 	NB_CODE
 )
-
 
 var HEADER1 []string = []string{
 	// C header
@@ -209,7 +207,6 @@ var FOOTER2 []string = []string{
 	"",
 }
 
-
 var hm, hmold *tcod.HeightMap
 var noise *tcod.Noise
 var rnd, backupRnd *tcod.Random
@@ -268,7 +265,6 @@ var smoothKernelWeight []float32 = []float32{1, 2, 1, 2, 20, 2, 1, 2, 1}
 var mapGradient []tcod.Color = make([]tcod.Color, 256)
 
 const MAX_COLOR_KEY = 10
-
 
 // TCOD's land color map
 var keyIndex []int = []int{0,
@@ -346,57 +342,55 @@ func cos(f float32) float32 {
 	return float32(math.Cos(float64(f)))
 }
 
-func vectorRemove(v vector.Vector, el interface{}) {
-	for i := 0; i < v.Len(); i++ {
-		if el == v.At(i) {
-			v.Delete(i)
+func listRemove(l list.List, val interface{}) {
+	for e := l.Front(); e != nil; e = e.Next() {
+		if e.Value == val {
+			l.Remove(e)
 			break
 		}
 	}
 }
 
-func stringVectorContains(v vector.StringVector, data string) bool {
-	for _, e := range v {
-		if e == data {
+func stringSliceContains(s []string, val string) bool {
+	for _, e := range s {
+		if e == val {
 			return true
 		}
 
 	}
 	return false
 }
-func peekOperation(v vector.Vector) IOperation {
-	if v.Len() == 0 {
-		return nil
-	}
-	return v.At(v.Len() - 1).(IOperation)
-}
 
+func peekOperation(l list.List) IOperation {
+	if l.Back() != nil {
+		return l.Back().Value.(IOperation)
+	}
+	return nil
+}
 
 //
 //
 // Operations
 //
 
-
 type OperationStatic struct {
 	names       []string
 	tips        []string
-	list        vector.Vector // the list of operation applied since the last clear
-	needsRandom bool          // we need a random number generator
-	needsNoise  bool          // we need a 2D noise
+	list        list.List // the list of operation applied since the last clear
+	needsRandom bool      // we need a random number generator
+	needsNoise  bool      // we need a 2D noise
 	currentOp   IOperation
-	codebuf     string                       // generated code buffer
-	initCode    [NB_CODE]vector.StringVector // list of global vars/functions to add to the generated code
+	codebuf     string            // generated code buffer
+	initCode    [NB_CODE][]string // list of global vars/functions to add to the generated code
 }
-
 
 func newOperationStatic() *OperationStatic {
 	result := &OperationStatic{}
-	result.list = vector.Vector{}
-	result.initCode = [NB_CODE]vector.StringVector{
-		vector.StringVector{},
-		vector.StringVector{},
-		vector.StringVector{}}
+	result.list = list.List{}
+	result.initCode = [NB_CODE][]string{
+		[]string{},
+		[]string{},
+		[]string{}}
 	// must match OpType enum
 	result.names = []string{
 		"norm",
@@ -422,7 +416,6 @@ func newOperationStatic() *OperationStatic {
 
 	return result
 }
-
 
 // generate the code corresponding to the list of operations
 func (self *OperationStatic) buildCode(codeType CodeType) string {
@@ -458,11 +451,11 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 		self.addCode(s)
 	}
 	self.addCode(HEADER2[codeType])
-	self.list.Do(func(e interface{}) {
-		op := e.(IOperation)
+	for e := self.list.Front(); e != nil; e = e.Next() {
+		op := e.Value.(IOperation)
 		code := op.getCode(codeType)
 		self.addCode(code)
-	})
+	}
 	self.addCode(FOOTER1[codeType])
 	if (self.needsRandom || self.needsNoise) && codeType == C {
 		self.addCode(fmt.Sprintf("\trnd=tcod.TCOD_random_new_from_seed(%uU);\n", seed))
@@ -474,16 +467,15 @@ func (self *OperationStatic) buildCode(codeType CodeType) string {
 	return self.codebuf
 }
 
-
 // remove all operation, clear the heightmap
 func (self *OperationStatic) clear() {
-	self.list = vector.Vector{}
+	self.list = list.List{}
 }
 
 // cancel the last operation
 func (self *OperationStatic) cancel() {
 	if self.currentOp != nil {
-		vectorRemove(self.list, self.currentOp)
+		listRemove(self.list, self.currentOp)
 		history.RemoveWidget(self.currentOp.getButton())
 		self.currentOp.getButton().UnSelect()
 		//delete self.currentOp
@@ -505,8 +497,8 @@ func (self *OperationStatic) reseed() {
 	addFbmDelta = 0
 	scaleFbmDelta = 0
 	hm.Clear()
-	for _, e := range self.list {
-		op := e.(IOperation)
+	for e := self.list.Front(); e != nil; e = e.Next() {
+		op := e.Value.(IOperation)
 		op.runInternal()
 	}
 
@@ -518,8 +510,8 @@ func (self *OperationStatic) run(op IOperation) {
 
 // add a global variable or a function to the generated code
 func (self *OperationStatic) addInitCode(codeType CodeType, code string) {
-	if !stringVectorContains(self.initCode[codeType], code) {
-		self.initCode[codeType].Push(code)
+	if !stringSliceContains(self.initCode[codeType], code) {
+		self.initCode[codeType] = append(self.initCode[codeType], code)
 	}
 }
 
@@ -533,7 +525,7 @@ func (self *OperationStatic) add(op IOperation) {
 	backup()
 	op.runInternal()
 	if op.addInternal() {
-		operations.list.Push(op)
+		operations.list.PushBack(op)
 		op.createParamUi()
 		op.setButton(gui.NewRadioButton(operations.names[op.getOpType()], operations.tips[op.getOpType()], historyCbk, op))
 		op.getButton().SetGroup(0)
@@ -544,14 +536,12 @@ func (self *OperationStatic) add(op IOperation) {
 	//else delete self
 }
 
-
 func historyCbk(w tcod.IWidget, data interface{}) {
 	op := data.(IOperation)
 	op.createParamUi()
 	op.getButton().Select()
 	operations.currentOp = op
 }
-
 
 //
 //
@@ -568,7 +558,6 @@ type IOperation interface {
 	getOpType() OpType
 }
 
-
 type Operation struct {
 	opType OpType
 	button *tcod.RadioButton // button associated with self operation in history
@@ -577,7 +566,6 @@ type Operation struct {
 func (self *Operation) initializeOperation(opType OpType) {
 	self.opType = opType
 }
-
 
 func (self *Operation) createParamUi() {
 	params.Clear()
@@ -593,12 +581,10 @@ func (self *Operation) runInternal() {
 	// abstract
 }
 
-
 // actually add self operation
 func (self *Operation) addInternal() bool {
 	return false
 }
-
 
 // the code corresponding to self operation
 func (self *Operation) getCode(codeType CodeType) string {
@@ -626,7 +612,6 @@ type NormalizeOperation struct {
 	Operation
 	min, max float32
 }
-
 
 func NewNormalizeOperation(min, max float32) *NormalizeOperation {
 	result := &NormalizeOperation{}
@@ -674,11 +659,11 @@ func (self *NormalizeOperation) addInternal() bool {
 }
 
 func normalizeMinValueCbk(w tcod.IWidget, val string, data interface{}) {
-	f, err := strconv.Atof32(val)
+	f, err := strconv.ParseFloat(val, 32)
 	if err != nil {
 		op := data.(*NormalizeOperation)
-		if f < op.max {
-			op.min = f
+		if float32(f) < op.max {
+			op.min = float32(f)
 			if peekOperation(operations.list) == IOperation(op) {
 				op.runInternal()
 			} else {
@@ -689,11 +674,11 @@ func normalizeMinValueCbk(w tcod.IWidget, val string, data interface{}) {
 }
 
 func normalizeMaxValueCbk(w tcod.IWidget, val string, data interface{}) {
-	f, err := strconv.Atof32(val)
+	f, err := strconv.ParseFloat(val, 32)
 	if err != nil {
 		op := data.(*NormalizeOperation)
-		if f > op.min {
-			op.max = f
+		if float32(f) > op.min {
+			op.max = float32(f)
 			if peekOperation(operations.list) == IOperation(op) {
 				op.runInternal()
 			} else {
@@ -719,7 +704,6 @@ func (self *NormalizeOperation) createParamUi() {
 	params.AddWidget(tbMax)
 }
 
-
 //
 // AddFbmOperation
 // add noise to the heightmap
@@ -729,7 +713,6 @@ type AddFbmOperation struct {
 	Operation
 	zoom, offsetx, offsety, octaves, scale, offset float32
 }
-
 
 func NewAddFbmOperation(zoom, offsetx, offsety, octaves, scale, offset float32) *AddFbmOperation {
 	result := &AddFbmOperation{}
@@ -847,7 +830,6 @@ func addFbmScaleValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	}
 }
 
-
 func (self *AddFbmOperation) createParamUi() {
 	params.Clear()
 	params.SetVisible(true)
@@ -885,7 +867,6 @@ func (self *AddFbmOperation) createParamUi() {
 
 }
 
-
 //
 // scale the heightmap by a noise function
 //
@@ -893,7 +874,6 @@ func (self *AddFbmOperation) createParamUi() {
 type ScaleFbmOperation struct {
 	AddFbmOperation
 }
-
 
 func NewScaleFbmOperation(zoom, offsetx, offsety, octaves, scale, offset float32) *ScaleFbmOperation {
 	result := &ScaleFbmOperation{}
@@ -944,7 +924,6 @@ func (self *ScaleFbmOperation) addInternal() bool {
 	return true
 }
 
-
 //
 //
 // Add a hill to the heightmap
@@ -954,7 +933,6 @@ type AddHillOperation struct {
 	nbHill                    int
 	radius, radiusVar, height float32
 }
-
 
 func NewAddHillOperation(nbHill int, radius, radiusVar, height float32) *AddHillOperation {
 	result := &AddHillOperation{}
@@ -969,7 +947,6 @@ func (self *AddHillOperation) initializeAddHillOperation(opType OpType, nbHill i
 	self.radiusVar = radiusVar
 	self.height = height
 }
-
 
 // AddHill
 func (self *AddHillOperation) getCode(codeType CodeType) string {
@@ -1050,7 +1027,6 @@ func (self *AddHillOperation) addInternal() bool {
 	return true
 }
 
-
 func addHillNbHillValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	op := data.(*AddHillOperation)
 	op.nbHill = int(val)
@@ -1125,14 +1101,12 @@ func (self *AddHillOperation) createParamUi() {
 	slider.SetValue(self.height)
 }
 
-
 // add a scalar to the heightmap
 //
 type AddLevelOperation struct {
 	Operation
 	level float32
 }
-
 
 func NewAddLevelOperation(level float32) *AddLevelOperation {
 	result := &AddLevelOperation{}
@@ -1211,7 +1185,6 @@ func (self *AddLevelOperation) createParamUi() {
 	}
 	slider.SetValue(self.level)
 }
-
 
 // smooth a part of the heightmap
 //
@@ -1382,7 +1355,6 @@ func (self *SmoothOperation) createParamUi() {
 	slider.SetValue(0.0)
 }
 
-
 //
 //
 // simulate rain erosion
@@ -1393,7 +1365,6 @@ type RainErosionOperation struct {
 	nbDroperations                 int
 	erosionCoef, sedimentationCoef float32
 }
-
 
 func NewRainErosionOperation(nbDroperations int, erosionCoef, sedimentationCoef float32) *RainErosionOperation {
 	result := &RainErosionOperation{}
@@ -1407,7 +1378,6 @@ func (self *RainErosionOperation) initializeRainErosionOperation(opType OpType, 
 	self.erosionCoef = erosionCoef
 	self.sedimentationCoef = sedimentationCoef
 }
-
 
 // Rain
 func (self *RainErosionOperation) getCode(codeType CodeType) string {
@@ -1491,7 +1461,6 @@ func (self *RainErosionOperation) createParamUi() {
 	params.AddWidget(slider)
 	slider.SetValue(self.sedimentationCoef)
 }
-
 
 //
 //
@@ -1585,7 +1554,6 @@ func (self *NoiseLerpOperation) createParamUi() {
 	slider.SetValue(self.coef)
 }
 
-
 // add a voronoi diagram
 //
 const MAX_VORONOI_COEF = 5
@@ -1597,7 +1565,6 @@ type VoronoiOperation struct {
 	coef       []float32
 	coefSlider [MAX_VORONOI_COEF]*tcod.Slider
 }
-
 
 func NewVoronoiOperation(nbPoints, nbCoef int, coef []float32) *VoronoiOperation {
 	result := &VoronoiOperation{}
@@ -1620,7 +1587,6 @@ func (self *VoronoiOperation) initializeVoronoiOperation(opType OpType, nbPoints
 		self.coefSlider[i] = nil
 	}
 }
-
 
 func (self *VoronoiOperation) getCode(codeType CodeType) string {
 	var coefstr string
@@ -1730,7 +1696,6 @@ func voronoiCoefValueCbk(w tcod.IWidget, val float32, data interface{}) {
 	}
 }
 
-
 func (self *VoronoiOperation) createParamUi() {
 	params.Clear()
 	params.SetName(operations.names[VORONOI])
@@ -1762,12 +1727,10 @@ func (self *VoronoiOperation) createParamUi() {
 	}
 }
 
-
 //
 //
 // Main program
 //
-
 
 func initColors() {
 	tcod.ColorGenMap(mapGradient, nbColorKeys, keyColor, keyIndex)
@@ -1931,7 +1894,6 @@ func normalizeCbk(w tcod.IWidget, data interface{}) {
 func addFbmCbk(w tcod.IWidget, data interface{}) {
 	operations.add(NewAddFbmOperation(1.0, addFbmDelta, 0.0, 6.0, 1.0, 0.5))
 }
-
 
 func scaleFbmCbk(w tcod.IWidget, data interface{}) {
 	operations.add(NewScaleFbmOperation(1.0, addFbmDelta, 0.0, 6.0, 1.0, 0.5))
@@ -2124,11 +2086,9 @@ func changeColorMapCbk(w tcod.IWidget, data interface{}) {
 	colorMapGui.SetVisible(true)
 }
 
-
 func addOperationButton(tools *tcod.ToolBar, opType OpType, callback tcod.WidgetCallback) {
 	tools.AddWidget(gui.NewButton(operations.names[opType], operations.tips[opType], callback, nil))
 }
-
 
 func buildGui() {
 	// status bar
@@ -2204,7 +2164,7 @@ func buildGui() {
 }
 
 func main() {
-	// change dir to program dir 
+	// change dir to program dir
 	program := os.Args[0]
 	dir, _ := path.Split(program)
 	os.Chdir(dir)

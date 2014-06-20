@@ -1,14 +1,13 @@
 package main
 
 import (
-	"container/vector"
 	"compress/zlib"
-	"gob"
+	"encoding/gob"
+	. "github.com/ogier/libtcod-go/tcod"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
-	. "tcod"
 )
 
 type Transition uint8
@@ -44,16 +43,16 @@ type AsciiArtGallery struct {
 	firstTime      int // time in milliseconds when first render occurred
 	moveTransition MoveTransition
 	arts           []IAsciiArt
-	artfiles       vector.StringVector
+	artfiles       []string
 	last           int
 	loadedArtsChan chan bool
 	loadedArts     bool
 }
 
-// TODO switch to go version  from May 2010 
+// TODO switch to go version  from May 2010
 // TODO decode ascii arts ,
-// TODO store as binary file 
-// CODE LenName Name  WIDTH, HEIGHT  OFFSETX OFFSETY  and stream of colors 
+// TODO store as binary file
+// CODE LenName Name  WIDTH, HEIGHT  OFFSETX OFFSETY  and stream of colors
 
 type AsciiArt struct {
 	name             string
@@ -62,7 +61,6 @@ type AsciiArt struct {
 	width, height    int
 	offsetX, offsetY int
 }
-
 
 var asciiArts []IAsciiArt
 
@@ -90,18 +88,18 @@ func (self *AsciiArtGallery) isArtsLoaded() bool {
 func (self *AsciiArtGallery) goLoadAsciiArts() {
 	self.loadedArts = false
 	go func() {
-		files := vector.StringVector{}
+		files := []string{}
 		entries, err := ioutil.ReadDir("data/ascii")
 		if err != nil {
 			panic("Cannot read files from data/ascii")
 		}
 		for _, f := range entries {
-			if strings.HasSuffix(f.Name, ".dat") {
-				files.Push(path.Join("data/ascii", f.Name))
+			if strings.HasSuffix(f.Name(), ".dat") {
+				files = append(files, path.Join("data/ascii", f.Name()))
 			}
 		}
 
-		self.arts = make([]IAsciiArt, files.Len())
+		self.arts = make([]IAsciiArt, len(files))
 		self.artfiles = files
 		self.loadedArtsChan <- true
 	}()
@@ -145,8 +143,7 @@ func (self *AsciiArtGallery) randomAsciiArt() IAsciiArt {
 	return nil
 }
 
-
-func NewAsciiArtFromFile(fname string) (art IAsciiArt, err os.Error) {
+func NewAsciiArtFromFile(fname string) (art IAsciiArt, err error) {
 
 	fin, err := os.Open(fname)
 	if err != nil {
@@ -163,7 +160,6 @@ func NewAsciiArtFromFile(fname string) (art IAsciiArt, err os.Error) {
 	return &a, nil
 
 }
-
 
 func (self *AsciiArt) PutChar(console IConsole, x, y int) {
 	color := self.colors[y+self.offsetY][x+self.offsetX]
@@ -183,7 +179,6 @@ func (self *AsciiArt) Draw(console IConsole) {
 		}
 	}
 }
-
 
 func (self *AsciiArt) Render(console IConsole, transition Transition, first bool) {
 	if first {
