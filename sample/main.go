@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"flag"
 	"fmt"
-	. "github.com/ogier/libtcod-go/tcod"
+	. "github.com/afolmert/libtcod-go/tcod"
 	"io/ioutil"
 	"math"
 	"os"
