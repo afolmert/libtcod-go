@@ -30,8 +30,8 @@ To build the bindings, you will need the libtcod library and Go language install
 Please refer to http://golang.org/doc/install.html for Go installation
 and to http://doryen.eptalys.net/libtcod/download/ for libtcod installation.
 
-You can obtain libtcod-go by running `go get github.com/ogier/libtcod-go/tcod`,
-and use the library in your programs with `import "github.com/ogier/libtcod-go/tcod"`.
+You can obtain libtcod-go by running `go get github.com/afolmert/libtcod-go/tcod`,
+and use the library in your programs with `import "github.com/afolmert/libtcod-go/tcod"`.
 
 The sample program and hmtool program can be built by running `go build` from
 within their respective directories, and then running the `./sample` and `./hmtool`
