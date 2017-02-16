@@ -2,7 +2,7 @@ What is it
 ----------
 libtcod-go is a set of Go bindings for the libtcod library
 
-libtcod (http://doryen.eptalys.net/libtcod/) is an open-source, cross-platform C
+libtcod (http://roguecentral.org/doryen/libtcod/) is an open-source, cross-platform C
 library for writing roguelike games
 It provides many utilities frequently used in roguelike games, like
 - truecolor console (SDL and OpenGL backends)
