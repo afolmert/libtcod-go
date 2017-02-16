@@ -81,89 +81,11 @@ package tcod
   	hm->values[nth] = val;
   }
 
-  // These functions are a workaround for passing structs from Go to C
-  // I must pass them as pointers otherwise they are passed incorrectly
-  // when more than one structure is passed
-
-  bool _TCOD_color_equals(TCOD_color_t *c1, TCOD_color_t *c2) {
-  	return TCOD_color_equals(*c1, *c2);
-  }
-
-  TCOD_color_t _TCOD_color_lerp(TCOD_color_t *c1, TCOD_color_t *c2, float coef) {
-  	return TCOD_color_lerp(*c1, *c2, coef);
-  }
-
-  TCOD_color_t _TCOD_color_add(TCOD_color_t *c1, TCOD_color_t *c2) {
-    return TCOD_color_add(*c1, *c2);
-  }
-
-  TCOD_color_t _TCOD_color_subtract(TCOD_color_t *c1, TCOD_color_t *c2) {
-    return TCOD_color_subtract(*c1, *c2);
-  }
-
-  TCOD_color_t _TCOD_color_multiply(TCOD_color_t *c1, TCOD_color_t *c2) {
-    return TCOD_color_multiply(*c1, *c2);
-  }
-
-  TCOD_color_t _TCOD_color_multiply_scalar(TCOD_color_t *c, float value) {
-	return TCOD_color_multiply_scalar(*c, value);
-  }
-
-  void _TCOD_console_set_color_control(TCOD_colctrl_t ctrl, TCOD_color_t *fore, TCOD_color_t *back) {
-	TCOD_console_set_color_control(ctrl, *fore, *back);
-  }
-
-  void _TCOD_console_set_key_color(TCOD_console_t console, TCOD_color_t *color) {
-	TCOD_console_set_key_color(console, *color);
-  }
-
-
-  void _TCOD_console_set_char_background(TCOD_console_t console, int x, int y, TCOD_color_t *color, TCOD_bkgnd_flag_t flag) {
-	TCOD_console_set_char_background(console, x, y, *color, flag);
-  }
-
-  void _TCOD_console_set_char_foreground(TCOD_console_t console, int x, int y, TCOD_color_t *color) {
-	TCOD_console_set_char_foreground(console, x, y, *color);
-  }
-
-  void _TCOD_console_set_fade(uint8 val, TCOD_color_t *color) {
-	TCOD_console_set_fade(val, *color);
-  }
-
-  void _TCOD_console_put_char_ex(TCOD_console_t console, int x, int y, int c, TCOD_color_t *fore, TCOD_color_t *back) {
-	TCOD_console_put_char_ex(console, x, y, c, *fore, *back);
-  }
-
-  void _TCOD_text_set_colors(TCOD_text_t text, TCOD_color_t *fore, TCOD_color_t *back, float transparency) {
-	TCOD_text_set_colors(text, *fore, *back, transparency);
-  }
-
   typedef struct {
   	char *name;
   	TCOD_value_type_t value_type;
   	TCOD_value_t value;
   } _prop_t;
-
-  void  _TCOD_struct_add_structure(TCOD_parser_struct_t *s, TCOD_parser_struct_t *subs) {
-    TCOD_struct_add_structure(*s, *subs);
-  }
-
-  void _TCOD_image_put_pixel(TCOD_image_t img, int x, int y, TCOD_color_t *color) {
-	 TCOD_image_put_pixel(img, x, y, *color);
-
-  }
-
-  void _TCOD_image_clear(TCOD_image_t img, TCOD_color_t *color) {
-	TCOD_image_clear(img, *color);
-  }
-
-  void _TCOD_image_set_key_color(TCOD_image_t img, TCOD_color_t *color) {
-	TCOD_image_set_key_color(img, *color);
-  }
-
-  void _TCOD_zip_put_color(TCOD_zip_t zip, TCOD_color_t *val) {
-	 TCOD_zip_put_color(zip, *val);
-  }
 
   bool _TCOD_sys_file_exists(const char * filename) {
 	return TCOD_sys_file_exists(filename);
@@ -397,36 +319,36 @@ func NewColorHSV(h, s, v float32) Color {
 func (self Color) Equals(c2 Color) bool {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
-	return toBool(C._TCOD_color_equals((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2)))
+	return toBool(C.TCOD_color_equals(cc1, cc2))
 }
 
 func (self Color) Add(c2 Color) Color {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
-	return toColor(C._TCOD_color_add((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2)))
+	return toColor(C.TCOD_color_add(cc1, cc2))
 }
 
 func (self Color) Subtract(c2 Color) Color {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
-	return toColor(C._TCOD_color_subtract((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2)))
+	return toColor(C.TCOD_color_subtract(cc1, cc2))
 }
 
 func (self Color) Multiply(c2 Color) Color {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
-	return toColor(C._TCOD_color_multiply((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2)))
+	return toColor(C.TCOD_color_multiply(cc1, cc2))
 }
 
 func (self Color) MultiplyScalar(value float32) Color {
 	c := fromColor(self)
-	return toColor(C._TCOD_color_multiply_scalar((*C.TCOD_color_t)(&c), C.float(value)))
+	return toColor(C.TCOD_color_multiply_scalar(c, C.float(value)))
 }
 
 func (self Color) Lerp(c2 Color, coef float32) Color {
 	cc1 := fromColor(self)
 	cc2 := fromColor(c2)
-	return toColor(C._TCOD_color_lerp((*C.TCOD_color_t)(&cc1), (*C.TCOD_color_t)(&cc2), C.float(coef)))
+	return toColor(C.TCOD_color_lerp(cc1, cc2, C.float(coef)))
 }
 
 // HSV transformations
@@ -657,12 +579,12 @@ func (self *Console) Clear() {
 
 func (self *Console) SetCharBackground(x, y int, color Color, flag BkgndFlag) {
 	ccolor := fromColor(color)
-	C._TCOD_console_set_char_background(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor), C.TCOD_bkgnd_flag_t(flag))
+	C.TCOD_console_set_char_background(self.Data, C.int(x), C.int(y), ccolor, C.TCOD_bkgnd_flag_t(flag))
 }
 
 func (self *Console) SetCharForeground(x, y int, color Color) {
 	ccolor := fromColor(color)
-	C._TCOD_console_set_char_foreground(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
+	C.TCOD_console_set_char_foreground(self.Data, C.int(x), C.int(y), ccolor)
 }
 
 func (self *Console) SetChar(x, y int, c int) {
@@ -676,8 +598,7 @@ func (self *Console) PutChar(x, y, c int, flag BkgndFlag) {
 func (self *Console) PutCharEx(x, y, c int, fore, back Color) {
 	forec := fromColor(fore)
 	backc := fromColor(back)
-	C._TCOD_console_put_char_ex(self.Data, C.int(x), C.int(y), C.int(c),
-		(*C.TCOD_color_t)(&forec), (*C.TCOD_color_t)(&backc))
+	C.TCOD_console_put_char_ex(self.Data, C.int(x), C.int(y), C.int(c), forec, backc)
 }
 
 func (self *Console) Print(x, y int, fmts string, v ...interface{}) {
@@ -796,7 +717,7 @@ func (self *Console) GetHeight() int {
 
 func (self *Console) SetKeyColor(color Color) {
 	ccolor := fromColor(color)
-	C._TCOD_console_set_key_color(self.Data, (*C.TCOD_color_t)(&ccolor))
+	C.TCOD_console_set_key_color(self.Data, ccolor)
 }
 
 func (self *Console) Blit(xSrc, ySrc, wSrc, hSrc int, dst IConsole, xDst, yDst int, foregroundAlpha, backgroundAlpha float32) {
@@ -875,7 +796,7 @@ func (self *RootConsole) SetDirty(x, y, w, h int) {
 
 func (self *RootConsole) SetFade(val uint8, fade Color) {
 	ccolor := fromColor(fade)
-	C._TCOD_console_set_fade(C.uint8(val), (*C.TCOD_color_t)(&ccolor))
+	C.TCOD_console_set_fade(C.uint8(val), ccolor)
 }
 
 func (self *RootConsole) GetFade() uint8 {
@@ -893,8 +814,7 @@ func (self *RootConsole) Flush() {
 func (self *RootConsole) SetColorControl(ctrl ColCtrl, fore, back Color) {
 	forec := fromColor(fore)
 	backc := fromColor(back)
-	C._TCOD_console_set_color_control(C.TCOD_colctrl_t(ctrl),
-		(*C.TCOD_color_t)(&forec), (*C.TCOD_color_t)(&backc))
+	C.TCOD_console_set_color_control(C.TCOD_colctrl_t(ctrl), forec, backc)
 }
 
 func (self *RootConsole) CheckForKeypress(flags int) Key {
@@ -1121,10 +1041,7 @@ func (self *Text) SetProperties(cursorChar int, blinkInterval int, prompt string
 func (self *Text) SetColors(fore, back Color, backTransparency float32) {
 	forec := fromColor(fore)
 	backc := fromColor(back)
-	C._TCOD_text_set_colors(self.Data,
-		(*C.TCOD_color_t)(&forec),
-		(*C.TCOD_color_t)(&backc),
-		C.float(backTransparency))
+	C.TCOD_text_set_colors(self.Data, forec, backc, C.float(backTransparency))
 }
 
 func (self *Text) Update(key Key) {
@@ -1793,7 +1710,7 @@ func LoadImage(filename string) *Image {
 
 func (self *Image) Clear(color Color) {
 	ccolor := fromColor(color)
-	C._TCOD_image_clear(self.Data, (*C.TCOD_color_t)(&ccolor))
+	C.TCOD_image_clear(self.Data, ccolor)
 }
 
 func (self *Image) Invert() {
@@ -1842,7 +1759,7 @@ func (self *Image) GetMipmapPixel(x0, y0, x1, y1 float32) Color {
 
 func (self *Image) PutPixel(x, y int, color Color) {
 	ccolor := fromColor(color)
-	C._TCOD_image_put_pixel(self.Data, C.int(x), C.int(y), (*C.TCOD_color_t)(&ccolor))
+	C.TCOD_image_put_pixel(self.Data, C.int(x), C.int(y), ccolor)
 }
 
 func (self *Image) Blit(console *Console, x, y float32, bkgndFlag BkgndFlag, scalex, scaley, angle float32) {
@@ -1860,7 +1777,7 @@ func (self *Image) Blit2x(dest *Console, dx, dy, sx, sy, w, h int) {
 
 func (self *Image) SetKeyColor(keyColor Color) {
 	ckeyColor := fromColor(keyColor)
-	C._TCOD_image_set_key_color(self.Data, (*C.TCOD_color_t)(&ckeyColor))
+	C.TCOD_image_set_key_color(self.Data, ckeyColor)
 }
 
 func (self *Image) IsPixelTransparent(x, y int) bool {
@@ -2161,7 +2078,7 @@ func (self ParserStruct) AddStructure(substruct ParserStruct) {
 	// TODO is this necessary ??
 	//	struct1 := self.Data
 	//	substruct2 := struct_.Data
-	C._TCOD_struct_add_structure(&self.Data, &substruct.Data)
+	C.TCOD_struct_add_structure(self.Data, substruct.Data)
 }
 
 func (self *ParserStruct) IsMandatory(propname string) bool {
@@ -2383,7 +2300,7 @@ func (self *Zip) PutString(val string) {
 
 func (self *Zip) PutColor(val Color) {
 	cval := fromColor(val)
-	C._TCOD_zip_put_color(self.Data, (*C.TCOD_color_t)(&cval))
+	C.TCOD_zip_put_color(self.Data, cval)
 }
 
 func (self *Zip) PutImage(val *Image) {
